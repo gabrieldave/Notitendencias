@@ -6,17 +6,25 @@ Stack: **Next.js 15** (App Router), **TypeScript**, **Tailwind**, **Drizzle ORM*
 
 ## Variables de entorno
 
-Copia `.env.example` a `.env` y ajusta:
+Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 
-| Variable | Uso |
-|----------|-----|
-| `DATABASE_URL` | `postgresql://cursor:cursor@HOST:5432/notitendencias` **sin** `?schema=public` |
-| `BRIDGE_API_KEY` | Bearer para `POST /api/bridge/ingest` |
-| `DEEPSEEK_API_KEY` | Procesamiento en `POST /api/process/[id]` |
-| `NEXT_PUBLIC_APP_URL` | URL pública, ej. `https://notitendencias.vibesystems.tech` |
-| `PORT` | Por defecto **3015** |
-| `ADMIN_PASSWORD` | Login admin (cookie httpOnly) |
-| `N8N_WEBHOOK_*` | Opcionales; la app sigue funcionando si van vacíos |
+### Tabla para Coolify (y cualquier deploy)
+
+| Variable | ¿Obligatoria? | Qué es |
+|----------|---------------|--------|
+| `DATABASE_URL` | **Sí** | Postgres de la app. Forma: `postgresql://USUARIO:PASSWORD@HOST:5432/notitendencias` **sin** `?schema=public`. En Docker/Coolify, `HOST` suele ser el nombre del contenedor (ej. `ys0ocwcwgso8co0ooko8gc4w`). |
+| `BRIDGE_API_KEY` | **Sí** | Secreto largo para el header `Authorization: Bearer …` en `POST /api/bridge/ingest`. Generar con `openssl rand -hex 32` y **la misma clave** en Kimi / scripts que ingieran datos. |
+| `DEEPSEEK_API_KEY` | **Sí** para procesar en admin | API de DeepSeek; sin ella, “Procesar” falla hasta que la configures. |
+| `NEXT_PUBLIC_APP_URL` | **Sí** | URL pública del sitio, ej. `https://notitendencias.vibesystems.tech` (metadata, enlaces). |
+| `PORT` | Recomendada | **`3015`** en producción (Coolify debe exponer este puerto del contenedor). |
+| `ADMIN_PASSWORD` | **Sí** | Contraseña del panel `/admin` (cookie httpOnly). Usa una contraseña fuerte única. |
+| `N8N_WEBHOOK_PUBLISHED_TREND` | No | URL del webhook n8n al publicar una tendencia. Vacío = no se llama. |
+| `N8N_WEBHOOK_NEWSLETTER` | No | URL n8n al suscribirse al newsletter. |
+| `N8N_WEBHOOK_ALERTS` | No | URL n8n si `trend_score >= 80` al publicar. |
+| `N8N_API_KEY` | No | Solo para `npm run n8n:push` en tu máquina/CI, **no** hace falta en el contenedor de la app Next. |
+| `N8N_BASE_URL` | No | Por defecto el script usa `https://n8n.vibesystems.tech`. |
+
+**Build en Docker:** el `Dockerfile` pasa `DATABASE_URL` y `NEXT_PUBLIC_APP_URL` como build args; en Coolify define también esas variables en “Build arguments” si el build las necesita, además del runtime.
 
 ## Setup local / VPS
 
