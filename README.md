@@ -1,0 +1,3 @@
+# Notitendencias
+
+Scaffold de negocio.
