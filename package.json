@@ -11,7 +11,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "npx tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "setup": "npx tsx scripts/setup.ts"
+    "setup": "npx tsx scripts/setup.ts",
+    "n8n:push": "npx tsx scripts/n8n-push-workflows.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.2",

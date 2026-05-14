@@ -1,10 +1,34 @@
 # Workflows n8n para Notitendencias
 
-El MCP de n8n disponible en este entorno solo permite **buscar y ejecutar** workflows existentes, no crearlos. Crea manualmente los siguientes flujos en tu instancia (`https://n8n.vibesystems.tech`) y pega las URLs de los nodos **Webhook** en las variables de entorno de la app:
+El **MCP de n8n** en Cursor permite buscar, ver detalle y ejecutar workflows; **no incluye creación**. Para crear los cuatro flujos de Notitendencias automáticamente usa el script del repo (API de n8n).
 
-- `N8N_WEBHOOK_PUBLISHED_TREND`
-- `N8N_WEBHOOK_NEWSLETTER`
-- `N8N_WEBHOOK_ALERTS`
+## Opción A — Crear y activar por API (recomendado)
+
+1. En n8n: **Settings → API → Create API Key** (rol con permiso de crear workflows).
+2. En tu máquina (o en CI), con el repo clonado:
+
+```bash
+export N8N_API_KEY="tu_api_key"
+export N8N_BASE_URL="https://n8n.vibesystems.tech"   # opcional si es el default
+cd Notitendencias
+npm run n8n:push
+```
+
+3. El script imprime las URLs de webhook de **producción**. Cópialas en Coolify / `.env` de la app:
+
+- `N8N_WEBHOOK_PUBLISHED_TREND` → `https://n8n.vibesystems.tech/webhook/notitendencias-published-trend`
+- `N8N_WEBHOOK_ALERTS` → `https://n8n.vibesystems.tech/webhook/notitendencias-alert`
+- `N8N_WEBHOOK_NEWSLETTER` → `https://n8n.vibesystems.tech/webhook/notitendencias-newsletter`
+
+4. El workflow **Daily Digest** queda activo con cron **08:00** (zona del servidor n8n); ajusta el nodo *Cron diario* si usas otra zona.
+
+Si `activate` falla por versión de API, activa manualmente el interruptor en la UI de n8n.
+
+---
+
+## Opción B — Creación manual en la UI
+
+Si no quieres usar la API, crea en `https://n8n.vibesystems.tech` los mismos paths de webhook y pega las URLs en las variables de arriba.
 
 La app funciona sin estas URLs; solo dejará de notificar a n8n.
 

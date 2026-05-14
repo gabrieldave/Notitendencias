@@ -55,6 +55,7 @@ Copia `.env.example` a `.env` y ajusta:
 | `npm run db:migrate` | Aplicar migraciones |
 | `npm run db:seed` | Categorías y fuentes iniciales |
 | `npm run setup` | Verificación + migrate + seed |
+| `npm run n8n:push` | Crea en n8n los 4 workflows (requiere `N8N_API_KEY`) |
 
 ## API (resumen)
 
@@ -134,7 +135,7 @@ cloudflared tunnel route dns 7b301862-56f6-4443-850b-f8df050490f6 notitendencias
 
 ## n8n y Kimi
 
-- Instrucciones de workflows: [`docs/n8n-workflows.md`](docs/n8n-workflows.md).
+- Instrucciones y **creación automática de workflows**: [`docs/n8n-workflows.md`](docs/n8n-workflows.md) (`npm run n8n:push` con `N8N_API_KEY`).
 - Prompt sugerido para Kimi WebBridge: [`docs/kimi-webbridge-prompt.md`](docs/kimi-webbridge-prompt.md).
 
 ## Infraestructura (alineación)
