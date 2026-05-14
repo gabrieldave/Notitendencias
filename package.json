@@ -1,0 +1,38 @@
+{
+  "name": "notitendencias",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3015",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3015}",
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "npx tsx src/db/seed.ts",
+    "db:studio": "drizzle-kit studio",
+    "setup": "npx tsx scripts/setup.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.2",
+    "next": "^15.3.2",
+    "postgres": "^3.4.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "dotenv": "^16.5.0",
+    "@types/node": "^22.15.18",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "autoprefixer": "^10.4.21",
+    "drizzle-kit": "^0.31.1",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "^15.3.2",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
