@@ -1,6 +1,6 @@
 /**
  * Sincroniza nodos Code del workflow "Notitendencias - X AI Radar" en n8n vía API REST.
- * No crea workflows de notificaciones (archivados). Requiere N8N_API_KEY.
+ * Requiere N8N_API_KEY.
  *
  * Uso: npm run n8n:sync-x-radar
  */
@@ -49,8 +49,6 @@ type Wf = {
   settings?: Record<string, unknown>;
 };
 
-const CODE_NODES: Record<string, string> = {};
-
 async function main() {
   if (!KEY) {
     console.error("Falta N8N_API_KEY");
@@ -58,27 +56,34 @@ async function main() {
   }
 
   const sdk = readFileSync(SDK_PATH, "utf8");
-  const patches: Record<string, string> = {
-    normalizeXPosts: extractConst("NORMALIZE_JS", sdk),
-    scoreAndFilter: extractConst("SCORE_FILTER_JS", sdk),
-    dedupe: extractConst("DEDUPE_JS", sdk),
-    "Expand queries": extractConst("EXPAND_QUERIES_JS", sdk),
-    "Log resumen": extractConst("LOG_SUMMARY_JS", sdk),
+
+  const patches: Record<string, { jsCode: string; mode: string }> = {
+    "Expand accounts": { jsCode: extractConst("EXPAND_ACCOUNTS_JS", sdk), mode: "runOnceForAllItems" },
+    "Expand queries": { jsCode: extractConst("EXPAND_ACCOUNTS_JS", sdk), mode: "runOnceForAllItems" },
+    pickTodayPost: { jsCode: extractConst("PICK_TODAY_JS", sdk), mode: "runOnceForEachItem" },
+    normalizeXPosts: { jsCode: extractConst("NORMALIZE_JS", sdk), mode: "runOnceForAllItems" },
+    editorialFilter: { jsCode: extractConst("EDITORIAL_FILTER_JS", sdk), mode: "runOnceForAllItems" },
+    scoreAndFilter: { jsCode: extractConst("EDITORIAL_FILTER_JS", sdk), mode: "runOnceForAllItems" },
+    dedupe: { jsCode: extractConst("DEDUPE_JS", sdk), mode: "runOnceForAllItems" },
+    "Log resumen": { jsCode: extractConst("LOG_SUMMARY_JS", sdk), mode: "runOnceForAllItems" },
   };
 
   const wf = await api<Wf>(`/api/v1/workflows/${WORKFLOW_ID}`);
 
   let updated = 0;
   for (const node of wf.nodes) {
-    const js = patches[node.name];
-    if (!js) continue;
-    node.parameters = {
-      ...(node.parameters ?? {}),
-      mode: "runOnceForAllItems",
-      jsCode: js,
-    };
+    const patch = patches[node.name];
+    if (!patch) continue;
+    node.parameters = { ...(node.parameters ?? {}), mode: patch.mode, jsCode: patch.jsCode };
     updated++;
   }
+
+  const settings = {
+    ...(wf.settings ?? {}),
+    executionOrder: "v1",
+    availableInMCP: true,
+    timezone: "America/Mexico_City",
+  };
 
   await api(`/api/v1/workflows/${WORKFLOW_ID}`, {
     method: "PUT",
@@ -86,12 +91,13 @@ async function main() {
       name: wf.name,
       nodes: wf.nodes,
       connections: wf.connections,
-      settings: wf.settings ?? { executionOrder: "v1", availableInMCP: true },
+      settings,
     }),
   });
 
-  console.log(`Workflow "${wf.name}" (${WORKFLOW_ID}): ${updated} nodos Code actualizados.`);
+  console.log(`Workflow "${wf.name}" (${WORKFLOW_ID}): ${updated} nodos actualizados.`);
   console.log(`${BASE}/workflow/${WORKFLOW_ID}`);
+  console.log("Nota: nodos nuevos (pickTodayPost, crons) requieren deploy vía MCP update_workflow si faltan en el canvas.");
 }
 
 main().catch((e) => {

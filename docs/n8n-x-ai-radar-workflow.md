@@ -7,52 +7,40 @@ Orquesta la consulta a la API de X, normalización, scoring, deduplicación e in
 | **Nombre** | `Notitendencias - X AI Radar` |
 | **ID** | `nFBNa3Y1ueVHBLbc` |
 | **URL** | https://n8n.vibesystems.tech/workflow/nFBNa3Y1ueVHBLbc |
-| **Estado** | **Inactivo** hasta configurar variables y habilitar nodos HTTP |
+| **Estado** | Requiere plan/créditos X API (Recent Search) + credentials Header Auth |
+| **Zona horaria** | `America/Mexico_City` (workflow settings) |
+| **Crons** | 10:45 y 15:45 CDMX |
 
 Código fuente del workflow (SDK): [`scripts/n8n-x-ai-radar-workflow.sdk.ts`](../scripts/n8n-x-ai-radar-workflow.sdk.ts)
 
 ---
 
-## Variables en n8n
+## Regla editorial (desde el primer día)
 
-Configurar en **Settings → Variables** (o credenciales) del entorno n8n:
+**Desde el primer día, el radar de X solo importa publicaciones nuevas desde hoy en adelante. No se importa historial pasado. Por cada cuenta se toma como máximo el último post original publicado hoy** (zona `America/Mexico_City`).
 
-| Variable | Ejemplo | Notas |
-|----------|---------|--------|
-| `X_BEARER_TOKEN` | (secreto) | API v2 Bearer de X Developer Portal |
-| `X_API_MAX_POSTS_PER_RUN` | `50` | Límite por ejecución |
-| `NOTITENDENCIAS_INGEST_URL` | `https://notitendencias.iareal.net/api/bridge/ingest` | |
-| `BRIDGE_API_KEY` | (secreto) | Igual que en la app |
+| Regla | Valor |
+|-------|--------|
+| Inicio del día | `startOfToday` en CDMX → `start_time` UTC en X API |
+| Por cuenta | `maxPostsPerAccount = 1` |
+| Filtro query | `from:{username} -is:retweet -is:reply` |
+| Sin historial | `start_time` + descarte `created_at` &lt; hoy |
+| Sin paginación | `max_results=10`, sin next_token |
+| Dedupe diario | `post_id`, `source_url` + static data por `dayKey` |
+| Horarios | 10:45 y 15:45 CDMX (newsletter editorial 16:30 fuera de n8n) |
 
-**Checklist (faltantes hasta que los configures en n8n → Settings → Variables):**
+## Credentials (sin Variables de pago)
 
-- [ ] `X_BEARER_TOKEN`
-- [ ] `BRIDGE_API_KEY`
-- [ ] `NOTITENDENCIAS_INGEST_URL`
-- [ ] `X_API_MAX_POSTS_PER_RUN` (opcional; default lógico 50, beta usa `max_results` ≤ 10)
+| Credential | Uso |
+|------------|-----|
+| **X API Bearer** | Header Auth: `Authorization` = `Bearer {token}` |
+| **Notitendencias Bridge** | Header Auth: mismo `BRIDGE_API_KEY` que Coolify |
 
-Lista editable en el nodo **Set config** (JSON):
+## Catálogo de cuentas (55)
 
-```json
-{
-  "keyAccounts": ["OpenAI", "AnthropicAI", "GoogleDeepMind", "GoogleAI", "MetaAI", "Microsoft", "NVIDIAAI", "huggingface", "Perplexity_AI", "MistralAI", "deepseek_ai", "ycombinator", "ProductHunt"],
-  "queries": [
-    "\"AI agent\" lang:en",
-    "\"OpenAI\" lang:en",
-    "\"Claude\" lang:en",
-    "\"Gemini AI\" lang:en",
-    "\"DeepSeek\" lang:en",
-    "\"new AI tool\" lang:en",
-    "\"AI startup\" lang:en",
-    "\"vibe coding\" lang:en",
-    "\"inteligencia artificial\" lang:es",
-    "\"herramienta de IA\" lang:es",
-    "\"agentes de IA\" lang:es",
-    "\"automatización con IA\" lang:es"
-  ],
-  "maxPostsPerRun": 50
-}
-```
+Lista en el nodo **Set config** → campo `accounts` (handles sin `@`). Ver `scripts/n8n-x-ai-radar-workflow.sdk.ts` (`ACCOUNTS`).
+
+Para añadir/quitar cuentas: edita `accounts` en **Set config** o el array `ACCOUNTS` en el SDK y redeploy (`update_workflow` / MCP).
 
 ---
 
@@ -61,11 +49,13 @@ Lista editable en el nodo **Set config** (JSON):
 ```mermaid
 flowchart LR
   M[Manual Trigger] --> B[Set config]
-  A[Cron 8:00] --> B
-  B --> D[Expand queries]
-  D --> C[HTTP X Recent Search]
-  C --> E[normalizeXPosts]
-  E --> F[scoreAndFilter]
+  C1[Cron 10:45] --> B
+  C2[Cron 15:45] --> B
+  B --> D[Expand accounts]
+  D --> X[HTTP X Recent Search]
+  X --> P[pickTodayPost]
+  P --> N[normalizeXPosts]
+  N --> F[editorialFilter]
   F --> G[dedupe]
   G --> H[Split in Batches]
   H --> I[POST ingest]
@@ -74,17 +64,17 @@ flowchart LR
 
 | # | Nodo | Tipo | Descripción |
 |---|------|------|-------------|
-| A | Manual Trigger (tests) | Manual | Prueba sin cron |
-| B | Cron diario 8am | Schedule Trigger | 08:00 (zona del servidor n8n); workflow inactivo en beta |
-| C | Set config | Set | Cuentas, queries, `maxPostsPerRun` |
-| D | Expand queries | Code | 1 item por query; `max_results` = min(10, tope) |
-| E | X API Recent Search | HTTP Request | `GET …/tweets/search/recent` — **deshabilitado** hasta `X_BEARER_TOKEN` |
-| F | normalizeXPosts | Code | Unifica tweets → payload Notitendencias |
-| G | scoreAndFilter | Code | +30 cuenta clave, +20 keywords, +15 URL, +10 métricas, +10 MX; descarta &lt;40 y arxiv |
-| H | dedupe | Code | Por `post_id` y `source_url` |
-| I | Split in Batches | Split | `batchSize: 1` |
-| J | POST Notitendencias ingest | HTTP Request | Bearer `BRIDGE_API_KEY` — **deshabilitado** hasta variables |
-| K | Log resumen | Code | Candidatos tras dedupe y nota de configuración |
+| A | Manual Trigger | Manual | Prueba antes de activar crons |
+| B | Cron 10:45 / 15:45 CDMX | Schedule | Dos corridas diarias |
+| C | Set config | Set | `accounts` (55), `timezone`, `maxPostsPerAccount` |
+| D | Expand accounts | Code | 1 item/cuenta + `start_time` CDMX |
+| E | X API Recent Search | HTTP | `from:user -is:retweet -is:reply` + `start_time` |
+| F | pickTodayPost | Code | Máx. 1 post original de hoy por cuenta |
+| G | normalizeXPosts | Code | Payload Notitendencias + `x_created_at` |
+| H | editorialFilter | Code | Descarta arXiv y ruido vacío |
+| I | dedupe | Code | `post_id`, `source_url`, static por día |
+| J | Split + POST ingest | HTTP | `status=new` en admin |
+| K | Log resumen | Code | Cuentas con post hoy vs ingestados |
 
 ---
 
@@ -94,8 +84,9 @@ flowchart LR
 
 - Method: `GET`
 - URL: `https://api.x.com/2/tweets/search/recent`
-- Query: `query={{ $json.query }}`, `max_results=10`, `tweet.fields=public_metrics,created_at,author_id,entities`, `expansions=author_id`, `user.fields=username,name`
-- Header: `Authorization: Bearer {{ $vars.X_BEARER_TOKEN }}`
+- Query: `query={{ $json.query }}`, `start_time={{ $json.start_time }}`, `max_results=10`
+- `tweet.fields`: `public_metrics,created_at,author_id,entities,referenced_tweets,conversation_id`
+- Auth: credential **X API Bearer** (Header Auth)
 
 Ajustar según documentación actual de X API v2 y tu tier de acceso.
 

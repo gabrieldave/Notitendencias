@@ -9,54 +9,136 @@ import {
   newCredential,
 } from '@n8n/workflow-sdk';
 
+const ACCOUNTS = [
+  'krea_ai',
+  'LTXStudio',
+  'testingcatalog',
+  'grok',
+  'TencentHunyuan',
+  'Baidu_Inc',
+  'ZaiOrg',
+  'MicrosoftAI',
+  'NVIDIAAI',
+  'MistralAI',
+  'AIatMeta',
+  'Docker',
+  'coolifyio',
+  'SD_Tutorial',
+  'aisearchio',
+  'ErnieForDevs',
+  'apify',
+  'LumaLabsAI',
+  'ArtificialAnlys',
+  'NousResearch',
+  'xai',
+  'ComfyUI',
+  'n8n_io',
+  'higgsfield',
+  'googlegemma',
+  'geminicli',
+  'ElevenLabs',
+  'ManusAI',
+  'LocalAIApp',
+  'deepseek_ai',
+  'Kling_ai',
+  'Kimi_Moonshot',
+  'cursor_ai',
+  'ollama',
+  'NotebookLM',
+  'open_claw',
+  'lmstudio',
+  'LocallyAIApp',
+  'GoogleAIStudio',
+  'openart_ai',
+  'GoogleAI',
+  'atomic_chat_hq',
+  'atomicbot_ai',
+  'huggingface',
+  'arena',
+  'MiniMax_ai',
+  'OpenRouter',
+  'perplexity_ai',
+  'Alibaba_Qwen',
+  'OpenAI',
+  'AnthropicAI',
+  'ClaudeApp',
+  'GeminiApp',
+  'GoogleLabs',
+  'stitchbygoogle',
+];
+
 const CONFIG_JSON = JSON.stringify({
-  keyAccounts: [
-    'OpenAI',
-    'AnthropicAI',
-    'GoogleDeepMind',
-    'GoogleAI',
-    'MetaAI',
-    'Microsoft',
-    'NVIDIAAI',
-    'huggingface',
-    'Perplexity_AI',
-    'MistralAI',
-    'deepseek_ai',
-    'ycombinator',
-    'ProductHunt',
-  ],
-  queries: [
-    '"AI agent" lang:en',
-    '"OpenAI" lang:en',
-    '"Claude" lang:en',
-    '"Gemini AI" lang:en',
-    '"DeepSeek" lang:en',
-    '"new AI tool" lang:en',
-    '"AI startup" lang:en',
-    '"vibe coding" lang:en',
-    '"inteligencia artificial" lang:es',
-    '"herramienta de IA" lang:es',
-    '"agentes de IA" lang:es',
-    '"automatización con IA" lang:es',
-  ],
-  maxPostsPerRun: 50,
+  accounts: ACCOUNTS,
+  timezone: 'America/Mexico_City',
+  maxPostsPerAccount: 1,
+  maxResultsPerRequest: 10,
 });
 
-const EXPAND_QUERIES_JS = `const config = $input.first().json;
-const maxRun = Number(config.maxPostsPerRun || 50);
-const maxResults = Math.min(10, maxRun);
-const queries = (config.queries || []).slice(0, 12);
-return queries.map((query) => ({
+const EXPAND_ACCOUNTS_JS = `const { DateTime } = require('luxon');
+const config = $input.first().json;
+const accounts = (config.accounts || []).map((u) => String(u).replace(/^@/, '').trim()).filter(Boolean);
+const tz = config.timezone || 'America/Mexico_City';
+const startOfToday = DateTime.now().setZone(tz).startOf('day');
+const startTimeIso = startOfToday.toUTC().toISO({ suppressMilliseconds: true });
+const dayKey = startOfToday.toFormat('yyyy-MM-dd');
+const maxResults = Math.min(100, Math.max(10, Number(config.maxResultsPerRequest) || 10));
+
+return accounts.map((username) => ({
   json: {
-    ...config,
-    query,
-    detected_query: query,
+    username,
+    query: 'from:' + username + ' -is:retweet -is:reply',
+    start_time: startTimeIso,
+    startOfTodayIso: startTimeIso,
+    dayKey,
+    timezone: tz,
     max_results: maxResults,
+    maxPostsPerAccount: Number(config.maxPostsPerAccount) || 1,
   },
 }));`;
 
-const NORMALIZE_JS = `const config = $('Set config').first().json;
-const keyAccounts = new Set((config.keyAccounts || []).map((h) => h.toLowerCase()));
+const PICK_TODAY_JS = `const { DateTime } = require('luxon');
+const res = $input.first().json;
+const src = ($('Expand accounts').item || $('Expand queries').item).json;
+const username = (src.username || '').toLowerCase();
+const startMs = DateTime.fromISO(src.startOfTodayIso, { zone: 'utc' }).toMillis();
+const tweets = res.data || [];
+const users = {};
+for (const u of res.includes?.users || []) users[u.id] = u;
+
+const candidates = [];
+for (const tw of tweets) {
+  if (!tw.created_at) continue;
+  const createdMs = DateTime.fromISO(tw.created_at, { zone: 'utc' }).toMillis();
+  if (createdMs < startMs) continue;
+  const refs = tw.referenced_tweets || [];
+  if (refs.some((r) => r.type === 'replied_to' || r.type === 'retweeted')) continue;
+  const user = users[tw.author_id] || {};
+  if ((user.username || '').toLowerCase() !== username) continue;
+  candidates.push({ tw, user });
+}
+
+if (!candidates.length) return [];
+
+candidates.sort(
+  (a, b) =>
+    DateTime.fromISO(b.tw.created_at, { zone: 'utc' }).toMillis() -
+    DateTime.fromISO(a.tw.created_at, { zone: 'utc' }).toMillis(),
+);
+const pick = candidates[0];
+
+return [
+  {
+    json: {
+      data: [pick.tw],
+      includes: { users: [pick.user] },
+      username: src.username,
+      dayKey: src.dayKey,
+      startOfTodayIso: src.startOfTodayIso,
+    },
+  },
+];`;
+
+const NORMALIZE_JS = `const { DateTime } = require('luxon');
 const items = $input.all();
 const out = [];
 
@@ -72,64 +154,60 @@ function firstUrl(entities) {
 
 function editorialTitle(text, username) {
   const t = (text || '').replace(/\\s+/g, ' ').trim();
-  if (t.length <= 100) return t.length ? t : 'Señal de IA en @' + username;
-  return 'Conversación de IA en @' + username + ': ' + t.slice(0, 80) + '…';
+  if (!t.length) return 'Novedad de IA en @' + username;
+  if (t.length <= 100) return t;
+  return '@' + username + ': ' + t.slice(0, 88) + '…';
+}
+
+function buildRawText(text, username, externalUrl) {
+  const t = (text || '').replace(/\\s+/g, ' ').trim().slice(0, 1200);
+  const parts = ['@' + username + ' publicó hoy en X sobre IA/tecnología.'];
+  if (t) parts.push('Resumen: ' + t);
+  if (externalUrl) parts.push('Enlace: ' + externalUrl);
+  return parts.join(' ').slice(0, 1500);
 }
 
 for (const item of items) {
-  const tweets = item.json.data || [];
-  const users = {};
-  for (const u of item.json.includes?.users || []) {
-    users[u.id] = u;
-  }
-  const detectedQuery =
-    item.json.detected_query ||
-    item.json.query ||
-    ($('Expand queries').item?.json?.query ?? '');
+  const tw = (item.json.data || [])[0];
+  if (!tw) continue;
+  const user = (item.json.includes?.users || [])[0] || {};
+  const username = item.json.username || user.username || 'unknown';
+  const postId = tw.id;
+  const text = tw.text || '';
+  const externalUrl = firstUrl(tw.entities);
+  const xCreated = tw.created_at || new Date().toISOString();
 
-  for (const tw of tweets) {
-    const user = users[tw.author_id] || {};
-    const username = user.username || 'unknown';
-    const postId = tw.id;
-    const text = tw.text || '';
-    const externalUrl = firstUrl(tw.entities);
-
-    out.push({
-      json: {
-        category: 'ia',
-        source_name: 'X',
-        source_url: 'https://x.com/' + username + '/status/' + postId,
-        title: editorialTitle(text, username),
-        raw_text: text.slice(0, 1500),
-        detected_at: tw.created_at || new Date().toISOString(),
-        metadata: {
-          platform: 'x',
-          signal_type: 'ai_trend',
-          author: user.name || '',
-          username,
-          post_id: postId,
-          likes: tw.public_metrics?.like_count ?? 0,
-          reposts: tw.public_metrics?.retweet_count ?? 0,
-          replies: tw.public_metrics?.reply_count ?? 0,
-          quotes: tw.public_metrics?.quote_count ?? 0,
-          detected_query: detectedQuery,
-          relevance_reason: keyAccounts.has(username.toLowerCase())
-            ? 'Cuenta clave de IA'
-            : 'Coincide con query de radar',
-          external_url: externalUrl,
-          from_key_account: keyAccounts.has(username.toLowerCase()),
-        },
+  out.push({
+    json: {
+      category: 'ia',
+      source_name: 'X',
+      source_url: 'https://x.com/' + username + '/status/' + postId,
+      title: editorialTitle(text, username),
+      raw_text: buildRawText(text, username, externalUrl),
+      detected_at: DateTime.now().toISO(),
+      metadata: {
+        platform: 'x',
+        signal_type: 'ai_trend',
+        author: user.name || '',
+        username,
+        post_id: postId,
+        x_created_at: xCreated,
+        dayKey: item.json.dayKey,
+        likes: tw.public_metrics?.like_count ?? 0,
+        reposts: tw.public_metrics?.retweet_count ?? 0,
+        replies: tw.public_metrics?.reply_count ?? 0,
+        quotes: tw.public_metrics?.quote_count ?? 0,
+        relevance_reason: 'Último post original de hoy (catálogo radar X)',
+        external_url: externalUrl,
+        from_key_account: true,
       },
-    });
-  }
+    },
+  });
 }
 
 return out;`;
 
-const SCORE_FILTER_JS = `const KEYWORDS = /\\b(launch|released|agent|model|AI tool|automation|OpenAI|Claude|Gemini|DeepSeek)\\b/i;
-const SPANISH = /\\b(inteligencia artificial|herramienta|agentes|automatización|méxico|latam)\\b/i;
-const ARXIV = /arxiv\\.org/i;
-
+const EDITORIAL_FILTER_JS = `const ARXIV = /arxiv\\.org|arxiv/i;
 const items = $input.all();
 const kept = [];
 
@@ -137,26 +215,28 @@ for (const item of items) {
   const j = item.json;
   const meta = j.metadata || {};
   const text = (j.title || '') + ' ' + (j.raw_text || '') + ' ' + (meta.external_url || '');
-  let score = 0;
-
-  if (meta.from_key_account) score += 30;
-  if (KEYWORDS.test(text)) score += 20;
-  if (meta.external_url) score += 15;
-  const engagement = (meta.likes || 0) + (meta.reposts || 0) * 2;
-  if (engagement >= 50) score += 10;
-  if (SPANISH.test(text)) score += 10;
 
   if (ARXIV.test(text)) continue;
-  if (score < 40) continue;
 
-  meta.relevance_reason = (meta.relevance_reason || '') + ' score=' + score;
-  j.metadata = meta;
+  const raw = (j.raw_text || '').trim();
+  if (raw.length < 12) continue;
+
   kept.push({ json: j });
 }
 
 return kept;`;
 
-const DEDUPE_JS = `const seenIds = new Set();
+const DEDUPE_JS = `const staticData = $getWorkflowStaticData('global');
+const dayKey =
+  $input.first().json.metadata?.dayKey ||
+  ($('Expand accounts').first() || $('Expand queries').first()).json.dayKey ||
+  'unknown';
+
+if (!staticData.ingestedPostIds) staticData.ingestedPostIds = {};
+if (!staticData.ingestedPostIds[dayKey]) staticData.ingestedPostIds[dayKey] = [];
+
+const sentToday = new Set(staticData.ingestedPostIds[dayKey]);
+const seenIds = new Set();
 const seenUrls = new Set();
 const out = [];
 
@@ -164,40 +244,75 @@ for (const item of $input.all()) {
   const meta = item.json.metadata || {};
   const postId = meta.post_id;
   const sourceUrl = item.json.source_url;
-  if (postId && seenIds.has(postId)) continue;
+  if (!postId) continue;
+  if (sentToday.has(postId) || seenIds.has(postId)) continue;
   if (sourceUrl && seenUrls.has(sourceUrl)) continue;
-  if (postId) seenIds.add(postId);
+  seenIds.add(postId);
   if (sourceUrl) seenUrls.add(sourceUrl);
+  sentToday.add(postId);
   out.push(item);
+}
+
+staticData.ingestedPostIds[dayKey] = [...sentToday];
+const keys = Object.keys(staticData.ingestedPostIds).sort();
+if (keys.length > 14) {
+  for (const k of keys.slice(0, keys.length - 14)) delete staticData.ingestedPostIds[k];
 }
 
 return out;`;
 
-const LOG_SUMMARY_JS = `const items = $('dedupe').all();
-return [{
-  json: {
-    finishedAt: new Date().toISOString(),
-    normalizedCandidates: items.length,
-    note: 'Radar X con credentials Header Auth (X API Bearer + Notitendencias Bridge).',
-    workflow: 'Notitendencias - X AI Radar',
+const LOG_SUMMARY_JS = `const { DateTime } = require('luxon');
+const accounts = $('Set config').first().json.accounts || [];
+const picked = $('pickTodayPost').all().length;
+const ingested = $('dedupe').all().length;
+const expandNode = $('Expand accounts').first() || $('Expand queries').first();
+const dayKey = expandNode.json.dayKey;
+const startIso = expandNode.json.startOfTodayIso;
+
+return [
+  {
+    json: {
+      finishedAt: DateTime.now().toISO(),
+      timezone: 'America/Mexico_City',
+      dayKey,
+      startOfTodayIso: startIso,
+      catalogAccounts: accounts.length,
+      accountsWithPostToday: picked,
+      candidatesToIngest: ingested,
+      note: 'Solo posts desde inicio del día CDMX; máx. 1 por cuenta; sin paginación histórica.',
+      workflow: 'Notitendencias - X AI Radar',
+    },
   },
-}];`;
+];`;
 
 const manualTrigger = trigger({
   type: 'n8n-nodes-base.manualTrigger',
   version: 1,
-  config: { name: 'Manual Trigger (tests)', position: [0, 200] },
+  config: { name: 'Manual Trigger (tests)', position: [0, 280] },
   output: [{}],
 });
 
-const cronTrigger = trigger({
+const cron1045 = trigger({
   type: 'n8n-nodes-base.scheduleTrigger',
   version: 1.3,
   config: {
-    name: 'Cron diario 8am',
-    position: [0, 0],
+    name: 'Cron 10:45 CDMX',
+    position: [0, 80],
     parameters: {
-      rule: { interval: [{ field: 'days', triggerAtHour: 8 }] },
+      rule: { interval: [{ field: 'days', triggerAtHour: 10, triggerAtMinute: 45 }] },
+    },
+  },
+  output: [{}],
+});
+
+const cron1545 = trigger({
+  type: 'n8n-nodes-base.scheduleTrigger',
+  version: 1.3,
+  config: {
+    name: 'Cron 15:45 CDMX',
+    position: [0, 180],
+    parameters: {
+      rule: { interval: [{ field: 'days', triggerAtHour: 15, triggerAtMinute: 45 }] },
     },
   },
   output: [{}],
@@ -208,27 +323,29 @@ const setConfig = node({
   version: 3.4,
   config: {
     name: 'Set config',
-    position: [240, 100],
+    position: [260, 180],
     parameters: { mode: 'raw', jsonOutput: CONFIG_JSON },
   },
-  output: [
-    {
-      keyAccounts: ['OpenAI'],
-      queries: ['"AI agent" lang:en'],
-      maxPostsPerRun: 50,
-    },
-  ],
+  output: [{ accounts: ['OpenAI'], timezone: 'America/Mexico_City', maxPostsPerAccount: 1 }],
 });
 
-const expandQueries = node({
+const expandAccounts = node({
   type: 'n8n-nodes-base.code',
   version: 2,
   config: {
-    name: 'Expand queries',
-    position: [480, 100],
-    parameters: { mode: 'runOnceForAllItems', jsCode: EXPAND_QUERIES_JS },
+    name: 'Expand accounts',
+    position: [500, 180],
+    parameters: { mode: 'runOnceForAllItems', jsCode: EXPAND_ACCOUNTS_JS },
   },
-  output: [{ query: '"AI agent" lang:en', max_results: 10 }],
+  output: [
+    {
+      username: 'OpenAI',
+      query: 'from:OpenAI -is:retweet -is:reply',
+      start_time: '2026-05-15T06:00:00Z',
+      dayKey: '2026-05-15',
+      max_results: 10,
+    },
+  ],
 });
 
 const xApiSearch = node({
@@ -236,7 +353,7 @@ const xApiSearch = node({
   version: 4.4,
   config: {
     name: 'X API Recent Search',
-    position: [720, 100],
+    position: [740, 180],
     credentials: { httpHeaderAuth: newCredential('X API Bearer') },
     parameters: {
       method: 'GET',
@@ -247,10 +364,12 @@ const xApiSearch = node({
       queryParameters: {
         parameters: [
           { name: 'query', value: expr('{{ $json.query }}') },
+          { name: 'start_time', value: expr('{{ $json.start_time }}') },
           { name: 'max_results', value: expr('{{ $json.max_results }}') },
           {
             name: 'tweet.fields',
-            value: 'public_metrics,created_at,author_id,entities',
+            value:
+              'public_metrics,created_at,author_id,entities,referenced_tweets,conversation_id',
           },
           { name: 'expansions', value: 'author_id' },
           { name: 'user.fields', value: 'username,name' },
@@ -265,11 +384,28 @@ const xApiSearch = node({
           id: '1',
           text: 'New AI tool launch',
           author_id: 'u1',
-          created_at: '2026-05-15T08:00:00.000Z',
+          created_at: '2026-05-15T14:00:00.000Z',
         },
       ],
       includes: { users: [{ id: 'u1', username: 'OpenAI', name: 'OpenAI' }] },
-      detected_query: '"AI agent" lang:en',
+    },
+  ],
+});
+
+const pickTodayPost = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'pickTodayPost',
+    position: [980, 180],
+    parameters: { mode: 'runOnceForEachItem', jsCode: PICK_TODAY_JS },
+  },
+  output: [
+    {
+      data: [{ id: '1', text: 'New AI tool launch', author_id: 'u1', created_at: '2026-05-15T14:00:00.000Z' }],
+      includes: { users: [{ id: 'u1', username: 'OpenAI', name: 'OpenAI' }] },
+      username: 'OpenAI',
+      dayKey: '2026-05-15',
     },
   ],
 });
@@ -279,7 +415,7 @@ const normalizeXPosts = node({
   version: 2,
   config: {
     name: 'normalizeXPosts',
-    position: [960, 100],
+    position: [1220, 180],
     parameters: { mode: 'runOnceForAllItems', jsCode: NORMALIZE_JS },
   },
   output: [
@@ -288,24 +424,24 @@ const normalizeXPosts = node({
       source_name: 'X',
       source_url: 'https://x.com/OpenAI/status/1',
       title: 'New AI tool launch',
-      metadata: { platform: 'x', post_id: '1', username: 'OpenAI' },
+      metadata: { post_id: '1', username: 'OpenAI', x_created_at: '2026-05-15T14:00:00.000Z' },
     },
   ],
 });
 
-const scoreAndFilter = node({
+const editorialFilter = node({
   type: 'n8n-nodes-base.code',
   version: 2,
   config: {
-    name: 'scoreAndFilter',
-    position: [1200, 100],
-    parameters: { mode: 'runOnceForAllItems', jsCode: SCORE_FILTER_JS },
+    name: 'editorialFilter',
+    position: [1460, 180],
+    parameters: { mode: 'runOnceForAllItems', jsCode: EDITORIAL_FILTER_JS },
   },
   output: [
     {
       category: 'ia',
       source_name: 'X',
-      metadata: { post_id: '1', from_key_account: true },
+      metadata: { post_id: '1', username: 'OpenAI' },
     },
   ],
 });
@@ -315,7 +451,7 @@ const dedupeNode = node({
   version: 2,
   config: {
     name: 'dedupe',
-    position: [1440, 100],
+    position: [1700, 180],
     parameters: { mode: 'runOnceForAllItems', jsCode: DEDUPE_JS },
   },
   output: [{ category: 'ia', metadata: { post_id: '1' } }],
@@ -325,7 +461,7 @@ const batchIngest = splitInBatches({
   version: 3,
   config: {
     name: 'Split in Batches',
-    position: [1680, 100],
+    position: [1940, 180],
     parameters: { batchSize: 1 },
   },
 });
@@ -335,7 +471,7 @@ const postIngest = node({
   version: 4.4,
   config: {
     name: 'POST Notitendencias ingest',
-    position: [1920, 200],
+    position: [2180, 300],
     credentials: { httpHeaderAuth: newCredential('Notitendencias Bridge') },
     parameters: {
       method: 'POST',
@@ -359,33 +495,36 @@ const logResumen = node({
   version: 2,
   config: {
     name: 'Log resumen',
-    position: [2160, 0],
+    position: [2180, 60],
     parameters: { mode: 'runOnceForAllItems', jsCode: LOG_SUMMARY_JS },
     executeOnce: true,
   },
-  output: [{ finishedAt: '2026-05-15T08:00:00.000Z', normalizedCandidates: 1 }],
+  output: [{ catalogAccounts: 55, candidatesToIngest: 1 }],
 });
 
-const betaNote = sticky(
-  '## X AI Radar\n\n1. Credentials: X API Bearer + Notitendencias Bridge (Header Auth)\n2. Prueba con Manual Trigger; max_results=10\n3. Activa el workflow solo cuando la prueba manual funcione',
-  [setConfig, xApiSearch, postIngest],
-  { position: [240, -200], width: 420, height: 200 },
+const radarNote = sticky(
+  '## X AI Radar (catálogo 55)\n\n- Solo posts desde hoy (America/Mexico_City)\n- Máx. 1 post original por cuenta\n- Crons: 10:45 y 15:45 CDMX\n- Credentials: X API Bearer + Notitendencias Bridge\n- Newsletter editorial: 16:30 CDMX (fuera de este workflow)',
+  [setConfig, expandAccounts, xApiSearch],
+  { position: [500, 400], width: 480, height: 220 },
 );
 
 export default workflow('nFBNa3Y1ueVHBLbc', 'Notitendencias - X AI Radar')
   .add(manualTrigger)
   .to(setConfig)
-  .add(cronTrigger)
+  .add(cron1045)
+  .to(setConfig)
+  .add(cron1545)
   .to(setConfig)
   .add(setConfig)
-  .to(expandQueries)
+  .to(expandAccounts)
   .to(xApiSearch)
+  .to(pickTodayPost)
   .to(normalizeXPosts)
-  .to(scoreAndFilter)
+  .to(editorialFilter)
   .to(dedupeNode)
   .to(
     batchIngest
       .onDone(logResumen)
       .onEachBatch(postIngest.to(nextBatch(batchIngest))),
   )
-  .add(betaNote);
+  .add(radarNote);

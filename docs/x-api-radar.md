@@ -44,8 +44,9 @@ X se usa como **radar de señales tempranas de IA**, no como fuente única ni co
 |-------|------------------------|
 | Posts por corrida | `X_API_MAX_POSTS_PER_RUN=50` |
 | Posts por día | `X_API_MAX_POSTS_PER_DAY=100` |
-| Frecuencia | 1× al día (cron 08:00); subir solo con tracción o usuarios de pago |
-| Alcance | Cuentas clave + queries acotadas, no timeline global |
+| Frecuencia | 2× al día: **10:45** y **15:45** CDMX (newsletter editorial ~16:30, fuera de n8n) |
+| Alcance | **55 cuentas** del catálogo; 1 request/cuenta/corrida |
+| Solo hoy | `start_time` = inicio del día `America/Mexico_City`; sin historial |
 | Reproceso | Guardar `metadata.post_id`; deduplicar en n8n antes de ingest |
 | Deduplicación extra | Mismo `post_id`, misma `source_url` o título muy similar en la misma ejecución |
 
@@ -53,27 +54,13 @@ Variables solo en **n8n** (o entorno del worker), nunca en el frontend de Next.j
 
 ---
 
-## 4. Cuentas clave iniciales de IA
+## 4. Catálogo de cuentas (55)
 
-Lista editable en el nodo **Set config** del workflow. Handles orientativos (verificar en X antes de producción):
+**Desde el primer día, el radar de X solo importa publicaciones nuevas desde hoy en adelante. No se importa historial pasado. Por cada cuenta se toma como máximo el último post original publicado hoy.**
 
-| Cuenta | Handle sugerido |
-|--------|-----------------|
-| OpenAI | `OpenAI` |
-| Anthropic | `AnthropicAI` |
-| Google DeepMind | `GoogleDeepMind` |
-| Google AI | `GoogleAI` |
-| Meta AI | `MetaAI` |
-| Microsoft | `Microsoft` |
-| NVIDIA AI | `NVIDIAAI` |
-| Hugging Face | `huggingface` |
-| Perplexity | `Perplexity_AI` |
-| Mistral | `MistralAI` |
-| DeepSeek | `deepseek_ai` |
-| Y Combinator | `ycombinator` |
-| Product Hunt | `ProductHunt` |
+Lista completa en `scripts/n8n-x-ai-radar-workflow.sdk.ts` (`ACCOUNTS`) y en el nodo n8n **Set config** → `accounts`. Incluye, entre otras: `OpenAI`, `AnthropicAI`, `GoogleAI`, `xai`, `cursor_ai`, `huggingface`, `perplexity_ai`, `deepseek_ai`, `n8n_io`, `coolifyio`, etc. (55 handles).
 
-El workflow debe leer esta lista desde variables de n8n (`$vars` o JSON en el nodo Set) para cambiarla sin tocar código de la app.
+Edición: añadir/quitar handles en **Set config** sin tocar la app Next.js.
 
 ---
 
