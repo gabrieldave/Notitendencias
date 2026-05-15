@@ -23,7 +23,9 @@ Código fuente del workflow (SDK): [`scripts/n8n-x-ai-radar-workflow.sdk.ts`](..
 |-------|--------|
 | Inicio del día | `startOfToday` en CDMX → `start_time` UTC en X API |
 | Por cuenta | `maxPostsPerAccount = 1` |
-| Filtro query | `from:{username} -is:retweet -is:reply` |
+| Filtro query | `from:{username} -is:retweet -is:reply -is:quote` |
+| Solo originales | `pickTodayPost` descarta reply/RT/quote por `referenced_tweets`; elige el **más reciente original** de hoy |
+| Metadata ingest | `is_original: true` |
 | Sin historial | `start_time` + descarte `created_at` &lt; hoy |
 | Sin paginación | `max_results=10`, sin next_token |
 | Dedupe diario | `post_id`, `source_url` + static data por `dayKey` |

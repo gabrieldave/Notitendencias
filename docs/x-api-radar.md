@@ -56,7 +56,7 @@ Variables solo en **n8n** (o entorno del worker), nunca en el frontend de Next.j
 
 ## 4. Catálogo de cuentas (55)
 
-**Desde el primer día, el radar de X solo importa publicaciones nuevas desde hoy en adelante. No se importa historial pasado. Por cada cuenta se toma como máximo el último post original publicado hoy.**
+**Desde el primer día, el radar de X solo importa publicaciones nuevas desde hoy en adelante. No se importa historial pasado. Por cada cuenta se toma como máximo el último post original publicado hoy** (excluye replies, retweets y quote tweets por defecto; si el más reciente del día no es original, se busca el siguiente original de hoy; si no hay ninguno, no se envía nada).
 
 Lista completa en `scripts/n8n-x-ai-radar-workflow.sdk.ts` (`ACCOUNTS`) y en el nodo n8n **Set config** → `accounts`. Incluye, entre otras: `OpenAI`, `AnthropicAI`, `GoogleAI`, `xai`, `cursor_ai`, `huggingface`, `perplexity_ai`, `deepseek_ai`, `n8n_io`, `coolifyio`, etc. (55 handles).
 

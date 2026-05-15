@@ -86,7 +86,7 @@ const maxResults = Math.min(100, Math.max(10, Number(config.maxResultsPerRequest
 return accounts.map((username) => ({
   json: {
     username,
-    query: 'from:' + username + ' -is:retweet -is:reply',
+    query: 'from:' + username + ' -is:retweet -is:reply -is:quote',
     start_time: startTimeIso,
     startOfTodayIso: startTimeIso,
     dayKey,
@@ -105,35 +105,55 @@ const tweets = res.data || [];
 const users = {};
 for (const u of res.includes?.users || []) users[u.id] = u;
 
-const candidates = [];
+function exclusionReason(tw) {
+  const refs = tw.referenced_tweets || [];
+  for (const r of refs) {
+    if (r.type === 'retweeted') return 'retweet';
+    if (r.type === 'replied_to') return 'reply';
+    if (r.type === 'quoted') return 'quote';
+  }
+  const text = (tw.text || '').trim();
+  if (/^RT\\s@/i.test(text)) return 'retweet_text';
+  if (/^@\\w+\\s/.test(text) && !text.includes('\\n') && text.length < 120) return 'likely_reply';
+  return null;
+}
+
+const todayRows = [];
 for (const tw of tweets) {
   if (!tw.created_at) continue;
   const createdMs = DateTime.fromISO(tw.created_at, { zone: 'utc' }).toMillis();
   if (createdMs < startMs) continue;
-  const refs = tw.referenced_tweets || [];
-  if (refs.some((r) => r.type === 'replied_to' || r.type === 'retweeted')) continue;
   const user = users[tw.author_id] || {};
   if ((user.username || '').toLowerCase() !== username) continue;
-  candidates.push({ tw, user });
+  todayRows.push({ tw, user, createdMs });
 }
 
-if (!candidates.length) return [];
+todayRows.sort((a, b) => b.createdMs - a.createdMs);
 
-candidates.sort(
-  (a, b) =>
-    DateTime.fromISO(b.tw.created_at, { zone: 'utc' }).toMillis() -
-    DateTime.fromISO(a.tw.created_at, { zone: 'utc' }).toMillis(),
-);
-const pick = candidates[0];
+const discarded = [];
+let picked = null;
+for (const row of todayRows) {
+  const reason = exclusionReason(row.tw);
+  if (reason) {
+    discarded.push({ post_id: row.tw.id, excluded_reason: reason });
+    continue;
+  }
+  picked = row;
+  break;
+}
+
+if (!picked) return [];
 
 return [
   {
     json: {
-      data: [pick.tw],
-      includes: { users: [pick.user] },
+      data: [picked.tw],
+      includes: { users: [picked.user] },
       username: src.username,
       dayKey: src.dayKey,
       startOfTodayIso: src.startOfTodayIso,
+      is_original: true,
+      _pickStats: { scanned: todayRows.length, discarded },
     },
   },
 ];`;
@@ -200,6 +220,7 @@ for (const item of items) {
         relevance_reason: 'Último post original de hoy (catálogo radar X)',
         external_url: externalUrl,
         from_key_account: true,
+        is_original: true,
       },
     },
   });
@@ -208,6 +229,7 @@ for (const item of items) {
 return out;`;
 
 const EDITORIAL_FILTER_JS = `const ARXIV = /arxiv\\.org|arxiv/i;
+const PROMO = /\\b(buy now|limited time|use code|descuento|promo|sponsored|#ad)\\b/i;
 const items = $input.all();
 const kept = [];
 
@@ -216,10 +238,13 @@ for (const item of items) {
   const meta = j.metadata || {};
   const text = (j.title || '') + ' ' + (j.raw_text || '') + ' ' + (meta.external_url || '');
 
+  if (meta.is_original === false) continue;
   if (ARXIV.test(text)) continue;
 
   const raw = (j.raw_text || '').trim();
   if (raw.length < 12) continue;
+
+  if (PROMO.test(text) && raw.length < 100 && !meta.external_url) continue;
 
   kept.push({ json: j });
 }
@@ -340,7 +365,7 @@ const expandAccounts = node({
   output: [
     {
       username: 'OpenAI',
-      query: 'from:OpenAI -is:retweet -is:reply',
+      query: 'from:OpenAI -is:retweet -is:reply -is:quote',
       start_time: '2026-05-15T06:00:00Z',
       dayKey: '2026-05-15',
       max_results: 10,
@@ -503,7 +528,7 @@ const logResumen = node({
 });
 
 const radarNote = sticky(
-  '## X AI Radar (catálogo 55)\n\n- Solo posts desde hoy (America/Mexico_City)\n- Máx. 1 post original por cuenta\n- Crons: 10:45 y 15:45 CDMX\n- Credentials: X API Bearer + Notitendencias Bridge\n- Newsletter editorial: 16:30 CDMX (fuera de este workflow)',
+  '## X AI Radar (catálogo 55)\n\n- Solo posts ORIGINALES de hoy (CDMX)\n- Excluye reply, RT, quote (-is:quote + metadata)\n- Máx. 1 original/cuenta (más reciente válido)\n- Crons: 10:45 y 15:45 CDMX',
   [setConfig, expandAccounts, xApiSearch],
   { position: [500, 400], width: 480, height: 220 },
 );
