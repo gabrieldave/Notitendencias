@@ -38,6 +38,12 @@ export default async function AdminHomePage() {
         </div>
         <div className="flex flex-wrap gap-3 text-sm">
           <Link
+            href="/admin/published"
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
+          >
+            Publicadas
+          </Link>
+          <Link
             href="/admin/import"
             className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
           >
@@ -48,6 +54,12 @@ export default async function AdminHomePage() {
             className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
           >
             Ajustes
+          </Link>
+          <Link
+            href="/admin/published"
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
+          >
+            Publicadas
           </Link>
           <Link
             href="/admin/users"

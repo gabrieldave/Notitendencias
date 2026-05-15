@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { isAdminEmail } from "@/lib/admin-emails";
 import { ADMIN_COOKIE_NAME } from "./constants";
 
 const SALT = "notitendencias:admin:v1";
@@ -45,12 +46,25 @@ export async function isElevatedAdmin(): Promise<boolean> {
   const session = await auth();
   const id = session?.user?.id;
   if (!id) return false;
+  if (session.user.role === "admin") return true;
+  if (isAdminEmail(session.user.email)) return true;
   const [row] = await db.select({ role: users.role }).from(users).where(eq(users.id, id)).limit(1);
   return row?.role === "admin";
 }
 
 export function isAdminFromRequest(request: NextRequest): boolean {
   return verifyAdminCookieValue(request.cookies.get(ADMIN_COOKIE_NAME)?.value);
+}
+
+/** Cookie admin o sesión Auth.js con rol/email de admin. */
+export async function isElevatedAdminFromRequest(
+  _request: NextRequest,
+): Promise<boolean> {
+  if (isAdminFromRequest(_request)) return true;
+  const session = await auth();
+  if (!session?.user) return false;
+  if (session.user.role === "admin") return true;
+  return isAdminEmail(session.user.email);
 }
 
 /** Hash no reversible para mostrar en settings (estado de contraseña) */

@@ -95,12 +95,22 @@ export function AdminPreviewToolbar({ trendId, slug, status, mentionsArxiv = fal
         </>
       )}
       {status === "published" && (
-        <Link
-          href={`/tendencia/${slug}`}
-          className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-orange underline decoration-2 underline-offset-2 hover:no-underline"
-        >
-          Ver versión pública
-        </Link>
+        <>
+          <Link
+            href={`/tendencia/${slug}`}
+            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-orange underline decoration-2 underline-offset-2 hover:no-underline"
+          >
+            Ver versión pública
+          </Link>
+          <button
+            type="button"
+            onClick={() => void reject()}
+            disabled={busy !== null}
+            className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-50"
+          >
+            {busy === "rej" ? "…" : "Quitar de la web"}
+          </button>
+        </>
       )}
     </div>
     </div>

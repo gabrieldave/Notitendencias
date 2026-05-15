@@ -174,12 +174,6 @@ export function Header({ user }: Props) {
               </Link>
             </>
           )}
-          <Link
-            href="/admin"
-            className="rounded-full px-3 py-2 text-xs font-semibold text-slate-500 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-brand-navy"
-          >
-            Admin
-          </Link>
         </div>
 
         <button
@@ -250,13 +244,6 @@ export function Header({ user }: Props) {
                 </Link>
               </>
             )}
-            <Link
-              href="/admin"
-              className="rounded-xl py-3 text-center text-base font-semibold text-slate-600"
-              onClick={() => setOpen(false)}
-            >
-              Admin
-            </Link>
           </nav>
         </div>
       )}

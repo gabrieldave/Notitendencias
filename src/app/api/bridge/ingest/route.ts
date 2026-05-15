@@ -11,7 +11,7 @@ function unauthorized() {
 }
 
 export async function POST(request: Request) {
-  const expected = process.env.BRIDGE_API_KEY;
+  const expected = process.env.BRIDGE_API_KEY?.trim();
   if (!expected) {
     return NextResponse.json(
       { ok: false, error: "BRIDGE_API_KEY no configurada en el servidor" },
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   }
 
   const auth = request.headers.get("authorization");
-  const token = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
+  const token = auth?.startsWith("Bearer ") ? auth.slice(7).trim() : null;
   if (!token || token !== expected) {
     return unauthorized();
   }

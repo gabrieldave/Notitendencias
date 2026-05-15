@@ -6,16 +6,10 @@ import { eq } from "drizzle-orm";
 import authConfig from "@/auth.config";
 import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
+import { isAdminEmail, parseAdminEmails } from "@/lib/admin-emails";
 import { assertMagicLinkRateLimit } from "@/lib/auth-rate-limit";
 import { isGoogleAuthConfigured } from "@/lib/google-auth";
 import { sendMagicLinkWebhook } from "@/lib/magic-link-webhook";
-
-function parseAdminEmails(): string[] {
-  return (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-}
 
 function publicAppOrigin(): string {
   const u = process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3015";
@@ -99,7 +93,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.id = row.id;
       session.user.email = row.email ?? "";
       session.user.name = row.name;
-      session.user.role = row.role;
+      session.user.role = row.role === "admin" || isAdminEmail(row.email) ? "admin" : row.role;
       session.user.plan = row.plan;
       session.user.status = row.status;
       return session;

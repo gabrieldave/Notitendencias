@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/db";
 import { trends, appEvents } from "@/db/schema";
-import { isAdminFromRequest } from "@/lib/admin-auth";
+import { isElevatedAdmin } from "@/lib/admin-auth";
 import { EDITORIAL_ARXIV_ALERT_ES, trendMentionsArxiv } from "@/lib/editorial";
 import { eq } from "drizzle-orm";
 
@@ -12,7 +12,7 @@ export async function POST(
   request: NextRequest,
   ctx: { params: Promise<{ segment: string }> },
 ) {
-  if (!isAdminFromRequest(request)) {
+  if (!(await isElevatedAdmin())) {
     return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
   }
 

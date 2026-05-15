@@ -1,17 +1,14 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { trends } from "@/db/schema";
-import { isAdminFromRequest } from "@/lib/admin-auth";
+import { isElevatedAdmin } from "@/lib/admin-auth";
 import { eq } from "drizzle-orm";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export async function POST(
-  request: NextRequest,
-  ctx: { params: Promise<{ segment: string }> },
-) {
-  if (!isAdminFromRequest(request)) {
+export async function POST(_request: Request, ctx: { params: Promise<{ segment: string }> }) {
+  if (!(await isElevatedAdmin())) {
     return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
   }
 
