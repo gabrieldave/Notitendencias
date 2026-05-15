@@ -66,11 +66,15 @@ export function AdminTrendTable({ trends }: { trends: Trend[] }) {
               <td className="px-4 py-3 text-right">
                 <div className="flex flex-wrap justify-end gap-2">
                   <Link
-                    href={`/tendencia/${t.slug}`}
+                    href={
+                      t.status === "published"
+                        ? `/tendencia/${t.slug}`
+                        : `/admin/preview/${t.slug}`
+                    }
                     className="text-xs font-semibold text-slate-400 underline decoration-dotted hover:text-brand-orange"
                     prefetch={false}
                   >
-                    Ver público
+                    {t.status === "published" ? "Ver público" : "Vista previa"}
                   </Link>
                   <button
                     type="button"
