@@ -1,12 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { db } from "@/db";
-import { trends, appEvents } from "@/db/schema";
 import { isElevatedAdmin } from "@/lib/admin-auth";
-import { EDITORIAL_ARXIV_ALERT_ES, trendMentionsArxiv } from "@/lib/editorial";
-import { eq } from "drizzle-orm";
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { publishTrendById } from "@/lib/admin-trend-actions";
 
 export async function POST(
   request: NextRequest,
@@ -17,21 +11,6 @@ export async function POST(
   }
 
   const { segment } = await ctx.params;
-  if (!UUID_RE.test(segment)) {
-    return NextResponse.json({ ok: false, error: "ID inválido" }, { status: 400 });
-  }
-
-  const [trend] = await db.select().from(trends).where(eq(trends.id, segment)).limit(1);
-  if (!trend) {
-    return NextResponse.json({ ok: false, error: "No encontrado" }, { status: 404 });
-  }
-
-  if (trend.status !== "draft" && trend.status !== "pending") {
-    return NextResponse.json(
-      { ok: false, error: `Estado no publicable: ${trend.status}` },
-      { status: 400 },
-    );
-  }
 
   let confirmEditorialArxiv = false;
   const raw = await request.text();
@@ -44,34 +23,22 @@ export async function POST(
     }
   }
 
-  if (trendMentionsArxiv(trend) && !confirmEditorialArxiv) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "EDITORIAL_ARXIV_CONFIRM_REQUIRED",
-        message: EDITORIAL_ARXIV_ALERT_ES,
-        hint: "Repite la solicitud POST con JSON: { \"confirmEditorialArxiv\": true } tras revisión manual explícita.",
-      },
-      { status: 400 },
-    );
+  const result = await publishTrendById(segment, { confirmEditorialArxiv });
+
+  if (!result.ok) {
+    if (result.code === "EDITORIAL_ARXIV_CONFIRM_REQUIRED") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: result.error,
+          message: result.message,
+          hint: result.hint,
+        },
+        { status: result.httpStatus },
+      );
+    }
+    return NextResponse.json({ ok: false, error: result.error }, { status: result.httpStatus });
   }
 
-  const now = new Date();
-  const [updated] = await db
-    .update(trends)
-    .set({
-      status: "published",
-      publishedAt: now,
-      updatedAt: now,
-    })
-    .where(eq(trends.id, trend.id))
-    .returning();
-
-  await db.insert(appEvents).values({
-    type: "trend.published",
-    payloadJson: { trendId: updated!.id, slug: updated!.slug, title: updated!.title },
-    status: "new",
-  });
-
-  return NextResponse.json({ ok: true, trend: updated });
+  return NextResponse.json({ ok: true, trend: result.trend });
 }

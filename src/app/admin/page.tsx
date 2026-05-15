@@ -34,6 +34,11 @@ export default async function AdminHomePage() {
         <div>
           <h1 className="text-3xl font-black text-brand-navy">Panel admin</h1>
           <p className="text-sm text-slate-600">Procesar hallazgos, publicar tendencias.</p>
+          <p className="mt-2 max-w-xl text-xs text-slate-500">
+            Para ocultar tendencias ya publicadas en la web, entra en{" "}
+            <span className="font-semibold text-slate-700">Publicadas</span> y usa{" "}
+            <span className="font-semibold text-slate-700">Quitar de la web</span>.
+          </p>
         </div>
         <AdminNav active="/admin" />
       </div>

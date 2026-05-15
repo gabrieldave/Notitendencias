@@ -1,0 +1,4 @@
+# Coolify usa Nixpacks: refuerza heap en `next build` (fase "Collecting build traces").
+# Si sigue fallando, sube a 8192 o aumenta RAM del servidor / límite del contenedor de build.
+[variables]
+NODE_OPTIONS = "--max-old-space-size=6144"

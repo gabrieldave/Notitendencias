@@ -37,6 +37,10 @@ Los cambios pueden tardar **5–30 minutos** en propagarse.
 
 ## 2. Variables en Coolify
 
+**Sin `AUTH_SECRET` en runtime** verás `[auth][error] MissingSecret` en los logs y fallará el middleware (`/admin`, `/mi-radar`). Debe estar definida como variable de **Runtime** del servicio (no solo en la fase de build).
+
+> **Auditoría Coolify:** si la variable existe en el panel pero sigue el error, suele ser porque el **middleware Edge** empaqueta `process.env.AUTH_SECRET` en la imagen durante `next build` como vacío (no estaba disponible en la etapa de build). El código usa lectura en runtime del secreto en `middleware.ts`. Aun así conviene tener `AUTH_SECRET` también disponible en **buildtime** en Coolify para otros pasos; tras cambios de código, haz **redeploy**.
+
 En el servicio **Notitendencias** → **Environment Variables** (runtime):
 
 | Variable | Valor |
@@ -69,6 +73,7 @@ Ya **no** hacen falta para login: `WEBHOOK_URL`, `APP_ID`, `AUTH_EMAIL_FROM` (ma
 | `access_denied` | App en modo Prueba y email no en testers | Añadir email en Pantalla de consentimiento |
 | `invalid_client` | ID o secreto mal en Coolify | Revisar variables y redeploy |
 | «Google no configurado» | Faltan `AUTH_GOOGLE_*` | Definir ambas y redeploy |
+| `MissingSecret` | Falta `AUTH_SECRET` o solo está en build | Añadir `AUTH_SECRET` en **runtime**, redeploy |
 
 ---
 

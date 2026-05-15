@@ -17,6 +17,8 @@ ARG NEXT_PUBLIC_APP_URL=https://notitendencias.vibesystems.tech
 ENV DATABASE_URL=$DATABASE_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
+# standalone + file tracing pica mucha RAM en el build; evita OOM en VPS pequeños
+ENV NODE_OPTIONS=--max-old-space-size=6144
 RUN npm run build
 
 # --- run ---
