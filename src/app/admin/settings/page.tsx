@@ -63,6 +63,49 @@ export default function AdminSettingsPage() {
           </p>
         </section>
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="font-bold text-brand-navy">Retención de datos</h2>
+          <p className="mt-2 text-slate-600">
+            Política aplicada por el script <code className="rounded bg-slate-100 px-1 text-xs">npm run cleanup:retention</code>{" "}
+            (ver <code className="rounded bg-slate-100 px-1 text-xs">docs/data-retention.md</code>). Por defecto corre en
+            modo simulación (<code className="rounded bg-slate-100 px-1 text-xs">DRY_RUN=true</code>); la limpieza real usa{" "}
+            <code className="rounded bg-slate-100 px-1 text-xs">DRY_RUN=false</code>.
+          </p>
+          <ul className="mt-3 list-disc space-y-1.5 pl-5 text-slate-700">
+            <li>
+              <strong>raw_trend_items</strong> procesados: eliminar tras <strong>30 días</strong> (tras desvincular tendencias).
+            </li>
+            <li>
+              <strong>raw_trend_items</strong> rechazados / duplicados / error: eliminar tras <strong>15 días</strong>.
+            </li>
+            <li>
+              <strong>raw_trend_items</strong> nuevos o en revisión editorial: sin borrado automático hasta{" "}
+              <strong>30 días</strong>; luego se marcan rechazados y entran en la política anterior.
+            </li>
+            <li>
+              <strong>Tendencias publicadas</strong>: archivar (no borrar) tras <strong>45 días</strong> desde la publicación.
+            </li>
+            <li>
+              <strong>Tendencias archivadas</strong>: eliminar tras <strong>180 días</strong> en archivo (según{" "}
+              <code className="text-xs">updated_at</code>).
+            </li>
+            <li>
+              <strong>Tendencias draft o pending</strong> antiguas: archivar tras <strong>30 días</strong>.
+            </li>
+            <li>
+              <strong>Tendencias rejected</strong>: eliminar tras <strong>30 días</strong>.
+            </li>
+            <li>
+              <strong>app_events</strong>: eliminar tras <strong>30 días</strong>.
+            </li>
+            <li>
+              <strong>newsletter_sends</strong>: mantener <strong>90 días</strong> de historial.
+            </li>
+            <li>
+              <strong>Suscriptores</strong>: nunca se borran automáticamente.
+            </li>
+          </ul>
+        </section>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="font-bold text-brand-navy">Puerto</h2>
           <p className="mt-2">
             Producción esperada: <strong>{port}</strong> (Coolify / Docker).
