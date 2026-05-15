@@ -16,10 +16,14 @@ const WORKFLOW_ID = process.env.N8N_X_RADAR_WORKFLOW_ID ?? "nFBNa3Y1ueVHBLbc";
 const SDK_PATH = join(process.cwd(), "scripts/n8n-x-ai-radar-workflow.sdk.ts");
 
 function extractConst(name: string, source: string): string {
-  const re = new RegExp(`const ${name} = \`([\\s\\S]*?)\`;`);
-  const m = source.match(re);
+  const tpl = new RegExp(`const ${name} = \`\\$\\{N8N_TZ_HELPER\\}([\\s\\S]*?)\`;`);
+  const plain = new RegExp(`const ${name} = \`([\\s\\S]*?)\`;`);
+  const helperMatch = source.match(/const N8N_TZ_HELPER = `([\s\S]*?)`;/);
+  const helper = helperMatch?.[1] ?? "";
+  const m = source.match(tpl) ?? source.match(plain);
   if (!m) throw new Error(`No se encontró const ${name} en ${SDK_PATH}`);
-  return m[1];
+  const body = m[1];
+  return body.startsWith("function n8nStartOfTodayInZone") ? body : helper + body;
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {

@@ -74,13 +74,53 @@ const CONFIG_JSON = JSON.stringify({
   maxResultsPerRequest: 10,
 });
 
-const EXPAND_ACCOUNTS_JS = `const { DateTime } = require('luxon');
+const N8N_TZ_HELPER = `function n8nStartOfTodayInZone(timeZone) {
+  const dayKey = new Intl.DateTimeFormat('en-CA', { timeZone }).format(Date.now());
+  const [y, mo, da] = dayKey.split('-').map((n) => parseInt(n, 10));
+  const fmt = (ms) => {
+    const p = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).formatToParts(new Date(ms));
+    const g = (t) => p.find((x) => x.type === t).value;
+    return {
+      dayKey: g('year') + '-' + g('month') + '-' + g('day'),
+      hour: parseInt(g('hour'), 10),
+      minute: parseInt(g('minute'), 10),
+    };
+  };
+  let startMs = Date.UTC(y, mo - 1, da, 12, 0, 0);
+  for (let i = 0; i < 48; i++) {
+    const probe = startMs - i * 3600000;
+    const f = fmt(probe);
+    if (f.dayKey === dayKey && f.hour === 0 && f.minute === 0) {
+      startMs = probe;
+      break;
+    }
+  }
+  const iso = new Date(startMs).toISOString();
+  const startTimeIso = iso.indexOf('.') !== -1 ? iso.slice(0, iso.indexOf('.')) + 'Z' : iso;
+  return { dayKey, startTimeIso, startMs };
+}
+function n8nParseIsoUtcMs(iso) {
+  return Date.parse(iso);
+}
+function n8nNowIso() {
+  return new Date().toISOString();
+}
+`;
+
+const EXPAND_ACCOUNTS_JS = `${N8N_TZ_HELPER}
 const config = $input.first().json;
 const accounts = (config.accounts || []).map((u) => String(u).replace(/^@/, '').trim()).filter(Boolean);
 const tz = config.timezone || 'America/Mexico_City';
-const startOfToday = DateTime.now().setZone(tz).startOf('day');
-const startTimeIso = startOfToday.toUTC().toISO({ suppressMilliseconds: true });
-const dayKey = startOfToday.toFormat('yyyy-MM-dd');
+const { dayKey, startTimeIso } = n8nStartOfTodayInZone(tz);
 const maxResults = Math.min(100, Math.max(10, Number(config.maxResultsPerRequest) || 10));
 
 return accounts.map((username) => ({
@@ -96,11 +136,11 @@ return accounts.map((username) => ({
   },
 }));`;
 
-const PICK_TODAY_JS = `const { DateTime } = require('luxon');
+const PICK_TODAY_JS = `${N8N_TZ_HELPER}
 const res = $input.first().json;
 const src = ($('Expand accounts').item || $('Expand queries').item).json;
 const username = (src.username || '').toLowerCase();
-const startMs = DateTime.fromISO(src.startOfTodayIso, { zone: 'utc' }).toMillis();
+const startMs = n8nParseIsoUtcMs(src.startOfTodayIso);
 const tweets = res.data || [];
 const users = {};
 for (const u of res.includes?.users || []) users[u.id] = u;
@@ -121,7 +161,7 @@ function exclusionReason(tw) {
 const todayRows = [];
 for (const tw of tweets) {
   if (!tw.created_at) continue;
-  const createdMs = DateTime.fromISO(tw.created_at, { zone: 'utc' }).toMillis();
+  const createdMs = n8nParseIsoUtcMs(tw.created_at);
   if (createdMs < startMs) continue;
   const user = users[tw.author_id] || {};
   if ((user.username || '').toLowerCase() !== username) continue;
@@ -158,7 +198,7 @@ return [
   },
 ];`;
 
-const NORMALIZE_JS = `const { DateTime } = require('luxon');
+const NORMALIZE_JS = `${N8N_TZ_HELPER}
 const items = $input.all();
 const out = [];
 
@@ -204,7 +244,7 @@ for (const item of items) {
       source_url: 'https://x.com/' + username + '/status/' + postId,
       title: editorialTitle(text, username),
       raw_text: buildRawText(text, username, externalUrl),
-      detected_at: DateTime.now().toISO(),
+      detected_at: n8nNowIso(),
       metadata: {
         platform: 'x',
         signal_type: 'ai_trend',
@@ -286,7 +326,7 @@ if (keys.length > 14) {
 
 return out;`;
 
-const LOG_SUMMARY_JS = `const { DateTime } = require('luxon');
+const LOG_SUMMARY_JS = `${N8N_TZ_HELPER}
 const accounts = $('Set config').first().json.accounts || [];
 const expandNode = $('Expand accounts').first() || $('Expand queries').first();
 const dayKey = expandNode.json.dayKey;
@@ -315,7 +355,7 @@ return [
       workflow_name: 'Notitendencias - X AI Radar',
       run_type: 'scheduled',
       started_at: startedAt,
-      finished_at: DateTime.now().toISO(),
+      finished_at: n8nNowIso(),
       status: 'success',
       posts_requested: postsRequested,
       posts_received: postsReceived,
