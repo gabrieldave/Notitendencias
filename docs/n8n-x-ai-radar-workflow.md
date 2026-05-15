@@ -249,7 +249,7 @@ Respuesta 200: `{ "ok": true, "item": { "id": "...", "status": "new", ... } }`.
 2. En Cursor: `validate_workflow` → `update_workflow` con `workflowId: nFBNa3Y1ueVHBLbc`.
 3. No activar el workflow ni los nodos HTTP hasta tener variables.
 
-`npm run n8n:push` **no** toca este workflow (solo webhooks + Daily Digest).
+`npm run n8n:sync-x-radar` sincroniza nodos Code desde [`scripts/n8n-x-ai-radar-workflow.sdk.ts`](../scripts/n8n-x-ai-radar-workflow.sdk.ts) (requiere `N8N_API_KEY`). Los workflows de notificación antiguos fueron **archivados** (ver [`docs/n8n-workflows.md`](./n8n-workflows.md)).
 
 ---
 
@@ -310,4 +310,4 @@ curl -X POST "https://notitendencias.iareal.net/api/bridge/ingest" \
 ## Documentación relacionada
 
 - [`docs/x-api-radar.md`](./x-api-radar.md) — estrategia, payload y filtrado
-- [`docs/n8n-workflows.md`](./n8n-workflows.md) — webhooks al publicar tendencias
+- [`docs/n8n-workflows.md`](./n8n-workflows.md) — estado de workflows archivados y variables n8n

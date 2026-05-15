@@ -1,135 +1,55 @@
-# Workflows n8n para Notitendencias
+# n8n y Notitendencias
 
-El **MCP de n8n** en Cursor permite buscar, ver detalle y ejecutar workflows; **no incluye creación**. Para crear los cuatro flujos de Notitendencias automáticamente usa el script del repo (API de n8n).
+## Estado actual (2026)
 
-## Opción A — Crear y activar por API (recomendado)
+Los workflows de **notificaciones** creados antes (`Published Trend`, `High Score Alert`, `Newsletter Subscribe`, `Daily Digest`) fueron **archivados** en n8n. Ya no forman parte del flujo editorial.
 
-1. En n8n: **Settings → API → Create API Key** (rol con permiso de crear workflows).
-2. En tu máquina (o en CI), con el repo clonado:
+**Único workflow de ingesta activo en el roadmap:**
 
-```bash
-export N8N_API_KEY="tu_api_key"
-export N8N_BASE_URL="https://n8n.vibesystems.tech"   # opcional si es el default
-cd Notitendencias
-npm run n8n:push
-```
+| Workflow | ID | URL |
+|----------|-----|-----|
+| **Notitendencias - X AI Radar** | `nFBNa3Y1ueVHBLbc` | https://n8n.vibesystems.tech/workflow/nFBNa3Y1ueVHBLbc |
 
-3. El script imprime las URLs de webhook de **producción**. Cópialas en Coolify / `.env` de la app:
+Flujo: **X API → n8n → `POST /api/bridge/ingest` → `/admin` → DeepSeek → publicación manual**.
 
-- `N8N_WEBHOOK_PUBLISHED_TREND` → `https://n8n.vibesystems.tech/webhook/notitendencias-published-trend`
-- `N8N_WEBHOOK_ALERTS` → `https://n8n.vibesystems.tech/webhook/notitendencias-alert`
-- `N8N_WEBHOOK_NEWSLETTER` → `https://n8n.vibesystems.tech/webhook/notitendencias-newsletter`
+Documentación:
 
-4. El workflow **Daily Digest** queda activo con cron **08:00** (zona del servidor n8n); ajusta el nodo *Cron diario* si usas otra zona.
+- [`docs/x-api-radar.md`](./x-api-radar.md) — estrategia, payload, filtrado, costos
+- [`docs/n8n-x-ai-radar-workflow.md`](./n8n-x-ai-radar-workflow.md) — nodos, variables, pruebas
 
-Si `activate` falla por versión de API, activa manualmente el interruptor en la UI de n8n.
+## Scripts del repo
 
----
+| Comando | Uso |
+|---------|-----|
+| `npm run n8n:sync-x-radar` | Sincroniza nodos Code del radar X vía API n8n (requiere `N8N_API_KEY`) |
+| ~~`npm run n8n:push`~~ | **Eliminado** — creaba los 4 webhooks archivados |
 
-## Opción B — Creación manual en la UI
+Definición del workflow en código: `scripts/n8n-x-ai-radar-workflow.sdk.ts`.
 
-Si no quieres usar la API, crea en `https://n8n.vibesystems.tech` los mismos paths de webhook y pega las URLs en las variables de arriba.
+## Variables de la app (deprecadas)
 
-La app funciona sin estas URLs; solo dejará de notificar a n8n.
+Estas variables **ya no se usan** en la app (sin llamadas a webhooks n8n al publicar o suscribirse). Puedes dejarlas vacías en Coolify:
 
----
+- `N8N_WEBHOOK_PUBLISHED_TREND`
+- `N8N_WEBHOOK_NEWSLETTER`
+- `N8N_WEBHOOK_ALERTS`
 
-## 1. Notitendencias – Published Trend Event
+## Variables solo en n8n
 
-**Objetivo:** recibir el evento cuando una tendencia se publica (`POST` desde la app).
+Configurar en **Settings → Variables** de n8n (no en el frontend de Next):
 
-1. Nuevo workflow: nombre `Notitendencias - Published Trend Event`.
-2. Nodo **Webhook**:
-   - Método: `POST`
-   - Path: `notitendencias-published-trend` (o el que prefieras; la URL completa es la que copias a `N8N_WEBHOOK_PUBLISHED_TREND`).
-   - Response: `Respond to Webhook` → texto `OK` o JSON `{ "ok": true }`.
-3. Opcional: nodo **Set** para mapear `body` a campos claros.
-4. Opcional: nodo **Postgres** / **Google Sheets** / **HTTP Request** para guardar log.
-5. Activa el workflow y copia la **Production URL** del webhook a `N8N_WEBHOOK_PUBLISHED_TREND`.
+- `X_BEARER_TOKEN`
+- `BRIDGE_API_KEY` (mismo valor que en la app)
+- `NOTITENDENCIAS_INGEST_URL` = `https://notitendencias.iareal.net/api/bridge/ingest`
+- `X_API_MAX_POSTS_PER_RUN` = `50` (beta: el workflow limita a 10 por query)
 
-**Payload típico** (ejemplo):
+## Workflows archivados (referencia)
 
-```json
-{
-  "event": "trend.published",
-  "trend": {
-    "id": "uuid",
-    "slug": "mi-tendencia-abc123",
-    "title": "…",
-    "summary": "…",
-    "trendScore": 72,
-    "categorySlug": "ia"
-  }
-}
-```
+No reactivar salvo que quieras volver al modelo de notificaciones:
 
----
-
-## 2. Notitendencias – High Score Alert
-
-**Objetivo:** alerta interna cuando `trend_score >= 80`.
-
-1. Workflow: `Notitendencias - High Score Alert`.
-2. **Webhook** `POST`, path ej. `notitendencias-alert`.
-3. Nodo **IF** (por ejemplo `{{ $json.trend.trendScore }}` >= 80) si quieres doble filtro.
-4. Placeholder: **Send Email**, **Telegram**, **Slack** o **WhatsApp** (según tu gateway compartido).
-5. URL del webhook → `N8N_WEBHOOK_ALERTS`.
-
-**Payload típico:**
-
-```json
-{
-  "event": "trend.high_score",
-  "trend": { "title": "…", "trendScore": 85, "slug": "…" }
-}
-```
-
----
-
-## 3. Notitendencias – Newsletter Subscribe
-
-**Objetivo:** capturar nuevos suscriptores desde el formulario público.
-
-1. Workflow: `Notitendencias - Newsletter Subscribe`.
-2. **Webhook** `POST`, path ej. `notitendencias-newsletter`.
-3. Nodo **Set** / **Postgres** para registrar el email (tu stack de email gateway puede ir después).
-4. URL → `N8N_WEBHOOK_NEWSLETTER`.
-
-**Payload típico:**
-
-```json
-{
-  "event": "newsletter.subscribe",
-  "subscriber": { "id": "uuid", "email": "user@example.com" }
-}
-```
-
----
-
-## 4. Notitendencias – Daily Digest
-
-**Objetivo:** cron diario que consulta la API pública y deja listo un resumen (email gateway después).
-
-1. Workflow: `Notitendencias - Daily Digest`.
-2. Nodo **Schedule Trigger** (cada día a la hora deseada).
-3. Nodo **HTTP Request**:
-   - Método: `GET`
-   - URL: `https://notitendencias.vibesystems.tech/api/trends?category_slug=ia`
-4. Nodo **Code** o **OpenAI/DeepSeek** para resumir la lista JSON.
-5. Placeholder: envío por email / Telegram (mismo gateway que otras apps).
-
-**Nota:** este flujo no requiere variable en la app; es totalmente autónomo en n8n.
-
----
-
-## Verificación rápida
-
-Desde el servidor o tu máquina (sin secretos en logs):
-
-```bash
-curl -sS -X POST "$N8N_WEBHOOK_PUBLISHED_TREND" \
-  -H "Content-Type: application/json" \
-  -d '{"ping":true}'
-```
-
-Debe responder `200` y el cuerpo configurado en el nodo Respond to Webhook.
+| Nombre | ID |
+|--------|-----|
+| Notitendencias - Published Trend Event | `QBOBRDYIZ7EP6Gby` |
+| Notitendencias - High Score Alert | `AhlNefqAPGsIm3r5` |
+| Notitendencias - Newsletter Subscribe | `m3DUwqMVxQNYHWDJ` |
+| Notitendencias - Daily Digest | `ZLOlwvyzLy6dTZ6K` |

@@ -25,11 +25,8 @@ Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 | `WEBHOOK_URL` / `APP_ID` | **Sí** para magic link | `POST` JSON al enviar enlace mágico (sin SMTP en Next). Ver sección **Autenticación** abajo. |
 | `AUTH_EMAIL_FROM` | Recomendada | Remitente lógico del flujo email (metadatos). |
 | `ADMIN_EMAILS` | No | Lista separada por comas: esos correos reciben `role=admin` en BD al iniciar sesión. El panel `/admin` sigue pudiendo usar la cookie de `ADMIN_PASSWORD`; las acciones sensibles también aceptan rol admin vía sesión + comprobación en BD. |
-| `N8N_WEBHOOK_PUBLISHED_TREND` | No | URL del webhook n8n al publicar una tendencia. Vacío = no se llama. |
-| `N8N_WEBHOOK_NEWSLETTER` | No | URL n8n al suscribirse al newsletter. |
-| `N8N_WEBHOOK_ALERTS` | No | URL n8n si `trend_score >= 80` al publicar. |
-| `N8N_API_KEY` | No | Solo para `npm run n8n:push` en tu máquina/CI, **no** hace falta en el contenedor de la app Next. |
-| `N8N_BASE_URL` | No | Por defecto el script usa `https://n8n.vibesystems.tech`. |
+| `N8N_API_KEY` | No | Solo para `npm run n8n:sync-x-radar` en tu máquina/CI (sincronizar workflow X). **No** en el contenedor Next. |
+| `N8N_BASE_URL` | No | Por defecto `https://n8n.vibesystems.tech`. |
 
 **Build en Docker:** el `Dockerfile` pasa `DATABASE_URL` y `NEXT_PUBLIC_APP_URL` como build args; en Coolify define también esas variables en “Build arguments” si el build las necesita, además del runtime.
 
@@ -92,18 +89,18 @@ La web usa **Auth.js (NextAuth v5)** con sesión en **PostgreSQL** (tablas `sess
 | `npm run db:migrate` | Aplicar migraciones |
 | `npm run db:seed` | Categorías y fuentes iniciales |
 | `npm run setup` | Verificación + migrate + seed |
-| `npm run n8n:push` | Crea en n8n los 4 workflows (requiere `N8N_API_KEY`) |
+| `npm run n8n:sync-x-radar` | Sincroniza nodos Code del workflow X AI Radar en n8n |
 
 ## API (resumen)
 
 - `POST /api/bridge/ingest` — Bearer `BRIDGE_API_KEY`, body validado con Zod.
 - `GET /api/raw-items?status=` — admin (cookie).
 - `POST /api/process/[id]` — admin; DeepSeek → tabla `trends` (estado `pending`).
-- `POST /api/trends/[uuid]/publish` — admin; publica, `app_events`, webhooks n8n si existen.
+- `POST /api/trends/[uuid]/publish` — admin; publica y registra `app_events`.
 - `POST /api/trends/[uuid]/reject` — admin.
 - `GET /api/trends` — público; `?category_slug=ia`.
 - `GET /api/trends/[slug]` — público por **slug** (no por UUID).
-- `POST /api/newsletter/subscribe` — email + webhook opcional.
+- `POST /api/newsletter/subscribe` — alta en `subscribers`.
 - `GET/POST /api/auth/[...nextauth]` — Auth.js (sesión, OAuth Google, magic link).
 - `POST /api/admin/login` | `logout` | `import` — panel.
 
@@ -187,7 +184,7 @@ Documentación completa: [`docs/x-api-radar.md`](docs/x-api-radar.md) (estrategi
 
 ## n8n y Kimi
 
-- Instrucciones y **creación automática de workflows**: [`docs/n8n-workflows.md`](docs/n8n-workflows.md) (`npm run n8n:push` con `N8N_API_KEY`).
+- Workflows n8n: [`docs/n8n-workflows.md`](docs/n8n-workflows.md) y radar X: [`docs/n8n-x-ai-radar-workflow.md`](docs/n8n-x-ai-radar-workflow.md).
 - Prompt sugerido para Kimi WebBridge: [`docs/kimi-webbridge-prompt.md`](docs/kimi-webbridge-prompt.md).
 
 ## Infraestructura (alineación)

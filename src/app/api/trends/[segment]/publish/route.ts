@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/db";
 import { trends, appEvents } from "@/db/schema";
 import { isAdminFromRequest } from "@/lib/admin-auth";
-import { getWebhookUrl, postWebhook } from "@/lib/webhook";
 import { EDITORIAL_ARXIV_ALERT_ES, trendMentionsArxiv } from "@/lib/editorial";
 import { eq } from "drizzle-orm";
 
@@ -73,27 +72,6 @@ export async function POST(
     payloadJson: { trendId: updated!.id, slug: updated!.slug, title: updated!.title },
     status: "new",
   });
-
-  const publishedUrl = getWebhookUrl("N8N_WEBHOOK_PUBLISHED_TREND");
-  if (publishedUrl) {
-    const r = await postWebhook(publishedUrl, { event: "trend.published", trend: updated });
-    if (!r.ok) {
-      console.warn("[n8n] published webhook:", r.error);
-    }
-  }
-
-  if ((updated?.trendScore ?? 0) >= 80) {
-    const alertUrl = getWebhookUrl("N8N_WEBHOOK_ALERTS");
-    if (alertUrl) {
-      const r = await postWebhook(alertUrl, {
-        event: "trend.high_score",
-        trend: updated,
-      });
-      if (!r.ok) {
-        console.warn("[n8n] alert webhook:", r.error);
-      }
-    }
-  }
 
   return NextResponse.json({ ok: true, trend: updated });
 }

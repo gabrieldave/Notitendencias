@@ -3,15 +3,10 @@ import {
   fingerprint,
   maskSecretConfigured,
 } from "@/lib/admin-auth";
-import { getWebhookUrl } from "@/lib/webhook";
-
 export const dynamic = "force-dynamic";
 
 export default function AdminSettingsPage() {
   const deepseek = maskSecretConfigured(process.env.DEEPSEEK_API_KEY);
-  const pub = getWebhookUrl("N8N_WEBHOOK_PUBLISHED_TREND");
-  const news = getWebhookUrl("N8N_WEBHOOK_NEWSLETTER");
-  const alerts = getWebhookUrl("N8N_WEBHOOK_ALERTS");
   const base =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3015";
   const port = process.env.PORT ?? "3015";
@@ -48,12 +43,17 @@ export default function AdminSettingsPage() {
           </p>
         </section>
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="font-bold text-brand-navy">Webhooks n8n</h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Publicación: {pub ? "configurado" : "vacío"}</li>
-            <li>Newsletter: {news ? "configurado" : "vacío"}</li>
-            <li>Alertas: {alerts ? "configurado" : "vacío"}</li>
-          </ul>
+          <h2 className="font-bold text-brand-navy">Radar X (n8n)</h2>
+          <p className="mt-2 text-slate-600">
+            La ingesta de señales desde X se orquesta en n8n con el workflow{" "}
+            <strong>Notitendencias - X AI Radar</strong>. Variables en n8n (no en esta app):{" "}
+            <code className="rounded bg-slate-100 px-1 text-xs">X_BEARER_TOKEN</code>,{" "}
+            <code className="rounded bg-slate-100 px-1 text-xs">BRIDGE_API_KEY</code>,{" "}
+            <code className="rounded bg-slate-100 px-1 text-xs">NOTITENDENCIAS_INGEST_URL</code>.
+            Ver{" "}
+            <code className="rounded bg-slate-100 px-1 text-xs">docs/n8n-x-ai-radar-workflow.md</code> en el
+            repositorio.
+          </p>
         </section>
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="font-bold text-brand-navy">Kimi WebBridge</h2>

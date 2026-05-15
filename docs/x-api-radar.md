@@ -269,5 +269,6 @@ Respuesta esperada: `{ "ok": true, "item": { ... } }` con `status: "new"`.
 ## Referencias
 
 - Workflow n8n: [`docs/n8n-x-ai-radar-workflow.md`](./n8n-x-ai-radar-workflow.md) — ID **`nFBNa3Y1ueVHBLbc`**, URL https://n8n.vibesystems.tech/workflow/nFBNa3Y1ueVHBLbc
-- Workflows existentes de la app: [`docs/n8n-workflows.md`](./n8n-workflows.md)
+- Estado de workflows n8n: [`docs/n8n-workflows.md`](./n8n-workflows.md)
+- Workflow operativo: [`docs/n8n-x-ai-radar-workflow.md`](./n8n-x-ai-radar-workflow.md) (`nFBNa3Y1ueVHBLbc`)
 - Kimi WebBridge (otra fuente): [`docs/kimi-webbridge-prompt.md`](./kimi-webbridge-prompt.md)

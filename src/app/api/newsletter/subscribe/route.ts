@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { subscribers } from "@/db/schema";
 import { newsletterSubscribeSchema } from "@/lib/schemas";
-import { getWebhookUrl, postWebhook } from "@/lib/webhook";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
@@ -45,14 +44,6 @@ export async function POST(request: Request) {
         .where(eq(subscribers.email, email))
         .limit(1);
       sub = again[0]!;
-    }
-  }
-
-  const hook = getWebhookUrl("N8N_WEBHOOK_NEWSLETTER");
-  if (hook) {
-    const r = await postWebhook(hook, { event: "newsletter.subscribe", subscriber: sub });
-    if (!r.ok) {
-      console.warn("[n8n] newsletter webhook:", r.error);
     }
   }
 

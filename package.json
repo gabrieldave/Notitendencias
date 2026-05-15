@@ -12,7 +12,7 @@
     "db:seed": "npx tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "setup": "npx tsx scripts/setup.ts",
-    "n8n:push": "npx tsx scripts/n8n-push-workflows.ts",
+    "n8n:sync-x-radar": "npx tsx scripts/n8n-sync-x-radar.ts",
     "cleanup:retention": "tsx scripts/cleanup-retention.ts"
   },
   "dependencies": {
