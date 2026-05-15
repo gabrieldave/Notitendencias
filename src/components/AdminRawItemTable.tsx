@@ -43,7 +43,17 @@ export function AdminRawItemTable({ items }: { items: RawTrendItem[] }) {
           {items.map((it) => (
             <tr key={it.id} className="border-t border-slate-100">
               <td className="px-4 py-3 font-medium text-brand-navy">
-                <div>{it.title}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>{it.title}</span>
+                  {it.metadataJson &&
+                    typeof it.metadataJson === "object" &&
+                    !Array.isArray(it.metadataJson) &&
+                    it.metadataJson.platform === "x" && (
+                      <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                        X
+                      </span>
+                    )}
+                </div>
                 {rawItemMentionsArxiv(it) && (
                   <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-950">
                     {EDITORIAL_ARXIV_ALERT_ES}

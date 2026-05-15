@@ -171,6 +171,20 @@ Si falta el registro DNS del túnel:
 cloudflared tunnel route dns 7b301862-56f6-4443-850b-f8df050490f6 notitendencias.vibesystems.tech
 ```
 
+## X API Radar
+
+Radar de señales de IA desde la **API oficial de X**, orquestado por **n8n**. No publica en la web: cada hallazgo llega a `POST /api/bridge/ingest` como `raw_trend_items` con `status=new` para revisión en `/admin`, procesamiento con DeepSeek y publicación manual.
+
+| Paso | Acción |
+|------|--------|
+| 1 | Crear app y **Bearer Token** en [X Developer Portal](https://developer.x.com/) (permisos de lectura acordes a tu plan). |
+| 2 | En **n8n**, definir `X_BEARER_TOKEN`, `BRIDGE_API_KEY`, `NOTITENDENCIAS_INGEST_URL` (ver `.env.example`). **No** poner el token de X en Next.js. |
+| 3 | Importar o crear el workflow **Notitendencias - X AI Radar** según [`docs/n8n-x-ai-radar-workflow.md`](docs/n8n-x-ai-radar-workflow.md). |
+| 4 | Probar con ~5 posts (límite bajo en el workflow) o con el curl de [`docs/x-api-radar.md`](docs/x-api-radar.md). |
+| 5 | Revisar en `/admin` (badge **X** si `metadata.platform === "x"`), pulsar **Procesar** (DeepSeek), luego publicar manualmente. |
+
+Documentación completa: [`docs/x-api-radar.md`](docs/x-api-radar.md) (estrategia, payload, filtrado) y [`docs/n8n-x-ai-radar-workflow.md`](docs/n8n-x-ai-radar-workflow.md) (nodos y código de ejemplo).
+
 ## n8n y Kimi
 
 - Instrucciones y **creación automática de workflows**: [`docs/n8n-workflows.md`](docs/n8n-workflows.md) (`npm run n8n:push` con `N8N_API_KEY`).

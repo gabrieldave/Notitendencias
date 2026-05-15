@@ -13,6 +13,17 @@ const deepSeekResultSchema = z.object({
 
 const SYSTEM_PROMPT = `Eres editor de Notitendencias, una plataforma mexicana de tendencias digitales. Convierte el hallazgo crudo en una tendencia clara, útil y accionable para público hispanohablante. No copies artículos completos. No inventes datos. Si falta contexto, dilo con cautela. Devuelve solo JSON válido con title, summary, why_it_matters, opportunity, content_ideas, business_ideas, tags y trend_score.`;
 
+const X_SOURCE_PROMPT_APPEND = ` El hallazgo proviene de X (Twitter): trátalo como señal temprana, no como hecho verificado. No afirmes más de lo que el post permite. Si metadata incluye external_url, recomienda verificar esa fuente. Redacta en español claro orientado a México.`;
+
+function isXSource(input: {
+  sourceName: string;
+  metadata: Record<string, unknown> | null;
+}): boolean {
+  if (input.sourceName.trim().toLowerCase() === "x") return true;
+  const platform = input.metadata?.platform;
+  return typeof platform === "string" && platform.toLowerCase() === "x";
+}
+
 export type DeepSeekTrendResult = z.infer<typeof deepSeekResultSchema>;
 
 function extractJson(content: string): string {
@@ -58,7 +69,10 @@ export async function processRawWithDeepSeek(input: {
       temperature: 0.4,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "system",
+          content: SYSTEM_PROMPT + (isXSource(input) ? X_SOURCE_PROMPT_APPEND : ""),
+        },
         {
           role: "user",
           content: `Analiza este hallazgo y devuelve solo el JSON:\n${JSON.stringify(userPayload)}`,
