@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { SiteFooter } from "@/components/SiteFooter";
+import { getOptionalSessionUser } from "@/lib/user-session";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -19,15 +20,16 @@ export const metadata: Metadata = {
   ),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getOptionalSessionUser();
   return (
     <html lang="es" className={dmSans.variable}>
       <body className="min-h-screen">
-        <Header />
+        <Header user={user} />
         <main className="min-h-[50vh]">{children}</main>
         <SiteFooter />
       </body>

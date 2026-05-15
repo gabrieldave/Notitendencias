@@ -44,6 +44,7 @@ export default async function AdminPreviewTrendPage({ params }: Props) {
       </div>
       <TrendDetailArticle
         trend={t}
+        access="full"
         backFooter={{ href: "/admin", label: "← Volver al panel admin" }}
       />
     </>

@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -103,7 +104,50 @@ export const appEvents = pgTable("app_events", {
     .notNull(),
 });
 
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  role: text("role").default("user").notNull(),
+  plan: text("plan").default("free").notNull(),
+  status: text("status").default("active").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const userPreferences = pgTable("user_preferences", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  favoriteCategories: jsonb("favorite_categories").$type<string[]>().default([]),
+  emailDigestFrequency: text("email_digest_frequency").default("weekly").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const userFavorites = pgTable(
+  "user_favorites",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    trendId: uuid("trend_id")
+      .notNull()
+      .references(() => trends.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    userTrendUnique: uniqueIndex("user_favorites_user_trend_unique").on(t.userId, t.trendId),
+  }),
+);
+
 export type Category = typeof categories.$inferSelect;
 export type RawTrendItem = typeof rawTrendItems.$inferSelect;
 export type Trend = typeof trends.$inferSelect;
 export type Subscriber = typeof subscribers.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type UserFavorite = typeof userFavorites.$inferSelect;
+export type UserPreference = typeof userPreferences.$inferSelect;

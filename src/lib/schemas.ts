@@ -27,3 +27,15 @@ export const newsletterSubscribeSchema = z.object({
 export const adminImportSchema = z.object({
   csv: z.string().min(1).max(2_000_000),
 });
+
+export const authEmailLoginSchema = z.object({
+  email: z.string().email().max(320).transform((e) => e.trim().toLowerCase()),
+});
+
+export const favoriteBodySchema = z.object({
+  trendId: z.string().uuid(),
+});
+
+export const adminUserPlanSchema = z.object({
+  plan: z.enum(["free", "premium"]),
+});

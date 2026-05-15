@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { ChevronDown, Loader2, Menu, X } from "lucide-react";
+import type { PublicUser } from "@/lib/user-session";
 
 const mainNav = [
   { href: "/", label: "Inicio" },
@@ -22,10 +23,34 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Header() {
+function LogoutButton({ className }: { className?: string }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={() => {
+        start(async () => {
+          await fetch("/api/auth/logout", { method: "POST" });
+          router.refresh();
+          router.push("/");
+        });
+      }}
+      className={className}
+    >
+      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salir"}
+    </button>
+  );
+}
+
+type Props = { user: PublicUser | null };
+
+export function Header({ user }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const premium = user?.plan === "premium";
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 shadow-[0_1px_0_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] backdrop-blur-md">
@@ -117,18 +142,43 @@ export function Header() {
           </div>
         </nav>
 
-        <div className="hidden items-center gap-3 sm:flex">
+        <div className="hidden flex-wrap items-center justify-end gap-2 sm:flex sm:gap-3">
+          {user ? (
+            <>
+              {premium && (
+                <span className="rounded-full bg-gradient-to-r from-amber-100 to-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-amber-950 ring-1 ring-amber-200/80">
+                  Premium
+                </span>
+              )}
+              <Link
+                href="/mi-radar"
+                className="rounded-full px-4 py-2.5 text-sm font-bold text-brand-navy ring-1 ring-slate-200 transition hover:bg-slate-50"
+              >
+                Mi radar
+              </Link>
+              <LogoutButton className="rounded-full px-4 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-brand-navy disabled:opacity-60" />
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-full px-4 py-2.5 text-sm font-bold text-brand-navy ring-1 ring-slate-200 transition hover:bg-slate-50"
+              >
+                Iniciar sesión
+              </Link>
+              <Link
+                href="/#newsletter"
+                className="rounded-full bg-brand-orange px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-orange-500/35 ring-2 ring-brand-orange/40 transition hover:bg-orange-600 hover:shadow-orange-500/45"
+              >
+                Suscribirme
+              </Link>
+            </>
+          )}
           <Link
             href="/admin"
-            className="rounded-full px-4 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-brand-navy"
+            className="rounded-full px-3 py-2 text-xs font-semibold text-slate-500 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-brand-navy"
           >
             Admin
-          </Link>
-          <Link
-            href="/#newsletter"
-            className="rounded-full bg-brand-orange px-6 py-3 text-sm font-black text-white shadow-lg shadow-orange-500/35 ring-2 ring-brand-orange/40 transition hover:bg-orange-600 hover:shadow-orange-500/45"
-          >
-            Suscribirme
           </Link>
         </div>
 
@@ -166,13 +216,40 @@ export function Header() {
             >
               Categorías
             </Link>
-            <Link
-              href="/#newsletter"
-              className="mt-2 rounded-xl bg-brand-orange py-3.5 text-center text-base font-black text-white shadow-lg shadow-orange-500/30"
-              onClick={() => setOpen(false)}
-            >
-              Suscribirme
-            </Link>
+            {user ? (
+              <>
+                {premium && (
+                  <span className="mx-3 mt-2 inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase text-amber-950">
+                    Premium
+                  </span>
+                )}
+                <Link
+                  href="/mi-radar"
+                  className="mt-2 rounded-xl px-3 py-3 text-base font-semibold text-brand-navy"
+                  onClick={() => setOpen(false)}
+                >
+                  Mi radar
+                </Link>
+                <LogoutButton className="w-full rounded-xl py-3 text-center text-base font-semibold text-slate-600" />
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="mt-2 rounded-xl px-3 py-3 text-base font-semibold text-brand-navy"
+                  onClick={() => setOpen(false)}
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  href="/#newsletter"
+                  className="mt-2 rounded-xl bg-brand-orange py-3.5 text-center text-base font-black text-white shadow-lg shadow-orange-500/30"
+                  onClick={() => setOpen(false)}
+                >
+                  Suscribirme
+                </Link>
+              </>
+            )}
             <Link
               href="/admin"
               className="rounded-xl py-3 text-center text-base font-semibold text-slate-600"

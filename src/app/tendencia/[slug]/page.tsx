@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { trends, type Trend } from "@/db/schema";
+import { trends, userFavorites, type Trend } from "@/db/schema";
 import { and, desc, eq, ne } from "drizzle-orm";
 import { TrendDetailArticle } from "@/components/TrendDetailArticle";
+import { TrendSaveButton } from "@/components/TrendSaveButton";
 import { MostViewedSidebar } from "@/components/MostViewedSidebar";
 import { QuickSignalCard } from "@/components/QuickSignalCard";
+import { isPremiumPlan } from "@/lib/membership";
+import { getOptionalSessionUser } from "@/lib/user-session";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -50,12 +53,39 @@ export default async function TrendDetailPage({ params }: Props) {
       ? { href: "/ia", label: "← Más tendencias de IA" }
       : { href: `/categoria/${t.categorySlug}`, label: `← Más en ${t.categorySlug}` };
 
+  const user = await getOptionalSessionUser();
+  const access = user && isPremiumPlan(user.plan) ? "full" : "limited";
+
+  let isFavorite = false;
+  if (user && isPremiumPlan(user.plan)) {
+    const [fav] = await db
+      .select({ id: userFavorites.id })
+      .from(userFavorites)
+      .where(and(eq(userFavorites.userId, user.id), eq(userFavorites.trendId, t.id)))
+      .limit(1);
+    isFavorite = Boolean(fav);
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/80">
       <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-12">
           <div className="min-w-0 rounded-[2rem] border border-slate-100/80 bg-white shadow-soft lg:rounded-3xl">
-            <TrendDetailArticle trend={t} backFooter={back} showNewsletter />
+            <TrendDetailArticle
+              trend={t}
+              access={access}
+              backFooter={back}
+              showNewsletter
+              saveButton={
+                <TrendSaveButton
+                  trendId={t.id}
+                  slug={t.slug}
+                  initialSaved={isFavorite}
+                  isLoggedIn={Boolean(user)}
+                  userPlan={user?.plan ?? null}
+                />
+              }
+            />
           </div>
           <aside className="flex flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
             <MostViewedSidebar trends={sidebarTrends} />

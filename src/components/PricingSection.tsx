@@ -22,6 +22,9 @@ export function PricingSection() {
           <p className="mt-3 text-base leading-relaxed text-slate-600 md:text-lg">
             Empieza gratis y desbloquea análisis completos cuando estés listo.
           </p>
+          <p className="mt-4 rounded-2xl border border-amber-100 bg-amber-50/90 px-4 py-3 text-sm font-semibold text-amber-950">
+            Pagos próximamente. Acceso premium por invitación durante beta.
+          </p>
         </header>
 
         <div className="mt-12 grid min-w-0 gap-8 lg:grid-cols-2 lg:gap-10">
@@ -64,7 +67,7 @@ export function PricingSection() {
               ))}
             </ul>
             <Link
-              href="/#newsletter"
+              href="/login?intent=premium"
               className="mt-auto flex w-full min-h-[52px] items-center justify-center rounded-2xl bg-brand-orange px-6 py-3.5 text-base font-black text-white shadow-lg shadow-orange-900/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
             >
               Ser Premium

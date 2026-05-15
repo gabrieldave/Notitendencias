@@ -3,64 +3,141 @@ import type { Trend } from "@/db/schema";
 import { NewsletterBox } from "@/components/NewsletterBox";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 import { SOURCE_URL_COLLAPSE_LENGTH } from "@/lib/editorial";
+import { FREE_SECTION_PREVIEW_CHARS, FREE_SUMMARY_MAX_CHARS } from "@/lib/constants";
+import { truncateForFreeSummary, truncateSectionPreview } from "@/lib/membership";
 import { Calendar } from "lucide-react";
+
+export type TrendDetailAccess = "full" | "limited";
 
 type Props = {
   trend: Trend;
+  access: TrendDetailAccess;
   backFooter?: { href: string; label: string };
   showNewsletter?: boolean;
+  saveButton?: React.ReactNode;
 };
+
+function PremiumUnlockCard() {
+  return (
+    <div className="relative mt-10 overflow-hidden rounded-3xl border border-brand-navy/15 bg-gradient-to-br from-brand-navy via-slate-900 to-slate-950 p-8 text-center text-white shadow-lift md:p-10">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand-orange/20 blur-3xl" aria-hidden />
+      <p className="text-xs font-black uppercase tracking-[0.25em] text-amber-200/90">Análisis completo</p>
+      <h2 className="mt-3 text-2xl font-black tracking-tight md:text-3xl">Desbloquea el análisis completo</h2>
+      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/80 md:text-base">
+        Ideas de contenido, oportunidades y contexto editorial profundo. Guarda tendencias en Mi radar con Premium.
+      </p>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href="/login?intent=premium"
+          className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-brand-orange px-6 py-3 text-sm font-black text-white shadow-lg shadow-orange-900/30 transition hover:bg-orange-500"
+        >
+          Hazte Premium
+        </Link>
+        <Link
+          href="/login"
+          className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-white/25 bg-white/5 px-6 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/10"
+        >
+          Iniciar sesión
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function SectionPreview({ title, tone, children }: { title: string; tone: "slate" | "amber"; children: React.ReactNode }) {
+  const border = tone === "amber" ? "border-amber-100" : "border-slate-100";
+  return (
+    <section className={`mt-6 rounded-3xl border ${border} bg-white/90 p-6 shadow-soft md:p-8`}>
+      <h2
+        className={`text-xs font-black uppercase tracking-[0.2em] ${
+          tone === "amber" ? "text-amber-800" : "text-brand-orange"
+        }`}
+      >
+        {title}
+      </h2>
+      <div className="relative mt-3 text-base leading-relaxed text-slate-700 md:text-lg">
+        {children}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white to-transparent"
+          aria-hidden
+        />
+      </div>
+    </section>
+  );
+}
 
 export function TrendDetailArticle({
   trend: t,
+  access,
   backFooter = { href: "/ia", label: "← Volver a IA" },
   showNewsletter = true,
+  saveButton,
 }: Props) {
+  const full = access === "full";
   const contentIdeas = (t.contentIdeas as string[] | null) ?? [];
   const businessIdeas = (t.businessIdeas as string[] | null) ?? [];
   const tags = (t.tags as string[] | null) ?? [];
 
+  const summaryDisplay = full ? t.summary : truncateForFreeSummary(t.summary, FREE_SUMMARY_MAX_CHARS);
+
+  const whyPreview = t.whyItMatters ? truncateSectionPreview(t.whyItMatters, FREE_SECTION_PREVIEW_CHARS) : "";
+  const oppPreview = t.opportunity ? truncateSectionPreview(t.opportunity, FREE_SECTION_PREVIEW_CHARS) : "";
+
   return (
     <article className="mx-auto max-w-3xl px-4 py-10 md:py-14">
       <header className="border-b border-slate-200/90 pb-8">
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="rounded-full bg-brand-navy px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white">
-            {t.categorySlug}
-          </span>
-          <TrendScoreBadge score={t.trendScore} size="lg" />
-          {t.publishedAt && (
-            <span className="inline-flex items-center gap-1.5 text-slate-500">
-              <Calendar className="h-4 w-4" aria-hidden />
-              <time dateTime={t.publishedAt.toISOString()} className="font-medium">
-                {new Date(t.publishedAt).toLocaleDateString("es-MX", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </time>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className="rounded-full bg-brand-navy px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white">
+              {t.categorySlug}
             </span>
-          )}
+            <TrendScoreBadge score={t.trendScore} size="lg" />
+            {t.publishedAt && (
+              <span className="inline-flex items-center gap-1.5 text-slate-500">
+                <Calendar className="h-4 w-4" aria-hidden />
+                <time dateTime={t.publishedAt.toISOString()} className="font-medium">
+                  {new Date(t.publishedAt).toLocaleDateString("es-MX", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </time>
+              </span>
+            )}
+          </div>
+          {saveButton ? <div className="shrink-0">{saveButton}</div> : null}
         </div>
         <h1 className="mt-6 text-3xl font-black leading-[1.15] tracking-tight text-brand-navy md:text-4xl lg:text-5xl">
           {t.title}
         </h1>
-        <p className="mt-6 text-lg leading-relaxed text-slate-700 md:text-xl">{t.summary}</p>
+        <p className="mt-6 text-lg leading-relaxed text-slate-700 md:text-xl">{summaryDisplay}</p>
       </header>
 
-      {t.whyItMatters && (
+      {full && t.whyItMatters && (
         <section className="mt-10 rounded-3xl border border-slate-100 bg-white p-6 shadow-soft md:p-8">
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-brand-orange">Por qué importa</h2>
           <p className="mt-3 text-base leading-relaxed text-slate-700 md:text-lg">{t.whyItMatters}</p>
         </section>
       )}
-      {t.opportunity && (
+      {full && t.opportunity && (
         <section className="mt-6 rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50/80 to-white p-6 shadow-soft md:p-8">
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-amber-800">Oportunidad</h2>
           <p className="mt-3 text-base leading-relaxed text-slate-700 md:text-lg">{t.opportunity}</p>
         </section>
       )}
 
-      {contentIdeas.length > 0 && (
+      {!full && t.whyItMatters && (
+        <SectionPreview title="Por qué importa" tone="slate">
+          <p>{whyPreview}</p>
+        </SectionPreview>
+      )}
+      {!full && t.opportunity && (
+        <SectionPreview title="Oportunidad" tone="amber">
+          <p>{oppPreview}</p>
+        </SectionPreview>
+      )}
+
+      {full && contentIdeas.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-black text-brand-navy md:text-2xl">Ideas de contenido</h2>
           <ul className="mt-4 space-y-3">
@@ -77,7 +154,27 @@ export function TrendDetailArticle({
         </section>
       )}
 
-      {businessIdeas.length > 0 && (
+      {!full && contentIdeas.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-black text-brand-navy md:text-2xl">Ideas de contenido</h2>
+          <ul className="mt-4 space-y-3">
+            {contentIdeas.slice(0, 1).map((idea) => (
+              <li
+                key={idea}
+                className="flex gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-slate-700 shadow-sm"
+              >
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-orange" aria-hidden />
+                <span className="leading-relaxed">{truncateSectionPreview(idea, FREE_SECTION_PREVIEW_CHARS)}</span>
+              </li>
+            ))}
+          </ul>
+          {contentIdeas.length > 1 && (
+            <p className="mt-2 text-sm font-semibold text-slate-500">+{contentIdeas.length - 1} ideas más en Premium</p>
+          )}
+        </section>
+      )}
+
+      {full && businessIdeas.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-black text-brand-navy md:text-2xl">Ideas de negocio</h2>
           <ul className="mt-4 space-y-3">
@@ -92,6 +189,30 @@ export function TrendDetailArticle({
             ))}
           </ul>
         </section>
+      )}
+
+      {!full && businessIdeas.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-black text-brand-navy md:text-2xl">Ideas de negocio</h2>
+          <ul className="mt-4 space-y-3">
+            {businessIdeas.slice(0, 1).map((idea) => (
+              <li
+                key={idea}
+                className="flex gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-slate-700 shadow-sm"
+              >
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-navy" aria-hidden />
+                <span className="leading-relaxed">{truncateSectionPreview(idea, FREE_SECTION_PREVIEW_CHARS)}</span>
+              </li>
+            ))}
+          </ul>
+          {businessIdeas.length > 1 && (
+            <p className="mt-2 text-sm font-semibold text-slate-500">+{businessIdeas.length - 1} ideas más en Premium</p>
+          )}
+        </section>
+      )}
+
+      {!full && (t.whyItMatters || t.opportunity || contentIdeas.length > 0 || businessIdeas.length > 0) && (
+        <PremiumUnlockCard />
       )}
 
       {tags.length > 0 && (
@@ -122,16 +243,18 @@ export function TrendDetailArticle({
         )}
       </section>
 
-      <div className="mt-10 rounded-3xl border border-brand-navy/15 bg-gradient-to-br from-brand-navy to-slate-900 p-6 text-center text-white shadow-lift md:p-8">
-        <p className="text-sm font-bold uppercase tracking-wide text-amber-200/90">Premium</p>
-        <p className="mt-2 text-lg font-black md:text-xl">¿Quieres radar completo y reportes?</p>
-        <Link
-          href="/#pricing"
-          className="mt-4 inline-flex rounded-full bg-brand-orange px-6 py-2.5 text-sm font-black text-white hover:bg-orange-500"
-        >
-          Ver planes
-        </Link>
-      </div>
+      {full && (
+        <div className="mt-10 rounded-3xl border border-brand-navy/10 bg-slate-50 p-6 text-center md:p-8">
+          <p className="text-sm font-bold text-brand-navy">¿Te sirvió esta señal?</p>
+          <p className="mt-1 text-sm text-slate-600">Explora más en Mi radar o comparte el hallazgo con tu equipo.</p>
+          <Link
+            href="/mi-radar"
+            className="mt-4 inline-flex rounded-full bg-white px-5 py-2 text-sm font-black text-brand-navy ring-1 ring-slate-200 transition hover:ring-brand-orange"
+          >
+            Ir a Mi radar
+          </Link>
+        </div>
+      )}
 
       {showNewsletter && (
         <div className="mt-10">

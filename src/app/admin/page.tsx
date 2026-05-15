@@ -49,6 +49,12 @@ export default async function AdminHomePage() {
           >
             Ajustes
           </Link>
+          <Link
+            href="/admin/users"
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
+          >
+            Usuarios
+          </Link>
           <AdminLogoutButton />
         </div>
       </div>
