@@ -137,8 +137,9 @@ return accounts.map((username) => ({
 }));`;
 
 const PICK_TODAY_JS = `${N8N_TZ_HELPER}
-const res = $input.first().json;
-const src = ($('Expand accounts').item || $('Expand queries').item).json;
+// runOnceForEachItem: usar $input.item, no $input.first()
+const res = $input.item.json;
+const src = $('Expand accounts').item.json;
 const username = (src.username || '').toLowerCase();
 const startMs = n8nParseIsoUtcMs(src.startOfTodayIso);
 const tweets = res.data || [];
