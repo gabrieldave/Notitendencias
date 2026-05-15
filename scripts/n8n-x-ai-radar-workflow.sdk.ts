@@ -137,7 +137,7 @@ return accounts.map((username) => ({
 }));`;
 
 const PICK_TODAY_JS = `${N8N_TZ_HELPER}
-// runOnceForEachItem: usar $input.item, no $input.first()
+// runOnceForEachItem: $input.item (no .first); return { json } — no uses []
 const res = $input.item.json;
 const src = $('Expand accounts').item.json;
 const username = (src.username || '').toLowerCase();
@@ -183,21 +183,31 @@ for (const row of todayRows) {
   break;
 }
 
-if (!picked) return [];
-
-return [
-  {
+if (!picked) {
+  return {
     json: {
-      data: [picked.tw],
-      includes: { users: [picked.user] },
+      _skipped_no_original_today: true,
       username: src.username,
       dayKey: src.dayKey,
       startOfTodayIso: src.startOfTodayIso,
-      is_original: true,
+      data: [],
+      includes: { users: [] },
       _pickStats: { scanned: todayRows.length, discarded },
     },
+  };
+}
+
+return {
+  json: {
+    data: [picked.tw],
+    includes: { users: [picked.user] },
+    username: src.username,
+    dayKey: src.dayKey,
+    startOfTodayIso: src.startOfTodayIso,
+    is_original: true,
+    _pickStats: { scanned: todayRows.length, discarded },
   },
-];`;
+};`;
 
 const NORMALIZE_JS = `${N8N_TZ_HELPER}
 const items = $input.all();
