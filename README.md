@@ -18,6 +18,13 @@ Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 | `NEXT_PUBLIC_APP_URL` | **Sí** | URL pública del sitio, ej. `https://notitendencias.vibesystems.tech` (metadata, enlaces). |
 | `PORT` | Recomendada | **`3015`** en producción (Coolify debe exponer este puerto del contenedor). |
 | `ADMIN_PASSWORD` | **Sí** | Contraseña del panel `/admin` (cookie httpOnly). Usa una contraseña fuerte única. |
+| `AUTH_SECRET` | **Sí** | Secreto de Auth.js / NextAuth (sesiones y tokens). Generar: `openssl rand -base64 32`. |
+| `AUTH_URL` | **Sí** en producción | URL pública canónica del sitio (igual que `NEXT_PUBLIC_APP_URL` si aplica). |
+| `AUTH_TRUST_HOST` | Solo prod tras proxy | `true` cuando la app está detrás de reverse proxy (Coolify) para validar host/proxy headers. |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Opcional | OAuth Google en `/login`. Si faltan, solo queda el enlace mágico. |
+| `WEBHOOK_URL` / `APP_ID` | **Sí** para magic link | `POST` JSON al enviar enlace mágico (sin SMTP en Next). Ver sección **Autenticación** abajo. |
+| `AUTH_EMAIL_FROM` | Recomendada | Remitente lógico del flujo email (metadatos). |
+| `ADMIN_EMAILS` | No | Lista separada por comas: esos correos reciben `role=admin` en BD al iniciar sesión. El panel `/admin` sigue pudiendo usar la cookie de `ADMIN_PASSWORD`; las acciones sensibles también aceptan rol admin vía sesión + comprobación en BD. |
 | `N8N_WEBHOOK_PUBLISHED_TREND` | No | URL del webhook n8n al publicar una tendencia. Vacío = no se llama. |
 | `N8N_WEBHOOK_NEWSLETTER` | No | URL n8n al suscribirse al newsletter. |
 | `N8N_WEBHOOK_ALERTS` | No | URL n8n si `trend_score >= 80` al publicar. |
@@ -26,7 +33,22 @@ Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 
 **Build en Docker:** el `Dockerfile` pasa `DATABASE_URL` y `NEXT_PUBLIC_APP_URL` como build args; en Coolify define también esas variables en “Build arguments” si el build las necesita, además del runtime.
 
-## Setup local / VPS
+## Autenticación (usuarios)
+
+La web usa **Auth.js (NextAuth v5)** con sesión en **PostgreSQL** (tablas `sessions`, `accounts`, `verification_tokens`) y adapter Drizzle. Duración de sesión: **90 días**.
+
+- **Google**: variables `AUTH_GOOGLE_ID` y `AUTH_GOOGLE_SECRET` (o equivalentes inferidos por Auth.js).
+- **Enlace mágico (email)**: el token de verificación caduca a los **30 minutos**. Al solicitar el enlace, la app hace `POST` a `WEBHOOK_URL` con JSON:
+
+  `{ "appId": "<APP_ID>", "event": "auth.magic_link", "to": "<email>", "data": { "name": "...", "verificationUrl": "...", "logoUrl": "..." } }`
+
+  No se usa SMTP dentro de Next. En producción no se registran URLs completas de verificación ni tokens en logs.
+
+- **Límite de frecuencia (magic link)**: en memoria por proceso — aprox. **12 solicitudes / 15 min** por IP y **5 / 15 min** por correo (ajustable en código). En varias réplicas usar Redis u otro almacén compartido.
+
+- **Turnstile u otro CAPTCHA** en el formulario de email: opcional; no está cableado por defecto (mejora futura).
+
+- **Deprecado**: `USER_SESSION_SECRET` / cookie MVP antigua; sustituido por `AUTH_SECRET` y sesión Auth.js.
 
 1. Crear la base en el contenedor PostgreSQL (en el VPS):
 
@@ -75,6 +97,7 @@ Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 - `GET /api/trends` — público; `?category_slug=ia`.
 - `GET /api/trends/[slug]` — público por **slug** (no por UUID).
 - `POST /api/newsletter/subscribe` — email + webhook opcional.
+- `GET/POST /api/auth/[...nextauth]` — Auth.js (sesión, OAuth Google, magic link).
 - `POST /api/admin/login` | `logout` | `import` — panel.
 
 > Rutas internas de publicación usan el **UUID** de la tendencia:  

@@ -24,11 +24,11 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
 
   async function save() {
     if (!isLoggedIn) {
-      router.push(`/login?next=${encodeURIComponent(next)}`);
+      router.push(`/login?callbackUrl=${encodeURIComponent(next)}`);
       return;
     }
     if (!premium) {
-      router.push(`/login?intent=premium&next=${encodeURIComponent(next)}`);
+      router.push(`/login?intent=premium&callbackUrl=${encodeURIComponent(next)}`);
       return;
     }
     startTransition(async () => {
@@ -43,11 +43,11 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
         return;
       }
       if (res.status === 401) {
-        router.push(`/login?next=${encodeURIComponent(next)}`);
+        router.push(`/login?callbackUrl=${encodeURIComponent(next)}`);
         return;
       }
       if (res.status === 403) {
-        router.push(`/login?intent=premium&next=${encodeURIComponent(next)}`);
+        router.push(`/login?intent=premium&callbackUrl=${encodeURIComponent(next)}`);
       }
     });
   }
@@ -68,7 +68,7 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
   if (!isLoggedIn) {
     return (
       <Link
-        href={`/login?next=${encodeURIComponent(next)}`}
+        href={`/login?callbackUrl=${encodeURIComponent(next)}`}
         className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-brand-navy shadow-sm ring-1 ring-slate-100 transition hover:border-brand-orange/40 hover:text-brand-orange"
       >
         <Bookmark className="h-4 w-4" aria-hidden />
@@ -80,7 +80,7 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
   if (!premium) {
     return (
       <Link
-        href={`/login?intent=premium&next=${encodeURIComponent(next)}`}
+        href={`/login?intent=premium&callbackUrl=${encodeURIComponent(next)}`}
         className="inline-flex items-center gap-2 rounded-full border border-amber-200/80 bg-gradient-to-r from-amber-50 to-white px-4 py-2 text-sm font-bold text-amber-950 shadow-sm ring-1 ring-amber-100 transition hover:ring-amber-300"
       >
         <Sparkles className="h-4 w-4 text-brand-orange" aria-hidden />

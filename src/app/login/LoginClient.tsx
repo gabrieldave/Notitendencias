@@ -4,39 +4,56 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { Loader2, Mail } from "lucide-react";
+import { SessionProvider } from "next-auth/react";
 
-export function LoginClient() {
+function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
+  const callbackUrl =
+    searchParams.get("callbackUrl") ?? searchParams.get("next") ?? "/";
   const intent = searchParams.get("intent");
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const safeCallback =
+    callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : "/";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+      const res = await signIn("email", {
+        email,
+        redirect: false,
+        callbackUrl: safeCallback,
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok || !data.ok) {
-        setError(data.error ?? "No se pudo iniciar sesión");
+      if (res?.error) {
+        setError("No se pudo enviar el enlace. Revisa tu correo o inténtalo más tarde.");
         setLoading(false);
         return;
       }
-      router.push(next.startsWith("/") ? next : "/");
-      router.refresh();
+      router.push(`/auth/verify-request?email=${encodeURIComponent(email)}`);
     } catch {
       setError("Error de red. Intenta de nuevo.");
+    } finally {
       setLoading(false);
+    }
+  }
+
+  async function onGoogle() {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      await signIn("google", { callbackUrl: safeCallback });
+    } catch {
+      setError("No se pudo iniciar con Google.");
+      setGoogleLoading(false);
     }
   }
 
@@ -59,8 +76,8 @@ export function LoginClient() {
             {intent === "premium" ? "Accede a Premium" : "Iniciar sesión"}
           </h1>
           <p className="mt-3 text-center text-sm leading-relaxed text-slate-600">
-            MVP sin contraseña: ingresa tu correo y abrimos tu sesión al instante.{" "}
-            <span className="font-semibold text-brand-navy">No enviamos enlaces mágicos todavía.</span>
+            Elige Google o recibe un <span className="font-semibold text-brand-navy">enlace mágico</span> por correo
+            (válido 30 minutos).
           </p>
           {intent === "premium" && (
             <p className="mt-4 rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-center text-xs font-semibold text-amber-950">
@@ -68,7 +85,38 @@ export function LoginClient() {
             </p>
           )}
 
-          <form onSubmit={onSubmit} className="mt-8 space-y-4">
+          <div className="mt-8">
+            {googleEnabled ? (
+              <button
+                type="button"
+                disabled={googleLoading}
+                onClick={() => void onGoogle()}
+                className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-base font-bold text-brand-navy shadow-sm ring-1 ring-slate-100 transition hover:bg-slate-50 disabled:opacity-60"
+              >
+                {googleLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                Continuar con Google
+              </button>
+            ) : (
+              <p className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-center text-xs font-semibold text-slate-600">
+                Google no está configurado en este entorno. Usa el enlace mágico por correo.
+              </p>
+            )}
+          </div>
+
+          {googleEnabled ? (
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center" aria-hidden>
+                <span className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs font-black uppercase tracking-wider text-slate-400">
+                <span className="bg-white px-3">o con correo</span>
+              </div>
+            </div>
+          ) : (
+            <div className="my-6" />
+          )}
+
+          <form onSubmit={onSubmit} className="space-y-4">
             <label className="block text-xs font-black uppercase tracking-wider text-slate-500" htmlFor="email">
               Correo electrónico
             </label>
@@ -97,7 +145,7 @@ export function LoginClient() {
               className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-brand-orange text-base font-black text-white shadow-lg shadow-orange-500/30 transition hover:bg-orange-600 disabled:opacity-60"
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-              Continuar
+              Enviar enlace mágico
             </button>
           </form>
 
@@ -107,5 +155,13 @@ export function LoginClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+export function LoginClient({ googleEnabled }: { googleEnabled: boolean }) {
+  return (
+    <SessionProvider>
+      <LoginForm googleEnabled={googleEnabled} />
+    </SessionProvider>
   );
 }

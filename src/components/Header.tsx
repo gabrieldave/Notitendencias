@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ChevronDown, Loader2, Menu, X } from "lucide-react";
-import type { PublicUser } from "@/lib/user-session";
+import { signOut } from "next-auth/react";
+import type { PublicUser } from "@/lib/session-user";
 
 const mainNav = [
   { href: "/", label: "Inicio" },
@@ -32,9 +33,8 @@ function LogoutButton({ className }: { className?: string }) {
       disabled={pending}
       onClick={() => {
         start(async () => {
-          await fetch("/api/auth/logout", { method: "POST" });
+          await signOut({ callbackUrl: "/" });
           router.refresh();
-          router.push("/");
         });
       }}
       className={className}

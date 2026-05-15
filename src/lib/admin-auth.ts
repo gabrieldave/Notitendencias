@@ -1,6 +1,10 @@
 import { createHash, createHmac, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
+import { eq } from "drizzle-orm";
+import { auth } from "@/auth";
+import { db } from "@/db";
+import { users } from "@/db/schema";
 import { ADMIN_COOKIE_NAME } from "./constants";
 
 const SALT = "notitendencias:admin:v1";
@@ -33,6 +37,16 @@ export function verifyAdminCookieValue(value: string | undefined): boolean {
 export async function isAdminFromCookies(): Promise<boolean> {
   const store = await cookies();
   return verifyAdminCookieValue(store.get(ADMIN_COOKIE_NAME)?.value);
+}
+
+/** Cookie admin del panel o rol `admin` en BD (sesión NextAuth). */
+export async function isElevatedAdmin(): Promise<boolean> {
+  if (await isAdminFromCookies()) return true;
+  const session = await auth();
+  const id = session?.user?.id;
+  if (!id) return false;
+  const [row] = await db.select({ role: users.role }).from(users).where(eq(users.id, id)).limit(1);
+  return row?.role === "admin";
 }
 
 export function isAdminFromRequest(request: NextRequest): boolean {

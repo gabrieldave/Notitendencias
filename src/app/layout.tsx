@@ -3,7 +3,7 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getOptionalSessionUser } from "@/lib/user-session";
+import { getOptionalSessionUser } from "@/lib/session-user";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],

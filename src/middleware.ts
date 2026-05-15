@@ -1,50 +1,10 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { ADMIN_COOKIE_NAME } from "./lib/constants";
+import NextAuth from "next-auth";
+import authConfig from "./auth.config";
 
-const SALT = "notitendencias:admin:v1";
+const { auth } = NextAuth(authConfig);
 
-function timingSafeEqualStr(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let out = 0;
-  for (let i = 0; i < a.length; i++) {
-    out |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return out === 0;
-}
-
-async function expectedAdminToken(): Promise<string> {
-  const pwd = process.env.ADMIN_PASSWORD ?? "";
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(pwd),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(SALT));
-  const bytes = new Uint8Array(sig);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  if (!pathname.startsWith("/admin")) return NextResponse.next();
-  if (pathname.startsWith("/admin/login")) return NextResponse.next();
-
-  const cookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const token = await expectedAdminToken();
-  const ok = cookie ? timingSafeEqualStr(cookie, token) : false;
-  if (!ok) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
-    url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
-  }
-  return NextResponse.next();
-}
+export default auth;
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/mi-radar/:path*"],
 };

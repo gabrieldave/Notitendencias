@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { subscribers, users } from "@/db/schema";
-import { isAdminFromCookies } from "@/lib/admin-auth";
+import { isElevatedAdmin } from "@/lib/admin-auth";
 
 export async function updateUserPlanAction(formData: FormData) {
-  if (!(await isAdminFromCookies())) {
+  if (!(await isElevatedAdmin())) {
     redirect("/admin/login?next=/admin/users");
   }
   const userId = String(formData.get("userId") ?? "");

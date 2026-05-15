@@ -3,6 +3,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -104,16 +105,64 @@ export const appEvents = pgTable("app_events", {
     .notNull(),
 });
 
+/** Usuarios: columnas Auth.js + negocio (role/plan/status). */
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
   name: text("name"),
+  emailVerified: timestamp("email_verified", { withTimezone: true, mode: "date" }),
+  image: text("image"),
   role: text("role").default("user").notNull(),
   plan: text("plan").default("free").notNull(),
   status: text("status").default("active").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+/** Cuentas OAuth / email para Auth.js + Drizzle adapter */
+export const accounts = pgTable(
+  "accounts",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (t) => ({
+    compoundPk: primaryKey({ columns: [t.provider, t.providerAccountId] }),
+  }),
+);
+
+/** Sesiones de base de datos Auth.js */
+export const sessions = pgTable("sessions", {
+  sessionToken: text("session_token").primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { withTimezone: true, mode: "date" }).notNull(),
+});
+
+/** Tokens de verificación (magic link) Auth.js */
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { withTimezone: true, mode: "date" }).notNull(),
+  },
+  (t) => ({
+    compoundPk: primaryKey({ columns: [t.identifier, t.token] }),
+  }),
+);
 
 export const userPreferences = pgTable("user_preferences", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -149,5 +198,8 @@ export type RawTrendItem = typeof rawTrendItems.$inferSelect;
 export type Trend = typeof trends.$inferSelect;
 export type Subscriber = typeof subscribers.$inferSelect;
 export type User = typeof users.$inferSelect;
+export type Account = typeof accounts.$inferSelect;
+export type UserSessionRow = typeof sessions.$inferSelect;
+export type VerificationToken = typeof verificationTokens.$inferSelect;
 export type UserFavorite = typeof userFavorites.$inferSelect;
 export type UserPreference = typeof userPreferences.$inferSelect;

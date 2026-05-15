@@ -1,22 +1,21 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
+import { auth } from "@/auth";
 import { db } from "@/db";
 import { userFavorites } from "@/db/schema";
 import { isPremiumPlan } from "@/lib/membership";
-import { getSessionPayloadFromRequest, getUserByIdForSession } from "@/lib/user-session";
 
 type Params = Promise<{ trendId: string }>;
 
-export async function DELETE(request: NextRequest, ctx: { params: Params }) {
-  const payload = getSessionPayloadFromRequest(request);
-  if (!payload) {
+export async function DELETE(_request: Request, ctx: { params: Params }) {
+  const session = await auth();
+  const id = session?.user?.id;
+  const plan = session?.user?.plan;
+  const status = session?.user?.status;
+  if (!id || status !== "active") {
     return NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 });
   }
-  const user = await getUserByIdForSession(payload.sub);
-  if (!user) {
-    return NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 });
-  }
-  if (!isPremiumPlan(user.plan)) {
+  if (!isPremiumPlan(plan ?? "free")) {
     return NextResponse.json({ ok: false, error: "Solo plan Premium" }, { status: 403 });
   }
 
@@ -27,7 +26,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Params }) {
 
   await db
     .delete(userFavorites)
-    .where(and(eq(userFavorites.userId, user.id), eq(userFavorites.trendId, trendId)));
+    .where(and(eq(userFavorites.userId, id), eq(userFavorites.trendId, trendId)));
 
   return NextResponse.json({ ok: true });
 }

@@ -7,7 +7,7 @@ import { TrendSaveButton } from "@/components/TrendSaveButton";
 import { MostViewedSidebar } from "@/components/MostViewedSidebar";
 import { QuickSignalCard } from "@/components/QuickSignalCard";
 import { isPremiumPlan } from "@/lib/membership";
-import { getOptionalSessionUser } from "@/lib/user-session";
+import { getOptionalSessionUser } from "@/lib/session-user";
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };

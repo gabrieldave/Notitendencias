@@ -10,9 +10,11 @@ function LoginFallback() {
 }
 
 export default function LoginPage() {
+  const googleEnabled =
+    Boolean(process.env.AUTH_GOOGLE_ID?.trim()) && Boolean(process.env.AUTH_GOOGLE_SECRET?.trim());
   return (
     <Suspense fallback={<LoginFallback />}>
-      <LoginClient />
+      <LoginClient googleEnabled={googleEnabled} />
     </Suspense>
   );
 }

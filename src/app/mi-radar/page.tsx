@@ -5,14 +5,14 @@ import { db } from "@/db";
 import { trends, userFavorites } from "@/db/schema";
 import { TrendCard } from "@/components/TrendCard";
 import { isPremiumPlan } from "@/lib/membership";
-import { getOptionalSessionUser } from "@/lib/user-session";
+import { getOptionalSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
 
 export default async function MiRadarPage() {
   const user = await getOptionalSessionUser();
   if (!user) {
-    redirect("/login?next=/mi-radar");
+    redirect(`/login?callbackUrl=${encodeURIComponent("/mi-radar")}`);
   }
 
   if (!isPremiumPlan(user.plan)) {
@@ -27,7 +27,7 @@ export default async function MiRadarPage() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
-              href="/login?intent=premium&next=/mi-radar"
+              href="/login?intent=premium&callbackUrl=%2Fmi-radar"
               className="inline-flex rounded-2xl bg-brand-orange px-6 py-3 text-sm font-black text-white shadow-lg shadow-orange-500/30 hover:bg-orange-600"
             >
               Hazte Premium

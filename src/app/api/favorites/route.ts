@@ -1,24 +1,27 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { and, desc, eq } from "drizzle-orm";
+import { auth } from "@/auth";
 import { db } from "@/db";
 import { trends, userFavorites } from "@/db/schema";
 import { favoriteBodySchema } from "@/lib/schemas";
 import { isPremiumPlan } from "@/lib/membership";
-import { getSessionPayloadFromRequest, getUserByIdForSession } from "@/lib/user-session";
 
-async function requirePremiumUser(request: NextRequest) {
-  const payload = getSessionPayloadFromRequest(request);
-  if (!payload) return { error: NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 }) };
-  const user = await getUserByIdForSession(payload.sub);
-  if (!user) return { error: NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 }) };
-  if (!isPremiumPlan(user.plan)) {
+async function requirePremiumUser() {
+  const session = await auth();
+  const id = session?.user?.id;
+  const plan = session?.user?.plan;
+  const status = session?.user?.status;
+  if (!id || status !== "active") {
+    return { error: NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 }) };
+  }
+  if (!isPremiumPlan(plan ?? "free")) {
     return { error: NextResponse.json({ ok: false, error: "Solo plan Premium" }, { status: 403 }) };
   }
-  return { user };
+  return { user: { id, plan: plan ?? "free" } };
 }
 
-export async function GET(request: NextRequest) {
-  const gate = await requirePremiumUser(request);
+export async function GET() {
+  const gate = await requirePremiumUser();
   if ("error" in gate) return gate.error;
 
   const rows = await db
@@ -44,7 +47,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const gate = await requirePremiumUser(request);
+  const gate = await requirePremiumUser();
   if ("error" in gate) return gate.error;
 
   let body: unknown;
