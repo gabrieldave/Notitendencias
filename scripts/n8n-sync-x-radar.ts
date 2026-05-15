@@ -5,6 +5,7 @@
  * Uso: npm run n8n:sync-x-radar
  */
 import "dotenv/config";
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -35,19 +36,59 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return JSON.parse(text) as T;
 }
 
+type WfNode = {
+  id: string;
+  name: string;
+  type: string;
+  typeVersion?: number;
+  position: [number, number];
+  parameters?: Record<string, unknown>;
+  disabled?: boolean;
+  credentials?: Record<string, { id: string; name: string }>;
+  executeOnce?: boolean;
+};
+
 type Wf = {
   id: string;
   name: string;
-  nodes: Array<{
-    id: string;
-    name: string;
-    type: string;
-    parameters?: Record<string, unknown>;
-    disabled?: boolean;
-  }>;
+  nodes: WfNode[];
   connections: Record<string, unknown>;
   settings?: Record<string, unknown>;
 };
+
+function usageHttpNode(existing?: WfNode): WfNode {
+  return {
+    id: existing?.id ?? randomUUID(),
+    name: "POST usage run",
+    type: "n8n-nodes-base.httpRequest",
+    typeVersion: 4.4,
+    position: existing?.position ?? [2240, 96],
+    credentials: existing?.credentials,
+    parameters: {
+      method: "POST",
+      url: "https://notitendencias.iareal.net/api/admin/usage/runs",
+      authentication: "genericCredentialType",
+      genericAuthType: "httpHeaderAuth",
+      sendHeaders: true,
+      headerParameters: {
+        parameters: [{ name: "Content-Type", value: "application/json" }],
+      },
+      sendBody: true,
+      specifyBody: "json",
+      jsonBody: "={{ JSON.stringify($json) }}",
+    },
+  };
+}
+
+function wireUsageConnections(connections: Record<string, unknown>): void {
+  const split = connections["Split in Batches"] as { main?: Array<Array<{ node: string; type: string; index: number }>> };
+  if (!split?.main) return;
+
+  split.main[0] = [{ node: "Log resumen", type: "main", index: 0 }];
+  connections["Log resumen"] = {
+    main: [[{ node: "POST usage run", type: "main", index: 0 }]],
+  };
+}
 
 async function main() {
   if (!KEY) {
@@ -75,8 +116,23 @@ async function main() {
     const patch = patches[node.name];
     if (!patch) continue;
     node.parameters = { ...(node.parameters ?? {}), mode: patch.mode, jsCode: patch.jsCode };
+    if (node.name === "Log resumen") node.executeOnce = true;
     updated++;
   }
+
+  let usageIdx = wf.nodes.findIndex((n) => n.name === "POST usage run");
+  if (usageIdx === -1) {
+    const bridgeNode = wf.nodes.find((n) => n.name === "POST Notitendencias ingest");
+    wf.nodes.push(usageHttpNode(bridgeNode));
+    usageIdx = wf.nodes.length - 1;
+    console.log("Nodo POST usage run añadido.");
+  } else {
+    wf.nodes[usageIdx] = usageHttpNode(wf.nodes[usageIdx]);
+    console.log("Nodo POST usage run actualizado.");
+  }
+
+  wireUsageConnections(wf.connections);
+  updated++;
 
   const settings = {
     ...(wf.settings ?? {}),
@@ -95,9 +151,11 @@ async function main() {
     }),
   });
 
-  console.log(`Workflow "${wf.name}" (${WORKFLOW_ID}): ${updated} nodos actualizados.`);
+  console.log(`Workflow "${wf.name}" (${WORKFLOW_ID}): ${updated} cambios aplicados.`);
   console.log(`${BASE}/workflow/${WORKFLOW_ID}`);
-  console.log("Nota: nodos nuevos (pickTodayPost, crons) requieren deploy vía MCP update_workflow si faltan en el canvas.");
+  console.log(
+    "Credencial n8n «Notitendencias Usage»: Header Auth Bearer = USAGE_API_KEY (misma que Coolify).",
+  );
 }
 
 main().catch((e) => {

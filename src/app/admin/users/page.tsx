@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { desc } from "drizzle-orm";
+import { AdminNav } from "@/components/AdminNav";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { updateUserPlanAction } from "./actions";
@@ -11,13 +11,15 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <Link href="/admin" className="text-sm font-semibold text-brand-orange hover:underline">
-        ← Volver al panel
-      </Link>
-      <h1 className="mt-4 text-3xl font-black text-brand-navy">Usuarios</h1>
-      <p className="mt-2 text-sm text-slate-600">
-        Cambia el plan manualmente durante la beta (sin pasarela de pago todavía).
-      </p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-brand-navy">Usuarios</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Cambia el plan manualmente durante la beta (sin pasarela de pago todavía).
+          </p>
+        </div>
+        <AdminNav active="/admin/users" />
+      </div>
 
       <div className="mt-8 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full text-left text-sm">

@@ -1,15 +1,15 @@
 import { CSVImportForm } from "@/components/CSVImportForm";
-import Link from "next/link";
+import { AdminNav } from "@/components/AdminNav";
 
 export const dynamic = "force-dynamic";
 
 export default function AdminImportPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <Link href="/admin" className="text-sm font-semibold text-brand-orange hover:underline">
-        ← Volver al panel
-      </Link>
-      <h1 className="mt-4 text-3xl font-black text-brand-navy">Importar CSV</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-black text-brand-navy">Importar CSV</h1>
+        <AdminNav active="/admin/import" />
+      </div>
       <p className="mt-2 text-sm text-slate-600">
         Columnas: <code className="rounded bg-slate-100 px-1">category</code>,{" "}
         <code className="rounded bg-slate-100 px-1">source_name</code>,{" "}

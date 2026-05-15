@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AdminNav } from "@/components/AdminNav";
 import {
   fingerprint,
   maskSecretConfigured,
@@ -30,10 +30,10 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <Link href="/admin" className="text-sm font-semibold text-brand-orange hover:underline">
-        ← Volver al panel
-      </Link>
-      <h1 className="mt-4 text-3xl font-black text-brand-navy">Ajustes</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-black text-brand-navy">Ajustes</h1>
+        <AdminNav active="/admin/settings" />
+      </div>
       <div className="mt-8 space-y-6 text-sm text-slate-700">
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="font-bold text-brand-navy">DeepSeek API</h2>
@@ -49,7 +49,9 @@ export default function AdminSettingsPage() {
             <strong>Notitendencias - X AI Radar</strong>. Variables en n8n (no en esta app):{" "}
             <code className="rounded bg-slate-100 px-1 text-xs">X_BEARER_TOKEN</code>,{" "}
             <code className="rounded bg-slate-100 px-1 text-xs">BRIDGE_API_KEY</code>,{" "}
-            <code className="rounded bg-slate-100 px-1 text-xs">NOTITENDENCIAS_INGEST_URL</code>.
+            <code className="rounded bg-slate-100 px-1 text-xs">NOTITENDENCIAS_INGEST_URL</code>, credencial{" "}
+            <strong>Notitendencias Usage</strong> con <code className="rounded bg-slate-100 px-1 text-xs">USAGE_API_KEY</code>{" "}
+            (misma que en Coolify).
             Ver{" "}
             <code className="rounded bg-slate-100 px-1 text-xs">docs/n8n-x-ai-radar-workflow.md</code> en el
             repositorio.

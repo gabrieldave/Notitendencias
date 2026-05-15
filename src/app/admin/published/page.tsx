@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { AdminLogoutButton } from "@/components/AdminLogoutButton";
+import { AdminNav } from "@/components/AdminNav";
 import { AdminPublishedTrendTable } from "@/components/AdminPublishedTrendTable";
 import { db } from "@/db";
 import { trends } from "@/db/schema";
@@ -25,15 +24,7 @@ export default async function AdminPublishedPage() {
             <span className="font-semibold">rejected</span> y dejan de mostrarse.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Link
-            href="/admin"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
-          >
-            ← Panel
-          </Link>
-          <AdminLogoutButton />
-        </div>
+        <AdminNav active="/admin/published" />
       </div>
       <AdminPublishedTrendTable trends={published} />
     </div>

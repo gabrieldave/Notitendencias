@@ -115,6 +115,8 @@ Protege con matcher:
 | `/admin/login` | Formulario de contraseña del panel |
 | `/admin` | Cola de `raw_trend_items` (new/error/requires_review) y `trends` (draft/pending); procesar y publicar |
 | `/admin/import` | Importación CSV de hallazgos |
+| `/admin/published` | Tendencias publicadas; quitar de la web |
+| `/admin/usage` | Consumo y costos estimados X API |
 | `/admin/settings` | Estado de variables (fingerprints, máscaras) |
 | `/admin/users` | Listado de usuarios; cambio manual de plan (beta, sin pasarela) |
 | `/admin/preview/[slug]` | Vista previa editorial antes de publicar |
@@ -204,7 +206,17 @@ Documentación operativa: `docs/kimi-webbridge-prompt.md`.
 
 Flujo: X API → n8n → `POST /api/bridge/ingest` → `raw_trend_items` (`status=new`) → `/admin` → DeepSeek → publicación manual.
 
-Documentación: `docs/x-api-radar.md`, `docs/n8n-x-ai-radar-workflow.md`. Sincronizar nodos Code: `npm run n8n:sync-x-radar` (requiere `N8N_API_KEY`).
+Documentación: `docs/x-api-radar.md`, `docs/n8n-x-ai-radar-workflow.md`. Sincronizar nodos Code: `npm run n8n:sync-x-radar` (requiere `N8N_API_KEY`). Al terminar cada corrida, **POST usage run** registra consumo en `POST /api/admin/usage/runs`.
+
+### Panel consumo X API
+
+| Ruta | Descripción |
+|------|-------------|
+| `/admin/usage` | Gasto estimado hoy/mes, presupuesto, últimas corridas, tarifas editables |
+| `POST /api/admin/usage/runs` | Registro desde n8n (`USAGE_API_KEY`) |
+| `GET /api/admin/usage/summary` | Agregados (solo admin) |
+
+Tablas: `usage_runs`, `usage_events`, `usage_budget_settings`. Migración `drizzle/0003_usage.sql`.
 
 ### Workflows archivados (notificaciones, ya no usados)
 
@@ -257,7 +269,8 @@ Estilo: Tailwind con tokens de marca (`brand-navy`, `brand-orange`).
 | `WEBHOOK_URL`, `APP_ID` | Magic link | Envío de correo vía n8n/externo |
 | `ADMIN_EMAILS` | Opcional | Rol admin en BD |
 | `N8N_API_KEY` | Solo `n8n:sync-x-radar` | Sincronizar workflow X en n8n (no en contenedor app) |
-| Variables X en n8n | Solo n8n | `X_BEARER_TOKEN`, `BRIDGE_API_KEY`, `NOTITENDENCIAS_INGEST_URL` |
+| `USAGE_API_KEY` | Sí (consumo n8n) | Bearer `POST /api/admin/usage/runs`; también en Coolify |
+| Variables X en n8n | Solo n8n | `X_BEARER_TOKEN`, credenciales Bridge y Usage |
 
 Copia base: `.env.example`.
 

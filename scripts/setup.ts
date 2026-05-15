@@ -22,6 +22,12 @@ function main() {
   console.log("→ Seed de categorías y fuentes…");
   execSync("npx tsx src/db/seed.ts", { stdio: "inherit", env: process.env });
 
+  if (!process.env.USAGE_API_KEY?.trim()) {
+    console.warn(
+      "Aviso: USAGE_API_KEY no está definida. El panel /admin/usage funcionará, pero n8n no podrá registrar corridas hasta configurarla.",
+    );
+  }
+
   console.log("Listo. Puedes arrancar con `npm run dev` o desplegar en Coolify.");
 }
 
