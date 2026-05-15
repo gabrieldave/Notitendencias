@@ -44,7 +44,6 @@ export default {
   trustHost: process.env.AUTH_TRUST_HOST === "true",
   pages: {
     signIn: "/login",
-    verifyRequest: "/auth/verify-request",
     error: "/auth/error",
   },
   callbacks: {

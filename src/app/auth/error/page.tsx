@@ -11,7 +11,7 @@ type Props = { searchParams: Promise<{ error?: string }> };
 const messages: Record<string, string> = {
   Configuration: "Hay un problema de configuración del servicio de acceso. Contacta al equipo.",
   AccessDenied: "No tienes permiso para acceder con esa cuenta.",
-  Verification: "El enlace de verificación no es válido o ha caducado. Solicita uno nuevo.",
+  Verification: "La sesión de Google no se pudo completar. Inténtalo de nuevo.",
   Default: "No pudimos completar el inicio de sesión. Inténtalo de nuevo.",
 };
 

@@ -1,85 +1,36 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import type { EmailConfig } from "@auth/core/providers/email";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import authConfig from "@/auth.config";
 import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
 import { isAdminEmail, parseAdminEmails } from "@/lib/admin-emails";
-import { assertMagicLinkRateLimit } from "@/lib/auth-rate-limit";
 import { isGoogleAuthConfigured } from "@/lib/google-auth";
-import { sendMagicLinkWebhook } from "@/lib/magic-link-webhook";
 
-function publicAppOrigin(): string {
-  const u = process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3015";
-  return new URL(u).origin;
+if (!isGoogleAuthConfigured()) {
+  console.warn(
+    "[auth] AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET no configurados. El login de usuarios no estará disponible.",
+  );
 }
 
-const magicLink: EmailConfig = {
-  id: "email",
-  type: "email",
-  name: "Correo",
-  from: process.env.AUTH_EMAIL_FROM ?? "Notitendencias <login@notitendencias.com>",
-  maxAge: 30 * 60,
-  async sendVerificationRequest(params) {
-    const { identifier, url, request } = params;
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      request.headers.get("x-real-ip") ??
-      "unknown";
-    const emailKey = identifier.toLowerCase().trim();
-    assertMagicLinkRateLimit(ip, emailKey);
-    const name = emailKey.split("@")[0] ?? "allí";
-    const logoUrl = `${publicAppOrigin()}/branding/logo-icon.png`;
-    await sendMagicLinkWebhook({
-      to: emailKey,
-      name,
-      verificationUrl: url,
-      logoUrl,
-    });
-  },
-};
-
-const providers = [
-  ...(isGoogleAuthConfigured()
-    ? [
-        Google({
-          clientId: process.env.AUTH_GOOGLE_ID!,
-          clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-        }),
-      ]
-    : []),
-  magicLink,
-];
-
-const baseAdapter = DrizzleAdapter(db, {
-  usersTable: users,
-  accountsTable: accounts,
-  sessionsTable: sessions,
-  verificationTokensTable: verificationTokens,
-});
-
-// Workaround: next-auth beta.30+ no pasa userId a createSession tras verificar
-// magic link (issue #13346). Cacheamos el id desde updateUser y lo inyectamos.
-let lastUserIdFromUpdate: string | null = null;
+const providers = isGoogleAuthConfigured()
+  ? [
+      Google({
+        clientId: process.env.AUTH_GOOGLE_ID!,
+        clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      }),
+    ]
+  : [];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: {
-    ...baseAdapter,
-    updateUser: async (user) => {
-      if (user.id) lastUserIdFromUpdate = user.id;
-      return baseAdapter.updateUser!(user);
-    },
-    createSession: async (session) => {
-      if (!session.userId && lastUserIdFromUpdate) {
-        session.userId = lastUserIdFromUpdate;
-        lastUserIdFromUpdate = null;
-      }
-      return baseAdapter.createSession!(session);
-    },
-  },
+  adapter: DrizzleAdapter(db, {
+    usersTable: users,
+    accountsTable: accounts,
+    sessionsTable: sessions,
+    verificationTokensTable: verificationTokens,
+  }),
   providers,
   session: {
     strategy: "database",
