@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Trend } from "@/db/schema";
 import { NewsletterBox } from "@/components/NewsletterBox";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
+import { SOURCE_URL_COLLAPSE_LENGTH } from "@/lib/editorial";
 import { Calendar } from "lucide-react";
 
 type Props = {
@@ -114,9 +115,9 @@ export function TrendDetailArticle({
             href={t.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 inline-block break-all text-sm font-semibold text-brand-orange hover:underline"
+            className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-orange hover:underline"
           >
-            {t.sourceUrl}
+            {t.sourceUrl.length > SOURCE_URL_COLLAPSE_LENGTH ? "Ver fuente original" : t.sourceUrl}
           </a>
         )}
       </section>

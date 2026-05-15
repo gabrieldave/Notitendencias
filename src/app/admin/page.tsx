@@ -12,7 +12,13 @@ export default async function AdminHomePage() {
   const rawPending = await db
     .select()
     .from(rawTrendItems)
-    .where(or(eq(rawTrendItems.status, "new"), eq(rawTrendItems.status, "error")))
+    .where(
+      or(
+        eq(rawTrendItems.status, "new"),
+        eq(rawTrendItems.status, "error"),
+        eq(rawTrendItems.status, "requires_review"),
+      ),
+    )
     .orderBy(desc(rawTrendItems.createdAt))
     .limit(100);
 

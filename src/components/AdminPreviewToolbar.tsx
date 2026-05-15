@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { EDITORIAL_ARXIV_ALERT_ES } from "@/lib/editorial";
 
 type Props = {
   trendId: string;
   slug: string;
   status: string;
+  /** Contenido detectado con menciones a arXiv: publicar exige confirmación explícita en API. */
+  mentionsArxiv?: boolean;
 };
 
-export function AdminPreviewToolbar({ trendId, slug, status }: Props) {
+export function AdminPreviewToolbar({ trendId, slug, status, mentionsArxiv = false }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState<"pub" | "rej" | null>(null);
   const canModerate = status === "draft" || status === "pending";
@@ -18,10 +21,22 @@ export function AdminPreviewToolbar({ trendId, slug, status }: Props) {
   async function publish() {
     setBusy("pub");
     try {
-      const res = await fetch(`/api/trends/${trendId}/publish`, { method: "POST" });
+      if (mentionsArxiv) {
+        const ok = confirm(
+          `${EDITORIAL_ARXIV_ALERT_ES}\n\n¿Confirmas publicación manual explícita?`,
+        );
+        if (!ok) {
+          setBusy(null);
+          return;
+        }
+      }
+      const res = await fetch(`/api/trends/${trendId}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mentionsArxiv ? { confirmEditorialArxiv: true } : {}),
+      });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
-      router.refresh();
+      if (!res.ok) throw new Error(data.message ?? data.error ?? "Error");
       router.push(`/tendencia/${slug}`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Error");
@@ -46,7 +61,13 @@ export function AdminPreviewToolbar({ trendId, slug, status }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 bg-amber-50/90 px-4 py-3">
+    <div className="space-y-0">
+      {mentionsArxiv && canModerate && (
+        <p className="border-b border-amber-200 bg-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-950">
+          {EDITORIAL_ARXIV_ALERT_ES}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center justify-center gap-2 bg-amber-50/90 px-4 py-3">
       <Link
         href="/admin"
         className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-brand-navy hover:border-brand-orange"
@@ -81,6 +102,7 @@ export function AdminPreviewToolbar({ trendId, slug, status }: Props) {
           Ver versión pública
         </Link>
       )}
+    </div>
     </div>
   );
 }

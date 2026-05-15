@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { rawTrendItems, categories } from "@/db/schema";
 import { bridgeIngestSchema } from "@/lib/schemas";
 import { RAW_TEXT_MAX_LENGTH } from "@/lib/constants";
+import { mergeEditorialArxivMetadata, rawItemMentionsArxiv } from "@/lib/editorial";
 import { eq } from "drizzle-orm";
 
 function unauthorized() {
@@ -61,6 +62,19 @@ export async function POST(request: Request) {
 
   const detected = data.detected_at ? new Date(data.detected_at) : null;
 
+  const metaIn =
+    data.metadata && typeof data.metadata === "object" && !Array.isArray(data.metadata)
+      ? (data.metadata as Record<string, unknown>)
+      : null;
+  const mentionsArxiv = rawItemMentionsArxiv({
+    title: data.title,
+    rawText: data.raw_text ?? null,
+    sourceUrl: data.source_url ?? null,
+    metadataJson: metaIn,
+  });
+  const metadataJson = mentionsArxiv ? mergeEditorialArxivMetadata(metaIn) : metaIn;
+  const status = mentionsArxiv ? "requires_review" : "new";
+
   const [item] = await db
     .insert(rawTrendItems)
     .values({
@@ -69,8 +83,8 @@ export async function POST(request: Request) {
       sourceUrl: data.source_url ?? null,
       title: data.title,
       rawText: data.raw_text ?? null,
-      metadataJson: data.metadata ?? null,
-      status: "new",
+      metadataJson: metadataJson && Object.keys(metadataJson).length > 0 ? metadataJson : null,
+      status,
       detectedAt: detected,
     })
     .returning();

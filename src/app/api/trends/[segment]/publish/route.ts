@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { trends, appEvents } from "@/db/schema";
 import { isAdminFromRequest } from "@/lib/admin-auth";
 import { getWebhookUrl, postWebhook } from "@/lib/webhook";
+import { EDITORIAL_ARXIV_ALERT_ES, trendMentionsArxiv } from "@/lib/editorial";
 import { eq } from "drizzle-orm";
 
 const UUID_RE =
@@ -29,6 +30,29 @@ export async function POST(
   if (trend.status !== "draft" && trend.status !== "pending") {
     return NextResponse.json(
       { ok: false, error: `Estado no publicable: ${trend.status}` },
+      { status: 400 },
+    );
+  }
+
+  let confirmEditorialArxiv = false;
+  const raw = await request.text();
+  if (raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw) as { confirmEditorialArxiv?: unknown };
+      if (parsed.confirmEditorialArxiv === true) confirmEditorialArxiv = true;
+    } catch {
+      return NextResponse.json({ ok: false, error: "JSON del cuerpo inválido" }, { status: 400 });
+    }
+  }
+
+  if (trendMentionsArxiv(trend) && !confirmEditorialArxiv) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "EDITORIAL_ARXIV_CONFIRM_REQUIRED",
+        message: EDITORIAL_ARXIV_ALERT_ES,
+        hint: "Repite la solicitud POST con JSON: { \"confirmEditorialArxiv\": true } tras revisión manual explícita.",
+      },
       { status: 400 },
     );
   }

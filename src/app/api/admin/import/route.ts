@@ -5,6 +5,7 @@ import { adminImportSchema } from "@/lib/schemas";
 import { isAdminFromRequest } from "@/lib/admin-auth";
 import { parseAdminImportCsv } from "@/lib/csv";
 import { RAW_TEXT_MAX_LENGTH } from "@/lib/constants";
+import { mergeEditorialArxivMetadata, rawItemMentionsArxiv } from "@/lib/editorial";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
@@ -57,16 +58,26 @@ export async function POST(request: NextRequest) {
       errors.push(`Fila ${i + 2}: título vacío`);
       continue;
     }
+    const sourceUrl = r.source_url?.trim() || null;
+    const baseMeta = { import: "csv" } as Record<string, unknown>;
+    const mentionsArxiv = rawItemMentionsArxiv({
+      title,
+      rawText: rawText || null,
+      sourceUrl,
+      metadataJson: baseMeta,
+    });
+    const metadataJson = mentionsArxiv ? mergeEditorialArxivMetadata(baseMeta) : baseMeta;
+    const status = mentionsArxiv ? "requires_review" : "new";
     const [item] = await db
       .insert(rawTrendItems)
       .values({
         categorySlug: category,
         sourceName: (r.source_name ?? "").trim() || "import",
-        sourceUrl: r.source_url?.trim() || null,
+        sourceUrl,
         title,
         rawText: rawText || null,
-        metadataJson: { import: "csv" },
-        status: "new",
+        metadataJson,
+        status,
       })
       .returning();
     inserted.push(item);

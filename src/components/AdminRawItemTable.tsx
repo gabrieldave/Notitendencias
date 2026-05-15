@@ -1,6 +1,7 @@
 "use client";
 
 import type { RawTrendItem } from "@/db/schema";
+import { EDITORIAL_ARXIV_ALERT_ES, rawItemMentionsArxiv } from "@/lib/editorial";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -41,7 +42,14 @@ export function AdminRawItemTable({ items }: { items: RawTrendItem[] }) {
         <tbody>
           {items.map((it) => (
             <tr key={it.id} className="border-t border-slate-100">
-              <td className="px-4 py-3 font-medium text-brand-navy">{it.title}</td>
+              <td className="px-4 py-3 font-medium text-brand-navy">
+                <div>{it.title}</div>
+                {rawItemMentionsArxiv(it) && (
+                  <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-950">
+                    {EDITORIAL_ARXIV_ALERT_ES}
+                  </p>
+                )}
+              </td>
               <td className="px-4 py-3">{it.categorySlug}</td>
               <td className="px-4 py-3">{it.sourceName}</td>
               <td className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">

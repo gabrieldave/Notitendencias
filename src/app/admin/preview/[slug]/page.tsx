@@ -4,6 +4,7 @@ import { trends } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { TrendDetailArticle } from "@/components/TrendDetailArticle";
 import { AdminPreviewToolbar } from "@/components/AdminPreviewToolbar";
+import { trendMentionsArxiv } from "@/lib/editorial";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +34,13 @@ export default async function AdminPreviewTrendPage({ params }: Props) {
   const bannerText = unpublished
     ? "Vista previa admin: esta tendencia todavía no está publicada."
     : "Vista previa admin: esta tendencia ya está publicada.";
+  const mentionsArxiv = trendMentionsArxiv(t);
 
   return (
     <>
       <div className="sticky top-0 z-30 border-b border-amber-200 bg-amber-50 shadow-sm">
         <p className="px-4 py-2.5 text-center text-sm font-semibold text-amber-950">{bannerText}</p>
-        <AdminPreviewToolbar trendId={t.id} slug={t.slug} status={t.status} />
+        <AdminPreviewToolbar trendId={t.id} slug={t.slug} status={t.status} mentionsArxiv={mentionsArxiv} />
       </div>
       <TrendDetailArticle
         trend={t}
