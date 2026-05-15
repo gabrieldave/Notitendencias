@@ -297,6 +297,44 @@ curl -X POST "https://notitendencias.iareal.net/api/bridge/ingest" \
 - **Beta:** `Expand queries` limita `max_results` a **10** por query (hasta 12 queries ≈ 120 lecturas máx. por corrida si X devuelve el tope).
 - **Producción:** subir `X_API_MAX_POSTS_PER_RUN` (p. ej. 50) y reducir queries activas si la cuota aprieta.
 - Mantener el workflow **inactivo** mientras falten tokens; no activar cron sin revisión editorial en `/admin`.
+- **Panel admin:** gasto estimado en [`/admin/usage`](https://notitendencias.iareal.net/admin/usage) (solo admin).
+
+### Registrar consumo al final de cada corrida
+
+Tras **Log resumen**, el nodo **POST usage run** envía métricas a Notitendencias:
+
+| Campo | Valor |
+|-------|--------|
+| URL | `https://notitendencias.iareal.net/api/admin/usage/runs` |
+| Método | `POST` |
+| Auth | Header `Authorization: Bearer <USAGE_API_KEY>` (credencial n8n **Notitendencias Usage**) |
+| Content-Type | `application/json` |
+
+Body (generado por **Log resumen**):
+
+```json
+{
+  "provider": "x",
+  "workflow_name": "Notitendencias - X AI Radar",
+  "run_type": "scheduled",
+  "started_at": "2026-05-15T16:45:00.000Z",
+  "finished_at": "2026-05-15T16:48:12.000Z",
+  "status": "success",
+  "posts_requested": 550,
+  "posts_received": 42,
+  "posts_filtered": 35,
+  "posts_sent_to_ingest": 7,
+  "duplicates_skipped": 2,
+  "errors_count": 0,
+  "metadata": {
+    "queries_used": ["OpenAI", "AnthropicAI"],
+    "accounts_checked": ["OpenAI", "AnthropicAI"],
+    "timezone": "America/Mexico_City"
+  }
+}
+```
+
+En Coolify define `USAGE_API_KEY` (misma clave que en n8n). El costo estimado usa `posts_received × post_read_cost_usd` (editable en `/admin/usage`). **No sustituye** el saldo real en X.
 
 ---
 

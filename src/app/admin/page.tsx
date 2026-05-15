@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { db } from "@/db";
 import { rawTrendItems, trends } from "@/db/schema";
 import { desc, eq, inArray, or } from "drizzle-orm";
-import { AdminLogoutButton } from "@/components/AdminLogoutButton";
+import { AdminNav } from "@/components/AdminNav";
 import { AdminRawItemTable } from "@/components/AdminRawItemTable";
 import { AdminTrendTable } from "@/components/AdminTrendTable";
 
@@ -36,39 +35,7 @@ export default async function AdminHomePage() {
           <h1 className="text-3xl font-black text-brand-navy">Panel admin</h1>
           <p className="text-sm text-slate-600">Procesar hallazgos, publicar tendencias.</p>
         </div>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Link
-            href="/admin/published"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
-          >
-            Publicadas
-          </Link>
-          <Link
-            href="/admin/import"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
-          >
-            Importar CSV
-          </Link>
-          <Link
-            href="/admin/settings"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
-          >
-            Ajustes
-          </Link>
-          <Link
-            href="/admin/published"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
-          >
-            Publicadas
-          </Link>
-          <Link
-            href="/admin/users"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold hover:border-brand-orange"
-          >
-            Usuarios
-          </Link>
-          <AdminLogoutButton />
-        </div>
+        <AdminNav active="/admin" />
       </div>
 
       <section className="mb-12">

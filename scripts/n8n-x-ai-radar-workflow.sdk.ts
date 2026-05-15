@@ -288,24 +288,51 @@ return out;`;
 
 const LOG_SUMMARY_JS = `const { DateTime } = require('luxon');
 const accounts = $('Set config').first().json.accounts || [];
-const picked = $('pickTodayPost').all().length;
-const ingested = $('dedupe').all().length;
 const expandNode = $('Expand accounts').first() || $('Expand queries').first();
 const dayKey = expandNode.json.dayKey;
 const startIso = expandNode.json.startOfTodayIso;
+const maxResults = Number(expandNode.json.max_results) || 10;
+
+const searchItems = $('X API Recent Search').all();
+let postsReceived = 0;
+for (const item of searchItems) {
+  postsReceived += (item.json.data || []).length;
+}
+
+const picked = $('pickTodayPost').all().length;
+const normalized = $('normalizeXPosts').all().length;
+const afterEditorial = $('editorialFilter').all().length;
+const ingested = $('dedupe').all().length;
+const postsRequested = accounts.length * maxResults;
+const postsFiltered = Math.max(0, postsReceived - ingested);
+const duplicatesSkipped = Math.max(0, afterEditorial - ingested);
+const startedAt = $execution.startedAt || startIso;
 
 return [
   {
     json: {
-      finishedAt: DateTime.now().toISO(),
-      timezone: 'America/Mexico_City',
-      dayKey,
-      startOfTodayIso: startIso,
-      catalogAccounts: accounts.length,
-      accountsWithPostToday: picked,
-      candidatesToIngest: ingested,
-      note: 'Solo posts desde inicio del día CDMX; máx. 1 por cuenta; sin paginación histórica.',
-      workflow: 'Notitendencias - X AI Radar',
+      provider: 'x',
+      workflow_name: 'Notitendencias - X AI Radar',
+      run_type: 'scheduled',
+      started_at: startedAt,
+      finished_at: DateTime.now().toISO(),
+      status: 'success',
+      posts_requested: postsRequested,
+      posts_received: postsReceived,
+      posts_filtered: postsFiltered,
+      posts_sent_to_ingest: ingested,
+      duplicates_skipped: duplicatesSkipped,
+      errors_count: 0,
+      metadata: {
+        queries_used: accounts.slice(0, 20),
+        accounts_checked: accounts,
+        timezone: 'America/Mexico_City',
+        dayKey,
+        catalogAccounts: accounts.length,
+        accountsWithPostToday: picked,
+        normalizedCandidates: normalized,
+        note: 'Solo posts desde inicio del día CDMX; máx. 1 por cuenta.',
+      },
     },
   },
 ];`;
@@ -524,7 +551,31 @@ const logResumen = node({
     parameters: { mode: 'runOnceForAllItems', jsCode: LOG_SUMMARY_JS },
     executeOnce: true,
   },
-  output: [{ catalogAccounts: 55, candidatesToIngest: 1 }],
+  output: [{ provider: 'x', posts_received: 1, posts_sent_to_ingest: 1 }],
+});
+
+const postUsageRun = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'POST usage run',
+    position: [2420, 60],
+    credentials: { httpHeaderAuth: newCredential('Notitendencias Usage') },
+    parameters: {
+      method: 'POST',
+      url: 'https://notitendencias.iareal.net/api/admin/usage/runs',
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      headerParameters: {
+        parameters: [{ name: 'Content-Type', value: 'application/json' }],
+      },
+      sendBody: true,
+      specifyBody: 'json',
+      jsonBody: expr('{{ JSON.stringify($json) }}'),
+    },
+  },
+  output: [{ ok: true, run: { id: 'run-1' } }],
 });
 
 const radarNote = sticky(
@@ -549,7 +600,7 @@ export default workflow('nFBNa3Y1ueVHBLbc', 'Notitendencias - X AI Radar')
   .to(dedupeNode)
   .to(
     batchIngest
-      .onDone(logResumen)
+      .onDone(logResumen.to(postUsageRun))
       .onEachBatch(postIngest.to(nextBatch(batchIngest))),
   )
   .add(radarNote);

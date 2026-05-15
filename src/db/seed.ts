@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { db } from "./index";
-import { categories, sources } from "./schema";
+import { categories, sources, usageBudgetSettings } from "./schema";
 import { eq } from "drizzle-orm";
 
 const categorySeeds = [
@@ -61,6 +61,24 @@ async function main() {
       await db.insert(sources).values(s);
       console.log("Fuente creada:", s.name);
     }
+  }
+
+  const [usageX] = await db
+    .select()
+    .from(usageBudgetSettings)
+    .where(eq(usageBudgetSettings.provider, "x"))
+    .limit(1);
+  if (!usageX) {
+    await db.insert(usageBudgetSettings).values({
+      provider: "x",
+      monthlyBudgetUsd: "60",
+      prepaidBalanceUsd: "5",
+      postReadCostUsd: "0.005",
+      trendReadCostUsd: "0.010",
+      userReadCostUsd: "0",
+      active: true,
+    });
+    console.log("Presupuesto X API creado (provider=x)");
   }
 
   console.log("Seed completado.");

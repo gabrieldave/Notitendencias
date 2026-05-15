@@ -39,3 +39,28 @@ export const favoriteBodySchema = z.object({
 export const adminUserPlanSchema = z.object({
   plan: z.enum(["free", "premium"]),
 });
+
+export const usageRunCreateSchema = z.object({
+  provider: z.string().min(1).max(32).default("x"),
+  workflow_name: z.string().max(256).optional().nullable(),
+  run_type: z.string().max(64).default("scheduled"),
+  started_at: z.string().datetime().optional().nullable(),
+  finished_at: z.string().datetime().optional().nullable(),
+  status: z.string().max(32).default("success"),
+  posts_requested: z.coerce.number().int().min(0).default(0),
+  posts_received: z.coerce.number().int().min(0).default(0),
+  posts_filtered: z.coerce.number().int().min(0).default(0),
+  posts_sent_to_ingest: z.coerce.number().int().min(0).default(0),
+  duplicates_skipped: z.coerce.number().int().min(0).default(0),
+  errors_count: z.coerce.number().int().min(0).default(0),
+  metadata: z.record(z.unknown()).optional().nullable(),
+});
+
+export const usageSettingsPatchSchema = z.object({
+  provider: z.string().min(1).max(32).default("x"),
+  monthly_budget_usd: z.coerce.number().min(0).optional(),
+  prepaid_balance_usd: z.coerce.number().min(0).optional(),
+  post_read_cost_usd: z.coerce.number().min(0).optional(),
+  trend_read_cost_usd: z.coerce.number().min(0).optional(),
+  user_read_cost_usd: z.coerce.number().min(0).optional(),
+});

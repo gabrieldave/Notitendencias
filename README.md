@@ -27,6 +27,7 @@ Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 | `ADMIN_EMAILS` | No | Lista separada por comas: esos correos reciben `role=admin` en BD al iniciar sesión. El panel `/admin` sigue pudiendo usar la cookie de `ADMIN_PASSWORD`; las acciones sensibles también aceptan rol admin vía sesión + comprobación en BD. |
 | `N8N_API_KEY` | No | Solo para `npm run n8n:sync-x-radar` en tu máquina/CI (sincronizar workflow X). **No** en el contenedor Next. |
 | `N8N_BASE_URL` | No | Por defecto `https://n8n.vibesystems.tech`. |
+| `USAGE_API_KEY` | **Sí** para registrar consumo desde n8n | Bearer para `POST /api/admin/usage/runs`. Generar con `openssl rand -hex 32`. Misma clave en Coolify y en n8n (credencial **Notitendencias Usage**). **No** exponer en el frontend. |
 
 **Build en Docker:** el `Dockerfile` pasa `DATABASE_URL` y `NEXT_PUBLIC_APP_URL` como build args; en Coolify define también esas variables en “Build arguments” si el build las necesita, además del runtime.
 
@@ -103,6 +104,8 @@ La web usa **Auth.js (NextAuth v5)** con sesión en **PostgreSQL** (tablas `sess
 - `POST /api/newsletter/subscribe` — alta en `subscribers`.
 - `GET/POST /api/auth/[...nextauth]` — Auth.js (sesión, OAuth Google, magic link).
 - `POST /api/admin/login` | `logout` | `import` — panel.
+- `POST /api/admin/usage/runs` — Bearer `USAGE_API_KEY` (n8n) o admin; registra una corrida del radar X.
+- `GET /api/admin/usage/summary` | `runs` | `PATCH .../settings` — solo admin (cookie/sesión).
 
 > Rutas internas de publicación usan el **UUID** de la tendencia:  
 > `POST /api/trends/<UUID>/publish` y `POST /api/trends/<UUID>/reject`.  
@@ -181,6 +184,21 @@ Radar de señales de IA desde la **API oficial de X**, orquestado por **n8n**. N
 | 5 | Revisar en `/admin` (badge **X** si `metadata.platform === "x"`), pulsar **Procesar** (DeepSeek), luego publicar manualmente. |
 
 Documentación completa: [`docs/x-api-radar.md`](docs/x-api-radar.md) (estrategia, payload, filtrado) y [`docs/n8n-x-ai-radar-workflow.md`](docs/n8n-x-ai-radar-workflow.md) (nodos y código de ejemplo).
+
+## Panel de consumo X API
+
+Panel admin en **`/admin/usage`** (enlace **Consumo** en la navegación admin). Muestra **gasto estimado** en USD según tarifas configurables en base de datos — no es la factura real de X.
+
+| Paso | Acción |
+|------|--------|
+| 1 | En Coolify (o `.env`), definir `USAGE_API_KEY` (`openssl rand -hex 32`). |
+| 2 | En n8n, credencial **Notitendencias Usage**: header `Authorization: Bearer <USAGE_API_KEY>`. |
+| 3 | Al final de cada corrida del workflow X AI Radar, el nodo **POST usage run** envía métricas a `POST /api/admin/usage/runs`. |
+| 4 | En `/admin/usage`, revisar gasto hoy/mes, % del presupuesto, últimas corridas y alertas. |
+| 5 | Ajustar presupuesto mensual, saldo prepago y costo por post leído en el formulario del panel. |
+| 6 | Verificar el **balance real** en el [portal de desarrollador de X](https://developer.x.com/) — la estimación interna puede desviarse. |
+
+El costo por corrida se calcula como `posts_received × post_read_cost_usd` (valor editable). La proyección mensual usa el promedio de los últimos 7 días × 30.
 
 ## n8n y Kimi
 

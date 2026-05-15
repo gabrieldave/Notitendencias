@@ -2,6 +2,7 @@ import {
   boolean,
   integer,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
   text,
@@ -203,3 +204,55 @@ export type UserSessionRow = typeof sessions.$inferSelect;
 export type VerificationToken = typeof verificationTokens.$inferSelect;
 export type UserFavorite = typeof userFavorites.$inferSelect;
 export type UserPreference = typeof userPreferences.$inferSelect;
+
+export const usageRuns = pgTable("usage_runs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  provider: text("provider").default("x").notNull(),
+  workflowName: text("workflow_name"),
+  runType: text("run_type").default("scheduled"),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+  status: text("status").default("success"),
+  timezone: text("timezone").default("America/Mexico_City"),
+  postsRequested: integer("posts_requested").default(0),
+  postsReceived: integer("posts_received").default(0),
+  postsFiltered: integer("posts_filtered").default(0),
+  postsSentToIngest: integer("posts_sent_to_ingest").default(0),
+  duplicatesSkipped: integer("duplicates_skipped").default(0),
+  errorsCount: integer("errors_count").default(0),
+  estimatedCostUsd: numeric("estimated_cost_usd", { precision: 12, scale: 4 }).default("0"),
+  metadataJson: jsonb("metadata_json").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const usageEvents = pgTable("usage_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  usageRunId: uuid("usage_run_id").references(() => usageRuns.id, { onDelete: "cascade" }),
+  provider: text("provider").default("x").notNull(),
+  resourceType: text("resource_type").notNull(),
+  resourceId: text("resource_id"),
+  username: text("username"),
+  sourceUrl: text("source_url"),
+  unitCostUsd: numeric("unit_cost_usd", { precision: 12, scale: 6 }).default("0"),
+  quantity: integer("quantity").default(1),
+  estimatedCostUsd: numeric("estimated_cost_usd", { precision: 12, scale: 6 }).default("0"),
+  metadataJson: jsonb("metadata_json").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const usageBudgetSettings = pgTable("usage_budget_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  provider: text("provider").default("x").notNull().unique(),
+  monthlyBudgetUsd: numeric("monthly_budget_usd", { precision: 12, scale: 2 }).default("60"),
+  prepaidBalanceUsd: numeric("prepaid_balance_usd", { precision: 12, scale: 2 }).default("5"),
+  postReadCostUsd: numeric("post_read_cost_usd", { precision: 12, scale: 6 }).default("0.005"),
+  trendReadCostUsd: numeric("trend_read_cost_usd", { precision: 12, scale: 6 }).default("0.010"),
+  userReadCostUsd: numeric("user_read_cost_usd", { precision: 12, scale: 6 }).default("0"),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type UsageRun = typeof usageRuns.$inferSelect;
+export type UsageEvent = typeof usageEvents.$inferSelect;
+export type UsageBudgetSettings = typeof usageBudgetSettings.$inferSelect;
