@@ -6,6 +6,7 @@ import {
   splitInBatches,
   nextBatch,
   expr,
+  newCredential,
 } from '@n8n/workflow-sdk';
 
 const CONFIG_JSON = JSON.stringify({
@@ -42,7 +43,7 @@ const CONFIG_JSON = JSON.stringify({
 });
 
 const EXPAND_QUERIES_JS = `const config = $input.first().json;
-const maxRun = Number($vars.X_API_MAX_POSTS_PER_RUN || config.maxPostsPerRun || 50);
+const maxRun = Number(config.maxPostsPerRun || 50);
 const maxResults = Math.min(10, maxRun);
 const queries = (config.queries || []).slice(0, 12);
 return queries.map((query) => ({
@@ -177,8 +178,7 @@ return [{
   json: {
     finishedAt: new Date().toISOString(),
     normalizedCandidates: items.length,
-    note: 'Habilita X API Recent Search y POST Notitendencias ingest tras configurar X_BEARER_TOKEN, BRIDGE_API_KEY y NOTITENDENCIAS_INGEST_URL en Variables n8n.',
-    ingestUrlVar: 'NOTITENDENCIAS_INGEST_URL',
+    note: 'Radar X con credentials Header Auth (X API Bearer + Notitendencias Bridge).',
     workflow: 'Notitendencias - X AI Radar',
   },
 }];`;
@@ -237,10 +237,12 @@ const xApiSearch = node({
   config: {
     name: 'X API Recent Search',
     position: [720, 100],
-    disabled: true,
+    credentials: { httpHeaderAuth: newCredential('X API Bearer') },
     parameters: {
       method: 'GET',
       url: 'https://api.x.com/2/tweets/search/recent',
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
       sendQuery: true,
       queryParameters: {
         parameters: [
@@ -252,15 +254,6 @@ const xApiSearch = node({
           },
           { name: 'expansions', value: 'author_id' },
           { name: 'user.fields', value: 'username,name' },
-        ],
-      },
-      sendHeaders: true,
-      headerParameters: {
-        parameters: [
-          {
-            name: 'Authorization',
-            value: expr('Bearer {{ $vars.X_BEARER_TOKEN }}'),
-          },
         ],
       },
     },
@@ -343,19 +336,15 @@ const postIngest = node({
   config: {
     name: 'POST Notitendencias ingest',
     position: [1920, 200],
-    disabled: true,
+    credentials: { httpHeaderAuth: newCredential('Notitendencias Bridge') },
     parameters: {
       method: 'POST',
-      url: expr('{{ $vars.NOTITENDENCIAS_INGEST_URL }}'),
+      url: 'https://notitendencias.iareal.net/api/bridge/ingest',
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
       sendHeaders: true,
       headerParameters: {
-        parameters: [
-          {
-            name: 'Authorization',
-            value: expr('Bearer {{ $vars.BRIDGE_API_KEY }}'),
-          },
-          { name: 'Content-Type', value: 'application/json' },
-        ],
+        parameters: [{ name: 'Content-Type', value: 'application/json' }],
       },
       sendBody: true,
       specifyBody: 'json',
@@ -378,7 +367,7 @@ const logResumen = node({
 });
 
 const betaNote = sticky(
-  '## X AI Radar (beta)\n\n1. Variables n8n: X_BEARER_TOKEN, BRIDGE_API_KEY, NOTITENDENCIAS_INGEST_URL, X_API_MAX_POSTS_PER_RUN\n2. Habilita nodos HTTP deshabilitados tras configurar\n3. Prueba con Manual Trigger; max_results=10 en beta\n4. Cron 8:00: activa workflow solo en producción',
+  '## X AI Radar\n\n1. Credentials: X API Bearer + Notitendencias Bridge (Header Auth)\n2. Prueba con Manual Trigger; max_results=10\n3. Activa el workflow solo cuando la prueba manual funcione',
   [setConfig, xApiSearch, postIngest],
   { position: [240, -200], width: 420, height: 200 },
 );
