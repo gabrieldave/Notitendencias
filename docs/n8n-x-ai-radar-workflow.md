@@ -2,8 +2,14 @@
 
 Orquesta la consulta a la API de X, normalización, scoring, deduplicación e ingesta en Notitendencias.
 
-**Nombre del workflow:** `Notitendencias - X AI Radar`  
-**Estado recomendado:** desactivado hasta configurar credenciales y probar con pocos posts.
+| Campo | Valor |
+|-------|--------|
+| **Nombre** | `Notitendencias - X AI Radar` |
+| **ID** | `nFBNa3Y1ueVHBLbc` |
+| **URL** | https://n8n.vibesystems.tech/workflow/nFBNa3Y1ueVHBLbc |
+| **Estado** | **Inactivo** hasta configurar variables y habilitar nodos HTTP |
+
+Código fuente del workflow (SDK): [`scripts/n8n-x-ai-radar-workflow.sdk.ts`](../scripts/n8n-x-ai-radar-workflow.sdk.ts)
 
 ---
 
@@ -15,9 +21,15 @@ Configurar en **Settings → Variables** (o credenciales) del entorno n8n:
 |----------|---------|--------|
 | `X_BEARER_TOKEN` | (secreto) | API v2 Bearer de X Developer Portal |
 | `X_API_MAX_POSTS_PER_RUN` | `50` | Límite por ejecución |
-| `X_API_MAX_POSTS_PER_DAY` | `100` | Contador acumulado (nodo Code opcional) |
 | `NOTITENDENCIAS_INGEST_URL` | `https://notitendencias.iareal.net/api/bridge/ingest` | |
 | `BRIDGE_API_KEY` | (secreto) | Igual que en la app |
+
+**Checklist (faltantes hasta que los configures en n8n → Settings → Variables):**
+
+- [ ] `X_BEARER_TOKEN`
+- [ ] `BRIDGE_API_KEY`
+- [ ] `NOTITENDENCIAS_INGEST_URL`
+- [ ] `X_API_MAX_POSTS_PER_RUN` (opcional; default lógico 50, beta usa `max_results` ≤ 10)
 
 Lista editable en el nodo **Set config** (JSON):
 
@@ -48,30 +60,31 @@ Lista editable en el nodo **Set config** (JSON):
 
 ```mermaid
 flowchart LR
-  A[Cron 8:00] --> B[Set config]
-  B --> C[HTTP X Recent Search]
-  B --> D[HTTP X User timelines]
+  M[Manual Trigger] --> B[Set config]
+  A[Cron 8:00] --> B
+  B --> D[Expand queries]
+  D --> C[HTTP X Recent Search]
   C --> E[normalizeXPosts]
-  D --> E
   E --> F[scoreAndFilter]
   F --> G[dedupe]
   G --> H[Split in Batches]
   H --> I[POST ingest]
-  I --> J[Log / fin]
+  H --> J[Log resumen]
 ```
 
 | # | Nodo | Tipo | Descripción |
 |---|------|------|-------------|
-| 1 | Cron diario | Schedule Trigger | 08:00 (zona del servidor n8n) |
-| 2 | Set config | Set | Cuentas, queries, `maxPostsPerRun` |
-| 3 | X Recent Search | HTTP Request | `GET https://api.x.com/2/tweets/search/recent?query=...` |
-| 4 | X User timeline | HTTP Request | Por cuenta clave (si el plan lo permite) |
-| 5 | normalizeXPosts | Code | Unifica tweets → payload Notitendencias |
-| 6 | scoreAndFilter | Code | Puntuación y filtro (score ≥ 40) |
-| 7 | dedupe | Code | Por `post_id` en la ejecución |
-| 8 | Split in Batches | Split | Tamaño 1–5 para no saturar ingest |
-| 9 | POST Notitendencias | HTTP Request | Bearer `BRIDGE_API_KEY` |
-| 10 | Log | Code / Set | Resumen: enviados, descartados, errores |
+| A | Manual Trigger (tests) | Manual | Prueba sin cron |
+| B | Cron diario 8am | Schedule Trigger | 08:00 (zona del servidor n8n); workflow inactivo en beta |
+| C | Set config | Set | Cuentas, queries, `maxPostsPerRun` |
+| D | Expand queries | Code | 1 item por query; `max_results` = min(10, tope) |
+| E | X API Recent Search | HTTP Request | `GET …/tweets/search/recent` — **deshabilitado** hasta `X_BEARER_TOKEN` |
+| F | normalizeXPosts | Code | Unifica tweets → payload Notitendencias |
+| G | scoreAndFilter | Code | +30 cuenta clave, +20 keywords, +15 URL, +10 métricas, +10 MX; descarta &lt;40 y arxiv |
+| H | dedupe | Code | Por `post_id` y `source_url` |
+| I | Split in Batches | Split | `batchSize: 1` |
+| J | POST Notitendencias ingest | HTTP Request | Bearer `BRIDGE_API_KEY` — **deshabilitado** hasta variables |
+| K | Log resumen | Code | Candidatos tras dedupe y nota de configuración |
 
 ---
 
@@ -230,27 +243,67 @@ Respuesta 200: `{ "ok": true, "item": { "id": "...", "status": "new", ... } }`.
 
 ---
 
-## Creación automática (MCP / API)
+## Actualizar el workflow (MCP)
 
-1. **MCP n8n en Cursor:** si `create_workflow_from_code` está disponible, validar con `validate_workflow` y crear el workflow desactivado.
-2. **Script del repo:** `npm run n8n:push` solo crea los workflows de webhooks/digest existentes; el radar X se documenta aquí para import manual.
-3. **Import manual en n8n UI:**
-   - Crear workflow vacío con el nombre `Notitendencias - X AI Radar`.
-   - Añadir nodos según la tabla anterior.
-   - Pegar los bloques Code de este documento.
-   - Configurar variables y **no activar** hasta probar con `max_results` bajo.
+1. Editar [`scripts/n8n-x-ai-radar-workflow.sdk.ts`](../scripts/n8n-x-ai-radar-workflow.sdk.ts).
+2. En Cursor: `validate_workflow` → `update_workflow` con `workflowId: nFBNa3Y1ueVHBLbc`.
+3. No activar el workflow ni los nodos HTTP hasta tener variables.
 
-Si la creación por MCP falla por credenciales, es esperado: completar variables en n8n y activar tras una prueba con 5 posts.
+`npm run n8n:push` **no** toca este workflow (solo webhooks + Daily Digest).
 
 ---
 
-## Prueba con 5 posts
+## Prueba manual (5–10 posts)
 
-1. En Set config, limitar a 1–2 queries y `max_results=5`.
-2. Ejecutar workflow manualmente (Test workflow).
-3. Verificar en https://notitendencias.iareal.net/admin que aparecen filas con `source_name` = X y badge **X**.
-4. Procesar uno con DeepSeek y revisar tono cauteloso.
-5. Publicar manualmente solo si pasa revisión.
+1. En n8n → **Settings → Variables**, definir `X_BEARER_TOKEN`, `BRIDGE_API_KEY`, `NOTITENDENCIAS_INGEST_URL`.
+2. Abrir el workflow → habilitar nodos **X API Recent Search** y **POST Notitendencias ingest** (clic derecho → Enable).
+3. Opcional: en **Set config**, dejar solo 1–2 queries para la primera corrida.
+4. **Execute workflow** con **Manual Trigger (tests)** (no hace falta activar el workflow para prueba manual).
+5. Revisar **Log resumen** (`normalizedCandidates`).
+6. En https://notitendencias.iareal.net/admin comprobar filas `source_name` = **X** y badge X.
+7. Procesar 1 ítem con DeepSeek; publicar solo tras revisión humana.
+
+### curl (ingest sin X API)
+
+Simula un hallazgo ya normalizado (útil si X API aún no está configurada):
+
+```bash
+curl -X POST "https://notitendencias.iareal.net/api/bridge/ingest" \
+  -H "Authorization: Bearer TU_BRIDGE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": "ia",
+    "source_name": "X",
+    "source_url": "https://x.com/OpenAI/status/1999999999999999999",
+    "title": "Señal de prueba radar X",
+    "raw_text": "Post de prueba para validar ingest desde n8n.",
+    "metadata": {
+      "platform": "x",
+      "signal_type": "ai_trend",
+      "username": "OpenAI",
+      "post_id": "1999999999999999999",
+      "from_key_account": true,
+      "relevance_reason": "Prueba manual"
+    }
+  }'
+```
+
+---
+
+## Activar cron diario (producción)
+
+1. Variables y prueba manual OK.
+2. Habilitar nodos HTTP si siguen deshabilitados.
+3. Activar el workflow (toggle) en n8n — dispara **Cron diario 8am**.
+4. Monitorear ejecuciones y cuota X API.
+
+---
+
+## Control de costos
+
+- **Beta:** `Expand queries` limita `max_results` a **10** por query (hasta 12 queries ≈ 120 lecturas máx. por corrida si X devuelve el tope).
+- **Producción:** subir `X_API_MAX_POSTS_PER_RUN` (p. ej. 50) y reducir queries activas si la cuota aprieta.
+- Mantener el workflow **inactivo** mientras falten tokens; no activar cron sin revisión editorial en `/admin`.
 
 ---
 
