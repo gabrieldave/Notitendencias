@@ -53,14 +53,33 @@ const providers = [
   magicLink,
 ];
 
+const baseAdapter = DrizzleAdapter(db, {
+  usersTable: users,
+  accountsTable: accounts,
+  sessionsTable: sessions,
+  verificationTokensTable: verificationTokens,
+});
+
+// Workaround: next-auth beta.30+ no pasa userId a createSession tras verificar
+// magic link (issue #13346). Cacheamos el id desde updateUser y lo inyectamos.
+let lastUserIdFromUpdate: string | null = null;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
+  adapter: {
+    ...baseAdapter,
+    updateUser: async (user) => {
+      if (user.id) lastUserIdFromUpdate = user.id;
+      return baseAdapter.updateUser!(user);
+    },
+    createSession: async (session) => {
+      if (!session.userId && lastUserIdFromUpdate) {
+        session.userId = lastUserIdFromUpdate;
+        lastUserIdFromUpdate = null;
+      }
+      return baseAdapter.createSession!(session);
+    },
+  },
   providers,
   session: {
     strategy: "database",
