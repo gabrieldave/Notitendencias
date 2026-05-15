@@ -11,3 +11,13 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -27,10 +28,8 @@ export default function RootLayout({
     <html lang="es" className={dmSans.variable}>
       <body className="min-h-screen">
         <Header />
-        <main>{children}</main>
-        <footer className="border-t border-slate-200 bg-white py-10 text-center text-sm text-slate-600">
-          © {new Date().getFullYear()} Notitendencias · vibesystems.tech
-        </footer>
+        <main className="min-h-[50vh]">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );

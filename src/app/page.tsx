@@ -1,112 +1,125 @@
 import { db } from "@/db";
-import { trends } from "@/db/schema";
+import { trends, type Trend } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { CategoryNav } from "@/components/CategoryNav";
+import { HeroSection } from "@/components/HeroSection";
+import { MostViewedSidebar } from "@/components/MostViewedSidebar";
 import { NewsletterBox } from "@/components/NewsletterBox";
-import { PremiumPreview } from "@/components/PremiumPreview";
-import { PricingTeaser } from "@/components/PricingTeaser";
-import { TrendCard } from "@/components/TrendCard";
+import { PremiumBanner } from "@/components/PremiumBanner";
+import { PricingSection } from "@/components/PricingSection";
+import { QuickSignalCard } from "@/components/QuickSignalCard";
+import { SectionHeader } from "@/components/SectionHeader";
+import { TrendCardHorizontal } from "@/components/TrendCardHorizontal";
+import { TrendCardLarge } from "@/components/TrendCardLarge";
 
 export const dynamic = "force-dynamic";
 
-async function loadHomeTrends() {
+async function loadPublished(): Promise<Trend[]> {
   try {
-    const published = await db
+    return await db
       .select()
       .from(trends)
       .where(eq(trends.status, "published"))
       .orderBy(desc(trends.publishedAt))
-      .limit(12);
-    const featured = [...published].sort((a, b) => b.trendScore - a.trendScore).slice(0, 3);
-    const topViews = [...published].slice(0, 4);
-    return { featured, topViews };
+      .limit(80);
   } catch {
-    return { featured: [], topViews: [] };
+    return [];
   }
 }
 
 export default async function HomePage() {
-  const { featured, topViews } = await loadHomeTrends();
+  const published = await loadPublished();
+  const byScore = [...published].sort((a, b) => b.trendScore - a.trendScore);
+  const mostViewed = byScore.slice(0, 5);
+  const momentum = byScore.slice(0, 6);
+  const iaStories = published.filter((t) => t.categorySlug === "ia").slice(0, 4);
+  const useIaBlock = iaStories.length > 0;
+  const fallbackFeatured = byScore.slice(0, 3);
 
   return (
-    <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-sky-50">
-        <div className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-brand-orange/20 blur-3xl" />
-        <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-sky-300/30 blur-3xl" />
-        <div className="mx-auto max-w-6xl px-4 py-16 md:py-24">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
-            Plataforma mexicana de tendencias digitales
-          </p>
-          <h1 className="mt-4 max-w-3xl text-4xl font-black leading-tight text-brand-navy md:text-5xl">
-            Las tendencias digitales más importantes, resumidas y convertidas en ideas útiles.
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg text-slate-600">
-            Rastreamos señales del internet, filtramos el ruido y te entregamos contenido claro,
-            accionable y lleno de oportunidades.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <a
-              href="/ia"
-              className="rounded-full bg-brand-navy px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-brand-orange"
-            >
-              Ver tendencias de IA
-            </a>
-            <a
-              href="#newsletter"
-              className="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-brand-navy hover:border-brand-orange"
-            >
-              Unirme al newsletter
-            </a>
+    <div className="min-h-screen bg-slate-50/80">
+      <HeroSection />
+
+      <section className="border-b border-slate-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-8 md:py-10">
+          <CategoryNav active="all" />
+        </div>
+      </section>
+
+      <section id="historias" className="scroll-mt-28">
+        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
+          <div className="grid gap-10 lg:grid-cols-[1fr_360px] lg:gap-12">
+            <div className="min-w-0 space-y-10">
+              {useIaBlock ? (
+                <>
+                  <SectionHeader
+                    title="Historias destacadas de IA"
+                    subtitle="Lo más reciente y relevante en inteligencia artificial."
+                    action={{ href: "/ia", label: "Ver todas →" }}
+                  />
+                  {iaStories[0] && (
+                    <div className="mt-6">
+                      <TrendCardHorizontal trend={iaStories[0]} />
+                    </div>
+                  )}
+                  <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                    {iaStories.slice(1, 4).map((t) => (
+                      <TrendCardLarge key={t.id} trend={t} />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <SectionHeader
+                    title="Destacadas hoy"
+                    subtitle="Las tendencias con mayor score editorial hasta que lleguen más historias de IA."
+                    action={{ href: "/#categorias", label: "Explorar categorías →" }}
+                  />
+                  <div className="mt-6 grid gap-6 md:grid-cols-3">
+                    {fallbackFeatured.length === 0 ? (
+                      <p className="text-slate-600 md:col-span-3">
+                        Aún no hay tendencias publicadas. Conecta Kimi WebBridge o importa CSV desde el panel admin.
+                      </p>
+                    ) : (
+                      fallbackFeatured.map((t) => <TrendCardLarge key={t.id} trend={t} />)
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <aside className="flex flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
+              <MostViewedSidebar trends={mostViewed} />
+              <QuickSignalCard />
+              <NewsletterBox variant="compact" />
+              <PricingSection />
+            </aside>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <CategoryNav />
+      <section className="mx-auto max-w-7xl px-4 pb-16 md:pb-20">
+        <PremiumBanner />
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-6">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-brand-navy">Destacadas hoy</h2>
-            <p className="text-sm text-slate-600">Mayor score editorial reciente</p>
+      <section className="border-t border-slate-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-14 md:py-16">
+          <SectionHeader
+            title="Tendencias que están marcando el cambio"
+            subtitle="Alto score editorial: señales que concentramos para ti."
+          />
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            {momentum.length === 0 ? (
+              <p className="text-slate-600 md:col-span-2">Pronto verás más señales aquí.</p>
+            ) : (
+              momentum.map((t) => <TrendCardLarge key={`mom-${t.id}`} trend={t} />)
+            )}
           </div>
-          <a href="/ia" className="text-sm font-semibold text-brand-orange hover:underline">
-            Ver categoría IA →
-          </a>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {featured.length === 0 ? (
-            <p className="text-slate-600 md:col-span-3">
-              Aún no hay tendencias publicadas. Conecta Kimi WebBridge o importa CSV desde el
-              panel admin.
-            </p>
-          ) : (
-            featured.map((t) => <TrendCard key={t.id} trend={t} />)
-          )}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <h2 className="text-2xl font-bold text-brand-navy">Lo más visto</h2>
-        <p className="text-sm text-slate-600">Orden editorial por frescura y score</p>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
-          {topViews.length === 0
-            ? null
-            : topViews.map((t) => <TrendCard key={t.id} trend={t} />)}
-        </div>
-      </section>
-
-      <section id="newsletter" className="mx-auto max-w-6xl px-4 py-12 scroll-mt-24">
+      <section className="mx-auto max-w-7xl px-4 pb-20">
         <NewsletterBox />
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <PremiumPreview />
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <PricingTeaser />
       </section>
     </div>
   );
