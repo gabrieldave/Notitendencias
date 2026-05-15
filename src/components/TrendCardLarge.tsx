@@ -3,9 +3,9 @@ import { ArrowRight, Calendar } from "lucide-react";
 import type { Trend } from "@/db/schema";
 import { TrendScoreBadge } from "./TrendScoreBadge";
 
-type Props = { trend: Trend; href?: string; className?: string };
+type Props = { trend: Trend; href?: string; className?: string; prominent?: boolean };
 
-export function TrendCardLarge({ trend, href, className = "" }: Props) {
+export function TrendCardLarge({ trend, href, className = "", prominent = false }: Props) {
   const to = href ?? `/tendencia/${trend.slug}`;
   const tags = (trend.tags as string[] | null)?.slice(0, 5) ?? [];
   const dateLabel = trend.publishedAt
@@ -18,7 +18,9 @@ export function TrendCardLarge({ trend, href, className = "" }: Props) {
 
   return (
     <article
-      className={`group flex h-full flex-col rounded-3xl border border-slate-200/90 bg-white p-6 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-brand-orange/30 hover:shadow-lift ${className}`}
+      className={`group flex h-full flex-col rounded-3xl border bg-white shadow-soft transition duration-300 hover:-translate-y-1 hover:border-brand-orange/30 hover:shadow-lift ${
+        prominent ? "border-2 border-brand-orange/20 p-8 shadow-lift md:p-10" : "border border-slate-200/90 p-6"
+      } ${className}`}
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-brand-navy/5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-navy ring-1 ring-brand-navy/10">
@@ -26,7 +28,11 @@ export function TrendCardLarge({ trend, href, className = "" }: Props) {
         </span>
         <TrendScoreBadge score={trend.trendScore} size="md" />
       </div>
-      <h3 className="text-xl font-black leading-snug text-brand-navy transition group-hover:text-brand-orange md:text-2xl">
+      <h3
+        className={`font-black leading-snug text-brand-navy transition group-hover:text-brand-orange ${
+          prominent ? "text-2xl md:text-3xl" : "text-xl md:text-2xl"
+        }`}
+      >
         <Link href={to} className="focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2">
           {trend.title}
         </Link>
@@ -55,10 +61,12 @@ export function TrendCardLarge({ trend, href, className = "" }: Props) {
       )}
       <Link
         href={to}
-        className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-brand-orange px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2"
+        className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-orange font-black text-white shadow-lg shadow-orange-500/25 transition hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2 sm:w-fit ${
+          prominent ? "min-h-[52px] px-8 py-3.5 text-base ring-2 ring-brand-orange/30" : "px-6 py-3 text-sm ring-1 ring-brand-orange/20"
+        }`}
       >
         Leer más
-        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
+        <ArrowRight className={`transition group-hover:translate-x-0.5 ${prominent ? "h-5 w-5" : "h-4 w-4"}`} aria-hidden />
       </Link>
     </article>
   );

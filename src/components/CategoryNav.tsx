@@ -12,12 +12,12 @@ import {
 } from "lucide-react";
 
 const ICONS: Record<string, ReactNode> = {
-  ia: <Brain className="h-3.5 w-3.5" aria-hidden />,
-  tecnologia: <Cpu className="h-3.5 w-3.5" aria-hidden />,
-  dinero: <Coins className="h-3.5 w-3.5" aria-hidden />,
-  creadores: <Users className="h-3.5 w-3.5" aria-hidden />,
-  entretenimiento: <Clapperboard className="h-3.5 w-3.5" aria-hidden />,
-  negocios: <TrendingUp className="h-3.5 w-3.5" aria-hidden />,
+  ia: <Brain className="h-4 w-4" aria-hidden />,
+  tecnologia: <Cpu className="h-4 w-4" aria-hidden />,
+  dinero: <Coins className="h-4 w-4" aria-hidden />,
+  creadores: <Users className="h-4 w-4" aria-hidden />,
+  entretenimiento: <Clapperboard className="h-4 w-4" aria-hidden />,
+  negocios: <TrendingUp className="h-4 w-4" aria-hidden />,
 };
 
 const CATS = [
@@ -39,26 +39,26 @@ type Props = {
 export function CategoryNav({ active = "all", className = "" }: Props) {
   return (
     <div id="categorias" className={`scroll-mt-28 ${className}`}>
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Explorar por categoría</p>
         <Link
           href="/#categorias"
-          className="hidden items-center gap-1 text-xs font-bold text-brand-orange hover:underline sm:inline-flex"
+          className="inline-flex w-fit shrink-0 items-center justify-center gap-2 rounded-full border-2 border-brand-navy/15 bg-white px-4 py-2.5 text-sm font-black text-brand-navy shadow-sm transition hover:border-brand-orange hover:bg-amber-50/80 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
         >
-          <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
+          <LayoutGrid className="h-4 w-4 text-brand-orange" aria-hidden />
           Todas las categorías
         </Link>
       </div>
-      <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 scrollbar-hide px-1">
+      <div className="-mx-1 flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide px-1">
         <Link
           href="/"
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 ${
+          className={`inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-3 text-base font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 ${
             active === "all"
-              ? "bg-brand-orange text-white shadow-md shadow-orange-500/20"
-              : "border border-slate-200 bg-white text-brand-navy hover:border-brand-orange/50 hover:bg-amber-50/50"
+              ? "bg-brand-orange text-white shadow-lg shadow-orange-500/25 ring-2 ring-brand-orange/40"
+              : "border border-slate-200 bg-white text-brand-navy hover:border-brand-orange/60 hover:bg-amber-50/70 hover:shadow-md active:scale-[0.98]"
           }`}
         >
-          <Sparkles className="h-3.5 w-3.5 opacity-90" aria-hidden />
+          <Sparkles className="h-4 w-4 opacity-90" aria-hidden />
           Todas
         </Link>
         {CATS.map((c) => {
@@ -67,10 +67,10 @@ export function CategoryNav({ active = "all", className = "" }: Props) {
             <Link
               key={c.slug}
               href={c.href}
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 ${
+              className={`inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-3 text-base font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 ${
                 isActive
-                  ? "bg-brand-navy text-white shadow-md"
-                  : "border border-slate-200 bg-white text-brand-navy hover:border-brand-orange/50 hover:bg-amber-50/50"
+                  ? "bg-brand-navy text-white shadow-lg shadow-brand-navy/25 ring-2 ring-brand-navy/30"
+                  : "border border-slate-200 bg-white text-brand-navy hover:border-brand-orange/60 hover:bg-amber-50/70 hover:shadow-md active:scale-[0.98]"
               }`}
             >
               {ICONS[c.slug]}

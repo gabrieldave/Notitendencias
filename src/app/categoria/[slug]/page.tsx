@@ -8,6 +8,7 @@ import { TrendCardLarge } from "@/components/TrendCardLarge";
 import { MostViewedSidebar } from "@/components/MostViewedSidebar";
 import { QuickSignalCard } from "@/components/QuickSignalCard";
 import { NewsletterBox } from "@/components/NewsletterBox";
+import { EditorialComingSoon } from "@/components/EditorialComingSoon";
 import { PricingSection } from "@/components/PricingSection";
 import { isPublicCategorySlug } from "@/lib/public-categories";
 
@@ -90,20 +91,34 @@ export default async function CategoriaPage({ params }: Props) {
               <SectionHeader title="Tendencias publicadas" subtitle="Ordenadas por fecha de publicación." />
               <div className="mt-8 grid gap-6 sm:grid-cols-2">
                 {list.length === 0 ? (
-                  <p className="text-slate-600 sm:col-span-2">Aún no hay tendencias publicadas en esta categoría.</p>
+                  <div className="sm:col-span-2">
+                    <EditorialComingSoon />
+                  </div>
                 ) : (
                   list.map((t) => <TrendCardLarge key={t.id} trend={t} />)
                 )}
               </div>
             </div>
             <aside className="flex flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
-              <MostViewedSidebar trends={topSidebar} />
+              {topSidebar.length > 0 ? (
+                <MostViewedSidebar trends={topSidebar} />
+              ) : (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/80 p-6 text-center text-sm text-slate-600">
+                  <p className="font-semibold text-brand-navy">Próximamente</p>
+                  <p className="mt-2 text-xs">Ranking cuando haya tendencias.</p>
+                </div>
+              )}
               <QuickSignalCard />
-              <NewsletterBox variant="compact" />
             </aside>
           </div>
         </div>
       </div>
+
+      <section className="mx-auto max-w-7xl px-4 pb-16 md:pb-20">
+        <div className="mx-auto max-w-4xl">
+          <NewsletterBox />
+        </div>
+      </section>
 
       <PricingSection />
     </>

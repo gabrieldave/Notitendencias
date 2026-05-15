@@ -5,8 +5,6 @@ import { and, desc, eq, ne } from "drizzle-orm";
 import { TrendDetailArticle } from "@/components/TrendDetailArticle";
 import { MostViewedSidebar } from "@/components/MostViewedSidebar";
 import { QuickSignalCard } from "@/components/QuickSignalCard";
-import { NewsletterBox } from "@/components/NewsletterBox";
-
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -57,12 +55,11 @@ export default async function TrendDetailPage({ params }: Props) {
       <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-12">
           <div className="min-w-0 rounded-[2rem] border border-slate-100/80 bg-white shadow-soft lg:rounded-3xl">
-            <TrendDetailArticle trend={t} backFooter={back} showNewsletter={false} />
+            <TrendDetailArticle trend={t} backFooter={back} showNewsletter />
           </div>
           <aside className="flex flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
             <MostViewedSidebar trends={sidebarTrends} />
             <QuickSignalCard />
-            <NewsletterBox variant="compact" />
           </aside>
         </div>
       </div>

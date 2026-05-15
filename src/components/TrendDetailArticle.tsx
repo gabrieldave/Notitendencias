@@ -8,15 +8,12 @@ type Props = {
   trend: Trend;
   backFooter?: { href: string; label: string };
   showNewsletter?: boolean;
-  /** Newsletter compact layout (e.g. sidebar) */
-  newsletterVariant?: "default" | "compact";
 };
 
 export function TrendDetailArticle({
   trend: t,
   backFooter = { href: "/ia", label: "← Volver a IA" },
   showNewsletter = true,
-  newsletterVariant = "default",
 }: Props) {
   const contentIdeas = (t.contentIdeas as string[] | null) ?? [];
   const businessIdeas = (t.businessIdeas as string[] | null) ?? [];
@@ -137,7 +134,7 @@ export function TrendDetailArticle({
 
       {showNewsletter && (
         <div className="mt-10">
-          <NewsletterBox variant={newsletterVariant} />
+          <NewsletterBox />
         </div>
       )}
 

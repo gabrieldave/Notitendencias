@@ -28,23 +28,27 @@ export function Header() {
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:py-3.5">
-        <Link href="/" className="flex shrink-0 items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2" onClick={() => setOpen(false)}>
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 shadow-[0_1px_0_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:py-5">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+          onClick={() => setOpen(false)}
+        >
           <Image
             src="/branding/logo-icon.png"
             alt=""
-            width={40}
-            height={40}
-            className="h-9 w-9 rounded-2xl shadow-sm ring-1 ring-slate-200/80"
+            width={48}
+            height={48}
+            className="h-11 w-11 rounded-2xl shadow-md ring-1 ring-slate-200/80 md:h-12 md:w-12"
             priority
           />
           <Image
             src="/branding/logo-wordmark.png"
             alt="Notitendencias"
-            width={200}
-            height={48}
-            className="hidden h-9 w-auto sm:block"
+            width={220}
+            height={52}
+            className="hidden h-10 w-auto sm:block md:h-11"
             priority
           />
           <span className="sr-only">Notitendencias — inicio</span>
@@ -79,7 +83,12 @@ export function Header() {
             </button>
             {moreOpen && (
               <>
-                <button type="button" className="fixed inset-0 z-40 cursor-default bg-transparent" aria-label="Cerrar menú" onClick={() => setMoreOpen(false)} />
+                <button
+                  type="button"
+                  className="fixed inset-0 z-40 cursor-default bg-transparent"
+                  aria-label="Cerrar menú"
+                  onClick={() => setMoreOpen(false)}
+                />
                 <div className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-2xl border border-slate-200 bg-white py-2 shadow-lift">
                   <Link
                     href="/#categorias"
@@ -108,16 +117,16 @@ export function Header() {
           </div>
         </nav>
 
-        <div className="hidden items-center gap-2 sm:flex">
+        <div className="hidden items-center gap-3 sm:flex">
           <Link
             href="/admin"
-            className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-brand-navy"
+            className="rounded-full px-4 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-brand-navy"
           >
             Admin
           </Link>
           <Link
             href="/#newsletter"
-            className="rounded-full bg-brand-orange px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-600"
+            className="rounded-full bg-brand-orange px-6 py-3 text-sm font-black text-white shadow-lg shadow-orange-500/35 ring-2 ring-brand-orange/40 transition hover:bg-orange-600 hover:shadow-orange-500/45"
           >
             Suscribirme
           </Link>
@@ -150,13 +159,25 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/#categorias" className="rounded-xl px-3 py-3 text-base font-semibold text-brand-navy" onClick={() => setOpen(false)}>
+            <Link
+              href="/#categorias"
+              className="rounded-xl px-3 py-3 text-base font-semibold text-brand-navy"
+              onClick={() => setOpen(false)}
+            >
               Categorías
             </Link>
-            <Link href="/#newsletter" className="mt-2 rounded-xl bg-brand-orange py-3 text-center text-base font-bold text-white" onClick={() => setOpen(false)}>
+            <Link
+              href="/#newsletter"
+              className="mt-2 rounded-xl bg-brand-orange py-3.5 text-center text-base font-black text-white shadow-lg shadow-orange-500/30"
+              onClick={() => setOpen(false)}
+            >
               Suscribirme
             </Link>
-            <Link href="/admin" className="rounded-xl py-3 text-center text-base font-semibold text-slate-600" onClick={() => setOpen(false)}>
+            <Link
+              href="/admin"
+              className="rounded-xl py-3 text-center text-base font-semibold text-slate-600"
+              onClick={() => setOpen(false)}
+            >
               Admin
             </Link>
           </nav>

@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { trends, type Trend } from "@/db/schema";
 import { and, desc, eq } from "drizzle-orm";
 import { CategoryNav } from "@/components/CategoryNav";
+import { EditorialComingSoon } from "@/components/EditorialComingSoon";
 import { MostViewedSidebar } from "@/components/MostViewedSidebar";
 import { NewsletterBox } from "@/components/NewsletterBox";
 import { PricingSection } from "@/components/PricingSection";
@@ -61,24 +62,38 @@ export default async function IaPage() {
           </div>
         </header>
 
-        <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_340px] lg:gap-12">
+        <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_360px] lg:gap-12">
           <div>
             <SectionHeader title="Todas las tendencias de IA" subtitle="Actualizadas por fecha de publicación." />
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
               {list.length === 0 ? (
-                <p className="text-slate-600 sm:col-span-2">No hay tendencias publicadas en IA todavía.</p>
+                <div className="sm:col-span-2">
+                  <EditorialComingSoon />
+                </div>
               ) : (
                 list.map((t) => <TrendCardLarge key={t.id} trend={t} />)
               )}
             </div>
           </div>
           <aside className="flex flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
-            <MostViewedSidebar trends={topSidebar} />
+            {topSidebar.length > 0 ? (
+              <MostViewedSidebar trends={topSidebar} />
+            ) : (
+              <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-600">
+                <p className="font-semibold text-brand-navy">Próximamente</p>
+                <p className="mt-2 text-xs">Ranking cuando haya datos.</p>
+              </div>
+            )}
             <QuickSignalCard />
-            <NewsletterBox variant="compact" />
           </aside>
         </div>
       </div>
+
+      <section className="mx-auto max-w-7xl px-4 pb-16 md:pb-20">
+        <div className="mx-auto max-w-4xl">
+          <NewsletterBox />
+        </div>
+      </section>
 
       <PricingSection />
     </div>
