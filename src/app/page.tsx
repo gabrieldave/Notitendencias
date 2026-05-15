@@ -92,7 +92,6 @@ export default async function HomePage() {
               <MostViewedSidebar trends={mostViewed} />
               <QuickSignalCard />
               <NewsletterBox variant="compact" />
-              <PricingSection />
             </aside>
           </div>
         </div>
@@ -101,6 +100,8 @@ export default async function HomePage() {
       <section className="mx-auto max-w-7xl px-4 pb-16 md:pb-20">
         <PremiumBanner />
       </section>
+
+      <PricingSection />
 
       <section className="border-t border-slate-100 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-14 md:py-16">

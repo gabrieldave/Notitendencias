@@ -76,10 +76,11 @@ export default async function IaPage() {
             <MostViewedSidebar trends={topSidebar} />
             <QuickSignalCard />
             <NewsletterBox variant="compact" />
-            <PricingSection />
           </aside>
         </div>
       </div>
+
+      <PricingSection />
     </div>
   );
 }
