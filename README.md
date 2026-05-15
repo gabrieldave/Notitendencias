@@ -37,7 +37,14 @@ Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 
 La web usa **Auth.js (NextAuth v5)** con sesión en **PostgreSQL** (tablas `sessions`, `accounts`, `verification_tokens`) y adapter Drizzle. Duración de sesión: **90 días**.
 
-- **Google**: variables `AUTH_GOOGLE_ID` y `AUTH_GOOGLE_SECRET` (o equivalentes inferidos por Auth.js).
+- **Google** (opcional en `/login`): define `AUTH_GOOGLE_ID` y `AUTH_GOOGLE_SECRET` en runtime (`.env` local o variables del contenedor en Coolify). Sin ambas, solo aparece el enlace mágico y el aviso «Google no configurado».
+
+  1. En [Google Cloud Console](https://console.cloud.google.com/) → APIs y servicios → Credenciales → **Crear credenciales** → ID de cliente OAuth → tipo **Aplicación web**.
+  2. **URIs de redirección autorizados** (sustituye el dominio si aplica):
+     - Desarrollo: `http://localhost:3015/api/auth/callback/google`
+     - Producción: `https://notitendencias.vibesystems.tech/api/auth/callback/google` (mismo host que `AUTH_URL` / `NEXT_PUBLIC_APP_URL`)
+  3. Copia **ID de cliente** → `AUTH_GOOGLE_ID` y **Secreto del cliente** → `AUTH_GOOGLE_SECRET`.
+  4. En producción, configura también `AUTH_SECRET`, `AUTH_URL` y `AUTH_TRUST_HOST=true` tras el proxy.
 - **Enlace mágico (email)**: el token de verificación caduca a los **30 minutos**. Al solicitar el enlace, la app hace `POST` a `WEBHOOK_URL` con JSON:
 
   `{ "appId": "<APP_ID>", "event": "auth.magic_link", "to": "<email>", "data": { "name": "...", "verificationUrl": "...", "logoUrl": "..." } }`

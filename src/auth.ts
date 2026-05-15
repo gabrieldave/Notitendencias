@@ -7,6 +7,7 @@ import authConfig from "@/auth.config";
 import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
 import { assertMagicLinkRateLimit } from "@/lib/auth-rate-limit";
+import { isGoogleAuthConfigured } from "@/lib/google-auth";
 import { sendMagicLinkWebhook } from "@/lib/magic-link-webhook";
 
 function parseAdminEmails(): string[] {
@@ -46,11 +47,8 @@ const magicLink: EmailConfig = {
   },
 };
 
-const googleConfigured =
-  Boolean(process.env.AUTH_GOOGLE_ID?.trim()) && Boolean(process.env.AUTH_GOOGLE_SECRET?.trim());
-
 const providers = [
-  ...(googleConfigured
+  ...(isGoogleAuthConfigured()
     ? [
         Google({
           clientId: process.env.AUTH_GOOGLE_ID!,

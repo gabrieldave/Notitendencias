@@ -1,5 +1,8 @@
 import { Suspense } from "react";
+import { isGoogleAuthConfigured } from "@/lib/google-auth";
 import { LoginClient } from "./LoginClient";
+
+export const dynamic = "force-dynamic";
 
 function LoginFallback() {
   return (
@@ -10,8 +13,7 @@ function LoginFallback() {
 }
 
 export default function LoginPage() {
-  const googleEnabled =
-    Boolean(process.env.AUTH_GOOGLE_ID?.trim()) && Boolean(process.env.AUTH_GOOGLE_SECRET?.trim());
+  const googleEnabled = isGoogleAuthConfigured();
   return (
     <Suspense fallback={<LoginFallback />}>
       <LoginClient googleEnabled={googleEnabled} />

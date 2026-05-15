@@ -98,7 +98,7 @@ function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
               </button>
             ) : (
               <p className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-center text-xs font-semibold text-slate-600">
-                Google no está configurado en este entorno. Usa el enlace mágico por correo.
+                Google no configurado. Usa el enlace mágico por correo.
               </p>
             )}
           </div>
