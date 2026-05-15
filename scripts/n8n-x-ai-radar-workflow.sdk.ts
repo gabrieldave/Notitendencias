@@ -354,7 +354,10 @@ const picked = $('pickTodayPost').all().length;
 const normalized = $('normalizeXPosts').all().length;
 const afterEditorial = $('editorialFilter').all().length;
 const ingested = $('dedupe').all().length;
-const postsRequested = accounts.length * maxResults;
+// posts_requested = cuentas radar (objetivo editorial: 1 tweet válido/cuenta a ingest).
+// max_results es solo cuántos tweets puede devolver CADA llamada a X antes de filtrar en código.
+const postsRequested = accounts.length;
+const tweetsCapacityUpperBound = accounts.length * maxResults;
 const postsFiltered = Math.max(0, postsReceived - ingested);
 const duplicatesSkipped = Math.max(0, afterEditorial - ingested);
 const startedAt = $execution.startedAt || startIso;
@@ -380,6 +383,9 @@ return [
         timezone: 'America/Mexico_City',
         dayKey,
         catalogAccounts: accounts.length,
+        max_results_per_x_search: maxResults,
+        x_recent_search_calls: accounts.length,
+        tweets_upper_bound_if_all_queries_full: tweetsCapacityUpperBound,
         accountsWithPostToday: picked,
         normalizedCandidates: normalized,
         note: 'Solo posts desde inicio del día CDMX; máx. 1 por cuenta.',

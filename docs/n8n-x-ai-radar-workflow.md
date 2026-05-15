@@ -312,6 +312,9 @@ Tras **Log resumen**, el nodo **POST usage run** envía métricas a Notitendenci
 
 Body (generado por **Log resumen**):
 
+- **`posts_requested`**: número de **cuentas del catálogo** radar (objetivo editorial: **hasta 1 tweet válido por cuenta** hacia ingest). **No** es `cuentas × max_results`.
+- **`metadata.tweets_upper_bound_if_all_queries_full`**: tope teórico de tweets si **cada** llamada a X devolviera el máximo (`cuentas × max_results_per_x_search`).
+
 ```json
 {
   "provider": "x",
@@ -320,7 +323,7 @@ Body (generado por **Log resumen**):
   "started_at": "2026-05-15T16:45:00.000Z",
   "finished_at": "2026-05-15T16:48:12.000Z",
   "status": "success",
-  "posts_requested": 550,
+  "posts_requested": 55,
   "posts_received": 42,
   "posts_filtered": 35,
   "posts_sent_to_ingest": 7,
@@ -329,7 +332,12 @@ Body (generado por **Log resumen**):
   "metadata": {
     "queries_used": ["OpenAI", "AnthropicAI"],
     "accounts_checked": ["OpenAI", "AnthropicAI"],
-    "timezone": "America/Mexico_City"
+    "timezone": "America/Mexico_City",
+    "dayKey": "2026-05-15",
+    "catalogAccounts": 55,
+    "max_results_per_x_search": 10,
+    "x_recent_search_calls": 55,
+    "tweets_upper_bound_if_all_queries_full": 550
   }
 }
 ```
