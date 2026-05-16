@@ -27,8 +27,10 @@ function RadarMembershipCard() {
         Recibe señales de IA curadas, explicadas y convertidas en oportunidades prácticas para crear contenido,
         automatizar procesos o detectar ideas de negocio.
       </p>
-      <p className="mt-4 text-lg font-black text-brand-orange">$99 MXN / mes</p>
-      <p className="mt-1 text-xs font-semibold text-white/60">Precio beta. Pagos próximamente.</p>
+      <p className="mt-4 text-2xl font-black tabular-nums text-brand-orange md:text-3xl">$5 USD / mes</p>
+      <p className="mt-1 text-xs font-semibold text-white/60">
+        ~ $99 MXN orientativo según tipo de cambio. Precio beta.
+      </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/#pricing"

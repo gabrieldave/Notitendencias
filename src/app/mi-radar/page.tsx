@@ -131,7 +131,7 @@ export default async function MiRadarPage({
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-600">Suscripción</p>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
                     Con <strong className="text-brand-navy">Notitendencias AI Radar</strong> activo tendrás favoritos
-                    ilimitados, esta biblioteca y lectura completa en cada señal ($99 MXN/mes cuando activemos cobro).
+                    ilimitados, esta biblioteca y lectura completa en cada señal ($5 USD/mes — orientativo ~ $99 MXN según tu banco).
                   </p>
                   <Link
                     href="/#pricing"

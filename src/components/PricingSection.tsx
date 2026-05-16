@@ -13,6 +13,22 @@ const benefits = [
   "Funciones completas de Mi radar al activar cobro",
 ] as const;
 
+/** Referencia visual: donde Stripe suele cobrar con tarjetas habituales en la región (emoji como ícono). */
+const REGION_ACCEPTED = [
+  { iso: "MX", label: "México", flag: "🇲🇽" },
+  { iso: "AR", label: "Argentina", flag: "🇦🇷" },
+  { iso: "CO", label: "Colombia", flag: "🇨🇴" },
+  { iso: "CL", label: "Chile", flag: "🇨🇱" },
+  { iso: "PE", label: "Perú", flag: "🇵🇪" },
+  { iso: "BR", label: "Brasil", flag: "🇧🇷" },
+  { iso: "UY", label: "Uruguay", flag: "🇺🇾" },
+  { iso: "EC", label: "Ecuador", flag: "🇪🇨" },
+  { iso: "CR", label: "Costa Rica", flag: "🇨🇷" },
+  { iso: "PA", label: "Panamá", flag: "🇵🇦" },
+  { iso: "GT", label: "Guatemala", flag: "🇬🇹" },
+  { iso: "DO", label: "Rep. Dominicana", flag: "🇩🇴" },
+] as const;
+
 export async function PricingSection() {
   const user = await getOptionalSessionUser();
   const checkout = stripeRadarCheckoutUrl(user?.id ?? null);
@@ -39,16 +55,42 @@ export async function PricingSection() {
 
         <div className="mx-auto mt-12 max-w-lg rounded-3xl border-2 border-brand-orange bg-gradient-to-b from-brand-navy via-brand-navy to-slate-950 p-8 text-white shadow-lift sm:p-10">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/15 pb-6">
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-200/95">Mensual</p>
               <p className="mt-2 flex flex-wrap items-baseline gap-2 font-black tabular-nums tracking-tight">
-                <span className="text-5xl md:text-6xl">$99</span>
-                <span className="text-xl font-bold text-white/90">MXN / mes</span>
+                <span className="text-5xl md:text-6xl">$5</span>
+                <span className="text-xl font-bold text-white/90 md:text-2xl">USD / mes</span>
+              </p>
+              <p className="mt-2 text-xs font-medium leading-snug text-white/65">
+                Cobro en USD con Stripe. Equivalente orientativo en pesos según tu banco y tipo de cambio.
               </p>
             </div>
-            <p className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/90 ring-1 ring-white/15">
-              ~ $5 USD / mes
+            <p className="shrink-0 rounded-xl bg-white/10 px-3 py-2 text-center text-xs font-semibold leading-tight text-white/90 ring-1 ring-white/15">
+              ~ $99 MXN / mes
             </p>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-center text-[10px] font-black uppercase tracking-[0.18em] text-amber-200/90">
+              Pagos desde Latinoamérica
+            </p>
+            <div
+              className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5"
+              role="list"
+              aria-label="Países de Latinoamérica desde los que puedes suscribirte"
+            >
+              {REGION_ACCEPTED.map((c) => (
+                <span
+                  key={c.iso}
+                  role="listitem"
+                  title={c.label}
+                  aria-label={c.label}
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-[1.35rem] leading-none shadow-inner shadow-black/20 ring-1 ring-white/20 transition hover:bg-white/15 sm:h-12 sm:w-12 sm:text-[1.5rem]"
+                >
+                  <span aria-hidden>{c.flag}</span>
+                </span>
+              ))}
+            </div>
           </div>
 
           <ul className="mt-8 flex flex-col gap-3.5 text-sm leading-snug text-white/95 md:text-base">
