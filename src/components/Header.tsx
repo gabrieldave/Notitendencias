@@ -170,9 +170,12 @@ export function Header({ user }: Props) {
           {user ? (
             <>
               {premium && (
-                <span className="rounded-full bg-gradient-to-r from-amber-100 to-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-amber-950 ring-1 ring-amber-200/80">
+                <Link
+                  href="/ia"
+                  className="rounded-full bg-gradient-to-r from-amber-100 to-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-amber-950 ring-1 ring-amber-200/80 transition hover:ring-brand-orange/60"
+                >
                   Radar
-                </span>
+                </Link>
               )}
               <Link
                 href="/mi-radar"
@@ -240,9 +243,13 @@ export function Header({ user }: Props) {
             {user ? (
               <>
                 {premium && (
-                  <span className="mx-3 mt-2 inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase text-amber-950">
+                  <Link
+                    href="/ia"
+                    className="mx-3 mt-2 inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase text-amber-950 ring-1 ring-amber-200/80 transition hover:ring-brand-orange/60"
+                    onClick={() => setOpen(false)}
+                  >
                     Radar
-                  </span>
+                  </Link>
                 )}
                 <Link
                   href="/mi-radar"
