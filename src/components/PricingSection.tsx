@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
-import { stripeRadarPaymentLink } from "@/lib/stripe-public";
+import { getOptionalSessionUser } from "@/lib/session-user";
+import { stripeRadarCheckoutUrl } from "@/lib/stripe-public";
 
 const benefits = [
   "Acceso completo a todas las señales del radar",
@@ -12,8 +13,9 @@ const benefits = [
   "Funciones completas de Mi radar al activar cobro",
 ] as const;
 
-export function PricingSection() {
-  const checkout = stripeRadarPaymentLink();
+export async function PricingSection() {
+  const user = await getOptionalSessionUser();
+  const checkout = stripeRadarCheckoutUrl(user?.id ?? null);
   return (
     <section
       id="pricing"
