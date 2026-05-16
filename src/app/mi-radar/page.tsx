@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { trends, userFavorites, users } from "@/db/schema";
 import { TrendCard } from "@/components/TrendCard";
 import { isPremiumPlan } from "@/lib/membership";
 import { getOptionalSessionUser } from "@/lib/session-user";
+import { trendRadarSortExpr } from "@/lib/radar-feed-queries";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,7 @@ export default async function MiRadarPage() {
         .from(userFavorites)
         .innerJoin(trends, eq(userFavorites.trendId, trends.id))
         .where(and(eq(userFavorites.userId, user.id), eq(trends.status, "published")))
-        .orderBy(desc(sql`coalesce(${trends.publishedAt}, ${trends.createdAt})`))
+        .orderBy(desc(trendRadarSortExpr))
     : [];
 
   const saved = rows.map((r) => r.trend);

@@ -6,6 +6,7 @@ import { categoryDisplayName } from "@/lib/category-display";
 import { SOURCE_URL_COLLAPSE_LENGTH } from "@/lib/editorial";
 import { FREE_SECTION_PREVIEW_CHARS, FREE_SUMMARY_MAX_CHARS } from "@/lib/constants";
 import { truncateForFreeSummary, truncateSectionPreview } from "@/lib/membership";
+import { trendRadarInstant } from "@/lib/trend-radar-instant";
 import { Calendar } from "lucide-react";
 
 export type TrendDetailAccess = "full" | "limited";
@@ -83,6 +84,7 @@ export function TrendDetailArticle({
   const tags = (t.tags as string[] | null) ?? [];
 
   const summaryDisplay = full ? t.summary : truncateForFreeSummary(t.summary, FREE_SUMMARY_MAX_CHARS);
+  const radarTs = trendRadarInstant(t);
 
   const whyPreview = t.whyItMatters ? truncateSectionPreview(t.whyItMatters, FREE_SECTION_PREVIEW_CHARS) : "";
   const oppPreview = t.opportunity ? truncateSectionPreview(t.opportunity, FREE_SECTION_PREVIEW_CHARS) : "";
@@ -96,18 +98,16 @@ export function TrendDetailArticle({
               {categoryDisplayName(t.categorySlug)}
             </span>
             <TrendScoreBadge score={t.trendScore} size="lg" />
-            {t.publishedAt && (
-              <span className="inline-flex items-center gap-1.5 text-slate-500">
-                <Calendar className="h-4 w-4" aria-hidden />
-                <time dateTime={t.publishedAt.toISOString()} className="font-medium">
-                  {new Date(t.publishedAt).toLocaleDateString("es-MX", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </time>
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1.5 text-slate-500">
+              <Calendar className="h-4 w-4" aria-hidden />
+              <time dateTime={radarTs.toISOString()} className="font-medium">
+                {radarTs.toLocaleDateString("es-MX", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </time>
+            </span>
           </div>
           {saveButton ? <div className="shrink-0">{saveButton}</div> : null}
         </div>

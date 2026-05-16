@@ -3,13 +3,14 @@ import { ArrowRight } from "lucide-react";
 import type { Trend } from "@/db/schema";
 import { categoryDisplayName } from "@/lib/category-display";
 import { formatFeedTimestamp } from "@/lib/feed-date";
+import { trendRadarInstant } from "@/lib/trend-radar-instant";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 
 type Props = { trend: Trend };
 
 export function TrendFeedCard({ trend: t }: Props) {
   const to = `/tendencia/${t.slug}`;
-  const ts = t.publishedAt ?? t.createdAt;
+  const ts = trendRadarInstant(t);
   const iso = ts instanceof Date ? ts.toISOString() : new Date(ts).toISOString();
   const tags = (t.tags as string[] | null)?.slice(0, 7) ?? [];
   const insightRaw = t.opportunity?.trim() || t.whyItMatters?.trim() || null;

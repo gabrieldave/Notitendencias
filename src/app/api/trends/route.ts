@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { trends } from "@/db/schema";
-import { desc, eq, and, SQL } from "drizzle-orm";
+import { trendPublicationSort } from "@/lib/radar-feed-queries";
+import { and, eq, SQL } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
     .select()
     .from(trends)
     .where(and(...parts))
-    .orderBy(desc(trends.publishedAt))
+    .orderBy(trendPublicationSort)
     .limit(100);
 
   return NextResponse.json({ ok: true, trends: rows });

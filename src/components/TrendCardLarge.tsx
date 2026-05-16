@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Calendar } from "lucide-react";
 import type { Trend } from "@/db/schema";
+import { trendRadarInstant } from "@/lib/trend-radar-instant";
 import { TrendScoreBadge } from "./TrendScoreBadge";
 
 type Props = { trend: Trend; href?: string; className?: string; prominent?: boolean };
@@ -8,13 +9,12 @@ type Props = { trend: Trend; href?: string; className?: string; prominent?: bool
 export function TrendCardLarge({ trend, href, className = "", prominent = false }: Props) {
   const to = href ?? `/tendencia/${trend.slug}`;
   const tags = (trend.tags as string[] | null)?.slice(0, 5) ?? [];
-  const dateLabel = trend.publishedAt
-    ? new Date(trend.publishedAt).toLocaleDateString("es-MX", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : null;
+  const radarTs = trendRadarInstant(trend);
+  const dateLabel = radarTs.toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
   return (
     <article
@@ -40,12 +40,10 @@ export function TrendCardLarge({ trend, href, className = "", prominent = false 
       <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-slate-600 md:text-base">{trend.summary}</p>
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
         {trend.sourceName && <span className="font-medium text-slate-600">Fuente · {trend.sourceName}</span>}
-        {dateLabel && (
-          <span className="inline-flex items-center gap-1">
-            <Calendar className="h-3.5 w-3.5" aria-hidden />
-            <time dateTime={trend.publishedAt?.toISOString()}>{dateLabel}</time>
-          </span>
-        )}
+        <span className="inline-flex items-center gap-1">
+          <Calendar className="h-3.5 w-3.5" aria-hidden />
+          <time dateTime={radarTs.toISOString()}>{dateLabel}</time>
+        </span>
       </div>
       {tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">

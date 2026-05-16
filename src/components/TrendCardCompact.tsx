@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Calendar } from "lucide-react";
 import type { Trend } from "@/db/schema";
 import { categoryDisplayName } from "@/lib/category-display";
+import { trendRadarInstant } from "@/lib/trend-radar-instant";
 import { TrendScoreBadge } from "./TrendScoreBadge";
 
 type Props = {
@@ -12,12 +13,11 @@ type Props = {
 
 export function TrendCardCompact({ trend, rank, href }: Props) {
   const to = href ?? `/tendencia/${trend.slug}`;
-  const dateLabel = trend.publishedAt
-    ? new Date(trend.publishedAt).toLocaleDateString("es-MX", {
-        day: "numeric",
-        month: "short",
-      })
-    : null;
+  const radarTs = trendRadarInstant(trend);
+  const dateLabel = radarTs.toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+  });
 
   return (
     <article className="group flex gap-3 rounded-2xl border border-transparent p-2 transition hover:border-slate-200 hover:bg-white hover:shadow-soft">
@@ -38,12 +38,10 @@ export function TrendCardCompact({ trend, rank, href }: Props) {
           <Link href={to}>{trend.title}</Link>
         </h3>
         <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-          {dateLabel && (
-            <span className="inline-flex items-center gap-0.5">
-              <Calendar className="h-3 w-3" aria-hidden />
-              {dateLabel}
-            </span>
-          )}
+          <span className="inline-flex items-center gap-0.5">
+            <Calendar className="h-3 w-3" aria-hidden />
+            {dateLabel}
+          </span>
         </div>
       </div>
     </article>

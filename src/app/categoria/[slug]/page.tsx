@@ -85,7 +85,7 @@ export default async function CategoriaPage({ params }: Props) {
             <div className="mx-auto w-full min-w-0 max-w-3xl flex-1 lg:mx-0">
               <SectionHeader
                 title="Señales publicadas"
-                subtitle="Feed cronológico por fecha de publicación (o alta editorial)."
+                subtitle="Feed cronológico por fecha del post en la fuente (cuando existe) o por publicación en el radar."
               />
               <div className="mt-10 flex flex-col gap-8 md:gap-10">
                 {list.length === 0 ? (

@@ -56,7 +56,7 @@ export default async function HomePage() {
                 <>
                   <SectionHeader
                     title="Radar en vivo"
-                    subtitle={`${publishedCount} señales recientes · todas las categorías · orden por fecha de publicación`}
+                    subtitle={`${publishedCount} señales recientes · todas las categorías · orden por fecha del post (si la fuente lo aporta)`}
                     action={{ href: "/ia", label: "Solo IA →" }}
                   />
                   <div className="mt-10 flex flex-col gap-8 md:gap-10">

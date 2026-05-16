@@ -2,9 +2,13 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { trends, type Trend } from "@/db/schema";
 import { calendarDayKeyForTrend } from "@/lib/feed-date";
+import { trendRadarInstant } from "@/lib/trend-radar-instant";
 
-/** Orden público del radar: fecha de publicación, o alta si no hubiera `published_at`. */
-export const trendPublicationSort = desc(sql`coalesce(${trends.publishedAt}, ${trends.createdAt})`);
+/** Expresión SQL para orden cronológico del radar (post en fuente → publicación → alta). */
+export const trendRadarSortExpr = sql`coalesce(${trends.signalPostedAt}, ${trends.publishedAt}, ${trends.createdAt})`;
+
+/** Orden público del radar: fecha del post en la fuente cuando existe; si no, publicación en sitio o alta editorial. */
+export const trendPublicationSort = desc(trendRadarSortExpr);
 
 export async function loadTrendFeed(categorySlug?: string, limit = 50): Promise<Trend[]> {
   const cond =
@@ -40,7 +44,7 @@ export function pickTopTodayFromRecent(recent: Trend[], limit = 5): Trend[] {
   const seen = new Set<string>();
   const out: Trend[] = [];
   for (const t of recent) {
-    const ts = t.publishedAt ?? t.createdAt;
+    const ts = trendRadarInstant(t);
     if (calendarDayKeyForTrend(ts) !== todayKey) continue;
     if (seen.has(t.id)) continue;
     seen.add(t.id);

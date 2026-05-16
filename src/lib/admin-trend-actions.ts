@@ -4,6 +4,7 @@ import { appEvents, rawTrendItems, trends, type Trend } from "@/db/schema";
 import { processRawWithDeepSeek } from "@/lib/deepseek";
 import { EDITORIAL_ARXIV_ALERT_ES, trendMentionsArxiv } from "@/lib/editorial";
 import { slugifyTitle } from "@/lib/slug";
+import { extractSignalPostedAtFromRaw } from "@/lib/trend-radar-instant";
 
 export const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -70,6 +71,7 @@ export async function processRawItemById(rawId: string): Promise<ProcessRawResul
         trendScore: ds.trend_score,
         sourceUrl: raw.sourceUrl,
         sourceName: raw.sourceName,
+        signalPostedAt: extractSignalPostedAtFromRaw(raw),
         status: "pending",
       })
       .returning();

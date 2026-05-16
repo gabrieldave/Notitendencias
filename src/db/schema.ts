@@ -67,6 +67,7 @@ export const trends = pgTable("trends", {
   sourceName: text("source_name"),
   status: text("status").default("draft").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
+  signalPostedAt: timestamp("signal_posted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

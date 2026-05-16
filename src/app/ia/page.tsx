@@ -66,7 +66,7 @@ export default async function IaPage() {
           <div className="mx-auto w-full min-w-0 max-w-3xl flex-1 lg:mx-0">
             <SectionHeader
               title="Radar IA · en vivo"
-              subtitle="Orden: fecha de publicación (más reciente primero). Si falta fecha pública, usamos la fecha de alta editorial."
+              subtitle="Orden: más reciente primero según la fecha del post en la fuente cuando existe; si no, por publicación en el radar."
             />
             <div className="mt-10 flex flex-col gap-8 md:gap-10">
               {list.length === 0 ? (
