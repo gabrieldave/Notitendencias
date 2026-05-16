@@ -26,8 +26,14 @@ function statusDisplay(status: string): string {
   return status;
 }
 
-export default async function MiRadarPage() {
+export default async function MiRadarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ bienvenida?: string }>;
+}) {
   const user = await getOptionalSessionUser();
+  const sp = await searchParams;
+  const bienvenidaStripe = sp.bienvenida === "1";
   if (!user) {
     redirect(`/login?callbackUrl=${encodeURIComponent("/mi-radar")}`);
   }
@@ -70,6 +76,25 @@ export default async function MiRadarPage() {
             <p className="mt-4 text-sm text-slate-500">{user.email}</p>
           )}
         </header>
+
+        {bienvenidaStripe && premium ? (
+          <div
+            role="status"
+            className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-semibold text-emerald-950 md:text-base"
+          >
+            ¡Bienvenido/a a Notitendencias AI Radar! Ya puedes ver el análisis completo, oportunidades e ideas de negocio
+            en todo el radar.
+          </div>
+        ) : null}
+        {bienvenidaStripe && !premium ? (
+          <div
+            role="status"
+            className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-relaxed text-amber-950"
+          >
+            Gracias por tu pago. Si tu cuenta sigue en beta, activa el webhook de Stripe→BD o asigna premium desde admin;
+            usa el mismo correo en Google que en el checkout cuando sea posible.
+          </div>
+        ) : null}
 
         <div className="mt-10 grid gap-8 lg:grid-cols-12">
           {/* Columna cuenta / suscripción */}

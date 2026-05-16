@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import { ChevronDown, Loader2, Menu, X } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { PublicUser } from "@/lib/session-user";
+import { stripeRadarPaymentLink } from "@/lib/stripe-public";
 
 const mainNav = [
   { href: "/", label: "Inicio" },
@@ -22,6 +23,28 @@ function isActive(pathname: string, href: string): boolean {
   if (href.startsWith("/#")) return false;
   if (href === "/ia") return pathname === "/ia" || pathname.startsWith("/ia/");
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function SubscribeButton({ className, onClick }: { className: string; onClick?: () => void }) {
+  const checkout = stripeRadarPaymentLink();
+  if (checkout) {
+    return (
+      <a
+        href={checkout}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        onClick={onClick}
+      >
+        Suscribirme
+      </a>
+    );
+  }
+  return (
+    <Link href="/#pricing" className={className} onClick={onClick}>
+      Suscribirme
+    </Link>
+  );
 }
 
 function LogoutButton({ className }: { className?: string }) {
@@ -166,12 +189,7 @@ export function Header({ user }: Props) {
               >
                 Iniciar sesión
               </Link>
-              <Link
-                href="/#newsletter"
-                className="rounded-full bg-brand-orange px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-orange-500/35 ring-2 ring-brand-orange/40 transition hover:bg-orange-600 hover:shadow-orange-500/45"
-              >
-                Suscribirme
-              </Link>
+              <SubscribeButton className="rounded-full bg-brand-orange px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-orange-500/35 ring-2 ring-brand-orange/40 transition hover:bg-orange-600 hover:shadow-orange-500/45" />
             </>
           )}
         </div>
@@ -235,13 +253,10 @@ export function Header({ user }: Props) {
                 >
                   Iniciar sesión
                 </Link>
-                <Link
-                  href="/#newsletter"
+                <SubscribeButton
                   className="mt-2 rounded-xl bg-brand-orange py-3.5 text-center text-base font-black text-white shadow-lg shadow-orange-500/30"
                   onClick={() => setOpen(false)}
-                >
-                  Suscribirme
-                </Link>
+                />
               </>
             )}
           </nav>

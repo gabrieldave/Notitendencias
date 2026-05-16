@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { stripeRadarPaymentLink } from "@/lib/stripe-public";
 
 const benefits = [
   "Acceso completo a todas las señales del radar",
@@ -12,6 +13,7 @@ const benefits = [
 ] as const;
 
 export function PricingSection() {
+  const checkout = stripeRadarPaymentLink();
   return (
     <section
       id="pricing"
@@ -27,7 +29,9 @@ export function PricingSection() {
             Radar accionable de IA para creadores, emprendedores y negocios pequeños.
           </p>
           <p className="mt-5 rounded-2xl border border-amber-100 bg-amber-50/90 px-4 py-3 text-sm font-semibold text-amber-950">
-            Precio beta. Pagos próximamente. Durante la beta el acceso puede ser por invitación o asignación manual.
+            {checkout
+              ? "Checkout con Stripe. Tras pagar configura la URL de éxito hacia Mi radar (ej. …/mi-radar?bienvenida=1). Para que el plan premium se active solo en tu cuenta hace falta un webhook de Stripe que actualice la BD (hoy también puedes asignar premium desde admin)."
+              : "Precio beta. Configura NEXT_PUBLIC_STRIPE_RADAR_PAYMENT_LINK para activar el checkout. Mientras tanto puedes solicitar acceso por login."}
           </p>
         </header>
 
@@ -55,12 +59,23 @@ export function PricingSection() {
           </ul>
 
           <div className="mt-10 flex flex-col gap-3">
-            <Link
-              href="/login?intent=premium"
-              className="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-brand-orange px-6 py-3.5 text-base font-black text-white shadow-lg shadow-orange-900/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
-            >
-              Unirme al radar
-            </Link>
+            {checkout ? (
+              <a
+                href={checkout}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-brand-orange px-6 py-3.5 text-base font-black text-white shadow-lg shadow-orange-900/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
+              >
+                Pagar con Stripe
+              </a>
+            ) : (
+              <Link
+                href="/login?intent=premium"
+                className="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-brand-orange px-6 py-3.5 text-base font-black text-white shadow-lg shadow-orange-900/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
+              >
+                Unirme al radar
+              </Link>
+            )}
             <Link
               href="/#newsletter"
               className="text-center text-sm font-bold text-amber-100/95 underline decoration-dotted underline-offset-4 hover:text-white"
