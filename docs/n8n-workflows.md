@@ -4,13 +4,16 @@
 
 Los workflows de **notificaciones** creados antes (`Published Trend`, `High Score Alert`, `Newsletter Subscribe`, `Daily Digest`) fueron **archivados** en n8n. Ya no forman parte del flujo editorial.
 
-**Único workflow de ingesta activo en el roadmap:**
+**Workflows activos en el roadmap:**
 
 | Workflow | ID | URL |
 |----------|-----|-----|
 | **Notitendencias - X AI Radar** | `nFBNa3Y1ueVHBLbc` | https://n8n.vibesystems.tech/workflow/nFBNa3Y1ueVHBLbc |
+| **Notitendencias - Stripe payment (Next)** | `kGibmI6jvH0pdHeQ` | https://n8n.vibesystems.tech/workflow/kGibmI6jvH0pdHeQ |
 
-Flujo: **X API → n8n → `POST /api/bridge/ingest` → `/admin` → DeepSeek → publicación manual**.
+Flujo radar: **X API → n8n → `POST /api/bridge/ingest` → `/admin` → DeepSeek → publicación manual**.
+
+Flujo pagos: tras **`checkout.session.completed`**, Next avisa a n8n (`N8N_PAYMENT_WEBHOOK_URL`). **Production webhook:** `POST https://n8n.vibesystems.tech/webhook/notitendencias-stripe-payment` — ramifica por `premiumActivated` y alerta si `fulfillReason` es `user_not_found` **o** `client_ref_user_not_found`. Los nodos finales son **No Op** para que enganches Gmail/Slack.
 
 Documentación:
 

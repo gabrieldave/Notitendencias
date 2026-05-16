@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ChevronDown, Loader2, Menu, X } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { showHeaderAdminNav } from "@/lib/header-admin-nav";
 import type { PublicUser } from "@/lib/session-user";
 import { stripeRadarPaymentLink } from "@/lib/stripe-public";
 
@@ -179,6 +180,14 @@ export function Header({ user }: Props) {
               >
                 Mi radar
               </Link>
+              {showHeaderAdminNav(user.email) && (
+                <Link
+                  href="/admin"
+                  className="rounded-full px-4 py-2.5 text-sm font-bold text-brand-navy ring-1 ring-slate-200 transition hover:bg-slate-50"
+                >
+                  Admin
+                </Link>
+              )}
               <LogoutButton className="rounded-full px-4 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-brand-navy disabled:opacity-60" />
             </>
           ) : (
@@ -242,6 +251,15 @@ export function Header({ user }: Props) {
                 >
                   Mi radar
                 </Link>
+                {showHeaderAdminNav(user.email) && (
+                  <Link
+                    href="/admin"
+                    className="rounded-xl px-3 py-3 text-base font-semibold text-brand-navy"
+                    onClick={() => setOpen(false)}
+                  >
+                    Admin
+                  </Link>
+                )}
                 <LogoutButton className="w-full rounded-xl py-3 text-center text-base font-semibold text-slate-600" />
               </>
             ) : (

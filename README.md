@@ -235,7 +235,7 @@ El costo por corrida se calcula como `posts_received × post_read_cost_usd` (val
 }
 ```
 
-En n8n: **IF** `premiumActivated` → correo al comprador y/o al admin; **IF** `fulfillReason == user_not_found` → alerta para revisión manual.
+En n8n: **IF** `premiumActivated` → correo al comprador y/o al admin; **IF** `fulfillReason` es `user_not_found` o `client_ref_user_not_found` → alerta para revisión manual.
 
 ## n8n y Kimi
 

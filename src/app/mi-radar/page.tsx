@@ -6,12 +6,40 @@ import { trends, userFavorites, users } from "@/db/schema";
 import { TrendCard } from "@/components/TrendCard";
 import { isPremiumPlan } from "@/lib/membership";
 import { getOptionalSessionUser } from "@/lib/session-user";
-import { trendRadarSortExpr } from "@/lib/radar-feed-queries";
 
 export const dynamic = "force-dynamic";
 
+/** Next puede pasar `searchParams` como Promise u objeto según versión/runtime; evita fallos al leer `bienvenida`. */
+async function normalizeSearchParams(raw: unknown): Promise<Record<string, string | string[] | undefined>> {
+  if (raw == null) return {};
+  const maybeThenable = raw as { then?: unknown };
+  if (typeof maybeThenable.then === "function") {
+    return await (raw as Promise<Record<string, string | string[] | undefined>>);
+  }
+  if (typeof raw === "object") {
+    return raw as Record<string, string | string[] | undefined>;
+  }
+  return {};
+}
+
+function bienvenidaFlag(sp: Record<string, string | string[] | undefined>): boolean {
+  const v = sp.bienvenida;
+  if (v === "1") return true;
+  if (Array.isArray(v) && v.some((x) => x === "1")) return true;
+  return false;
+}
+
 function formatMemberSince(d: Date): string {
   return new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" }).format(d);
+}
+
+function safeMemberSince(createdAt: unknown): Date {
+  if (createdAt instanceof Date && !Number.isNaN(createdAt.getTime())) return createdAt;
+  if (typeof createdAt === "string") {
+    const parsed = new Date(createdAt);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return new Date();
 }
 
 function planDisplay(plan: string): string {
@@ -29,11 +57,11 @@ function statusDisplay(status: string): string {
 export default async function MiRadarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ bienvenida?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await getOptionalSessionUser();
-  const sp = await searchParams;
-  const bienvenidaStripe = sp.bienvenida === "1";
+  const sp = await normalizeSearchParams(searchParams);
+  const bienvenidaStripe = bienvenidaFlag(sp);
   if (!user) {
     redirect(`/login?callbackUrl=${encodeURIComponent("/mi-radar")}`);
   }
@@ -44,7 +72,7 @@ export default async function MiRadarPage({
     .where(eq(users.id, user.id))
     .limit(1);
 
-  const memberSince = profile?.createdAt ?? new Date();
+  const memberSince = safeMemberSince(profile?.createdAt);
   const premium = isPremiumPlan(user.plan);
 
   const rows = premium
@@ -53,7 +81,7 @@ export default async function MiRadarPage({
         .from(userFavorites)
         .innerJoin(trends, eq(userFavorites.trendId, trends.id))
         .where(and(eq(userFavorites.userId, user.id), eq(trends.status, "published")))
-        .orderBy(desc(trendRadarSortExpr))
+        .orderBy(desc(trends.signalPostedAt), desc(trends.publishedAt), desc(trends.createdAt))
     : [];
 
   const saved = rows.map((r) => r.trend);
