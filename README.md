@@ -15,7 +15,7 @@ Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 | `DATABASE_URL` | **Sí** | Postgres de la app. Forma: `postgresql://USUARIO:PASSWORD@HOST:5432/notitendencias` **sin** `?schema=public`. En Docker/Coolify, `HOST` suele ser el nombre del contenedor (ej. `ys0ocwcwgso8co0ooko8gc4w`). |
 | `BRIDGE_API_KEY` | **Sí** | Secreto largo para el header `Authorization: Bearer …` en `POST /api/bridge/ingest`. Generar con `openssl rand -hex 32` y **la misma clave** en Kimi / scripts que ingieran datos. |
 | `DEEPSEEK_API_KEY` | **Sí** para procesar en admin | API de DeepSeek; sin ella, “Procesar” falla hasta que la configures. |
-| `NEXT_PUBLIC_APP_URL` | **Sí** | URL pública del sitio, ej. `https://notitendencias.vibesystems.tech` (metadata, enlaces). |
+| `NEXT_PUBLIC_APP_URL` | **Sí** | URL pública del sitio (producción: `https://notitendencias.iareal.net`; metadata, enlaces). |
 | `PORT` | Recomendada | **`3015`** en producción (Coolify debe exponer este puerto del contenedor). |
 | `ADMIN_PASSWORD` | **Sí** | Contraseña del panel `/admin` (cookie httpOnly). Usa una contraseña fuerte única. |
 | `AUTH_SECRET` | **Sí** | Secreto de Auth.js / NextAuth (sesiones y tokens). Generar: `openssl rand -base64 32`. |
@@ -40,7 +40,7 @@ La web usa **Auth.js (NextAuth v5)** con sesión en **PostgreSQL** (tablas `sess
   1. En [Google Cloud Console](https://console.cloud.google.com/) → APIs y servicios → Credenciales → **Crear credenciales** → ID de cliente OAuth → tipo **Aplicación web**.
   2. **URIs de redirección autorizados** (sustituye el dominio si aplica):
      - Desarrollo: `http://localhost:3015/api/auth/callback/google`
-     - Producción: `https://notitendencias.vibesystems.tech/api/auth/callback/google` (mismo host que `AUTH_URL` / `NEXT_PUBLIC_APP_URL`)
+     - Producción: `https://notitendencias.iareal.net/api/auth/callback/google` (mismo host que `AUTH_URL` / `NEXT_PUBLIC_APP_URL`)
   3. Copia **ID de cliente** → `AUTH_GOOGLE_ID` y **Secreto del cliente** → `AUTH_GOOGLE_SECRET`.
   4. En producción, configura también `AUTH_SECRET`, `AUTH_URL` y `AUTH_TRUST_HOST=true` tras el proxy.
 - **Enlace mágico (email)**: el token de verificación caduca a los **30 minutos**. Al solicitar el enlace, la app hace `POST` a `WEBHOOK_URL` con JSON:
@@ -114,7 +114,7 @@ La web usa **Auth.js (NextAuth v5)** con sesión en **PostgreSQL** (tablas `sess
 ## Curl de prueba (ingest)
 
 ```bash
-curl -X POST "https://notitendencias.vibesystems.tech/api/bridge/ingest" \
+curl -X POST "https://notitendencias.iareal.net/api/bridge/ingest" \
   -H "Authorization: Bearer TU_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -153,11 +153,13 @@ En `/etc/cloudflared/config.yml`, la entrada del subdominio debe ir **antes** de
 
 ```yaml
 ingress:
-  - hostname: notitendencias.vibesystems.tech
+  - hostname: notitendencias.iareal.net
     service: http://127.0.0.1:3015
   # ... otras apps ...
   - service: http_status:404
 ```
+
+Ajusta `hostname` si tu túnel o DNS usan otro FQDN; debe coincidir con `NEXT_PUBLIC_APP_URL` / `AUTH_URL`.
 
 Aplicar cambios:
 
@@ -165,10 +167,10 @@ Aplicar cambios:
 sudo systemctl restart cloudflared
 ```
 
-Si falta el registro DNS del túnel:
+Si falta el registro DNS del túnel, usa tu tunnel ID y hostname reales, por ejemplo:
 
 ```bash
-cloudflared tunnel route dns 7b301862-56f6-4443-850b-f8df050490f6 notitendencias.vibesystems.tech
+cloudflared tunnel route dns <TU_TUNNEL_ID> notitendencias.iareal.net
 ```
 
 ## X API Radar

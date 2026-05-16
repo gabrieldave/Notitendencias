@@ -13,7 +13,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 COPY . .
 ARG DATABASE_URL=postgresql://cursor:cursor@127.0.0.1:5432/notitendencias
-ARG NEXT_PUBLIC_APP_URL=https://notitendencias.vibesystems.tech
+ARG NEXT_PUBLIC_APP_URL=https://notitendencias.iareal.net
 ENV DATABASE_URL=$DATABASE_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1

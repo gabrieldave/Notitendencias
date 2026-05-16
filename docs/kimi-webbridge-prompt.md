@@ -49,7 +49,7 @@ Reglas:
 
 Si puedes mandar HTTP requests, envía cada hallazgo con método POST a:
 
-https://notitendencias.vibesystems.tech/api/bridge/ingest
+https://notitendencias.iareal.net/api/bridge/ingest
 
 Headers:
 Authorization: Bearer TU_BRIDGE_API_KEY
