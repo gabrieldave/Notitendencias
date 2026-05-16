@@ -68,6 +68,7 @@ export async function processRawItemById(rawId: string): Promise<ProcessRawResul
         contentIdeas: ds.content_ideas ?? [],
         businessIdeas: ds.business_ideas ?? [],
         tags: ds.tags ?? [],
+        radarPayload: (ds.radar_payload ?? {}) as Record<string, unknown>,
         trendScore: ds.trend_score,
         sourceUrl: raw.sourceUrl,
         sourceName: raw.sourceName,

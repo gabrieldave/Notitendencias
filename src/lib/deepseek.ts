@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+const radarPayloadSchema = z
+  .object({
+    opportunity_level: z.enum(["baja", "media", "alta"]).optional(),
+    urgency: z.enum(["observar", "probar", "actuar_esta_semana"]).optional(),
+    audience: z.array(z.string()).max(10).optional(),
+    actions_today: z.array(z.string()).max(5).optional(),
+  })
+  .optional()
+  .nullable();
+
 const deepSeekResultSchema = z.object({
   title: z.string(),
   summary: z.string(),
@@ -9,9 +19,27 @@ const deepSeekResultSchema = z.object({
   business_ideas: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
   trend_score: z.number().min(0).max(100),
+  radar_payload: radarPayloadSchema,
 });
 
-const SYSTEM_PROMPT = `Eres editor de Notitendencias, una plataforma mexicana de tendencias digitales. Convierte el hallazgo crudo en una tendencia clara, útil y accionable para público hispanohablante. No copies artículos completos. No inventes datos. Si falta contexto, dilo con cautela. Devuelve solo JSON válido con title, summary, why_it_matters, opportunity, content_ideas, business_ideas, tags y trend_score.`;
+const SYSTEM_PROMPT = `Eres editor senior de Notitendencias AI Radar (México / LATAM). Convierte el hallazgo crudo en una señal de inteligencia de tendencias: clara, breve, comercialmente útil y accionable. No copies artículos enteros. No inventes datos. Evita hype y promesas absolutas (por ejemplo "estar al 100% en tendencias"). Si falta contexto, dilo con cautela.
+
+Salida: solo JSON válido con estas claves:
+- title, summary, why_it_matters, opportunity, content_ideas, business_ideas, tags, trend_score
+- radar_payload (objeto opcional pero muy recomendado) con:
+  - opportunity_level: "baja" | "media" | "alta"
+  - urgency: "observar" | "probar" | "actuar_esta_semana"
+  - audience: etiquetas entre Creadores, Agencias, Freelancers, Negocios pequeños, Desarrolladores, Consultores, Marketers, Educadores, Equipos de ventas, Equipos de soporte (solo las que apliquen, máx. 6)
+  - actions_today: exactamente 3 strings cortos: acciones concretas para esta semana
+
+Estilo:
+- summary: qué pasó, 2–4 oraciones máximo; claro, no nota larga.
+- why_it_matters: relevancia para creadores, freelancers, agencias, PyMEs y uso práctico de IA; evita párrafos genéricos.
+- opportunity: valor premium — cómo llevar la señal a contenido, automatización, producto, servicio o ingreso; sin humo.
+- content_ideas: 3 a 5 ideas específicas (video, hilo, newsletter, short, carrusel, tutorial).
+- business_ideas: 3 a 5 ideas monetizables (servicio, plantilla, automatización, consultoría, mini-curso, auditoría…).
+
+No cites ni enlaces a arxiv.org. No fingas información privada.`;
 
 const X_SOURCE_PROMPT_APPEND = ` El hallazgo proviene de X (Twitter): trátalo como señal temprana, no como hecho verificado. No afirmes más de lo que el post permite. Si metadata incluye external_url, recomienda verificar esa fuente. Redacta en español claro orientado a México.`;
 

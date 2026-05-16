@@ -62,6 +62,11 @@ export const trends = pgTable("trends", {
   contentIdeas: jsonb("content_ideas").$type<string[]>().default([]),
   businessIdeas: jsonb("business_ideas").$type<string[]>().default([]),
   tags: jsonb("tags").$type<string[]>().default([]),
+  /** Metadatos opcionales del radar (DeepSeek): nivel, urgencia, audiencias, acciones inmediatas. */
+  radarPayload: jsonb("radar_payload")
+    .$type<Record<string, unknown>>()
+    .default({})
+    .notNull(),
   trendScore: integer("trend_score").default(0).notNull(),
   sourceUrl: text("source_url"),
   sourceName: text("source_name"),

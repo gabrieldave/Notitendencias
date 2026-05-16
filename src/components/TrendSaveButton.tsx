@@ -72,7 +72,7 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
         className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-brand-navy shadow-sm ring-1 ring-slate-100 transition hover:border-brand-orange/40 hover:text-brand-orange"
       >
         <Bookmark className="h-4 w-4" aria-hidden />
-        Guardar
+        Guardar en Mi radar
       </Link>
     );
   }
@@ -84,7 +84,7 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
         className="inline-flex items-center gap-2 rounded-full border border-amber-200/80 bg-gradient-to-r from-amber-50 to-white px-4 py-2 text-sm font-bold text-amber-950 shadow-sm ring-1 ring-amber-100 transition hover:ring-amber-300"
       >
         <Sparkles className="h-4 w-4 text-brand-orange" aria-hidden />
-        Guardar · Mi radar
+        Guardar en Mi radar
       </Link>
     );
   }
@@ -98,7 +98,7 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
         className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-900 shadow-sm transition hover:bg-emerald-100 disabled:opacity-60"
       >
         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkCheck className="h-4 w-4" aria-hidden />}
-        Guardado
+        Guardado en Mi radar
       </button>
     );
   }
@@ -111,7 +111,7 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
       className="inline-flex items-center gap-2 rounded-full bg-brand-navy px-4 py-2 text-sm font-bold text-white shadow-md shadow-slate-900/15 ring-2 ring-brand-navy/20 transition hover:bg-slate-900 disabled:opacity-60"
     >
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className="h-4 w-4" aria-hidden />}
-      Guardar
+      Guardar en Mi radar
     </button>
   );
 }
