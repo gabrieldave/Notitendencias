@@ -68,10 +68,6 @@ export default {
         return NextResponse.redirect(url);
       }
 
-      if (pathname.startsWith("/mi-radar")) {
-        return Boolean(auth?.user?.id);
-      }
-
       return true;
     },
   },

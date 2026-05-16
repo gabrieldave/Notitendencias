@@ -13,6 +13,7 @@ const { auth } = NextAuth(async () => ({
 
 export default auth;
 
+/** Solo `/admin`: el middleware Edge no puede usar el adapter Drizzle; con sesión en BD `auth()` ahí no obtiene `user.id` y redirigía a login. `/mi-radar` se protege en servidor con `getOptionalSessionUser()`. */
 export const config = {
-  matcher: ["/admin/:path*", "/mi-radar/:path*"],
+  matcher: ["/admin/:path*"],
 };

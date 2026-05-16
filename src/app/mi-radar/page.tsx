@@ -2,12 +2,28 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { trends, userFavorites } from "@/db/schema";
+import { trends, userFavorites, users } from "@/db/schema";
 import { TrendCard } from "@/components/TrendCard";
 import { isPremiumPlan } from "@/lib/membership";
 import { getOptionalSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
+
+function formatMemberSince(d: Date): string {
+  return new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" }).format(d);
+}
+
+function planDisplay(plan: string): string {
+  if (plan === "premium") return "Premium";
+  if (plan === "free") return "Gratis";
+  return plan;
+}
+
+function statusDisplay(status: string): string {
+  if (status === "active") return "Activa";
+  if (status === "inactive") return "Inactiva";
+  return status;
+}
 
 export default async function MiRadarPage() {
   const user = await getOptionalSessionUser();
@@ -15,75 +31,193 @@ export default async function MiRadarPage() {
     redirect(`/login?callbackUrl=${encodeURIComponent("/mi-radar")}`);
   }
 
-  if (!isPremiumPlan(user.plan)) {
-    return (
-      <div className="min-h-[60vh] bg-slate-50/80">
-        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-brand-orange">Mi radar</p>
-          <h1 className="mt-3 text-3xl font-black text-brand-navy md:text-4xl">Desbloquea Mi radar</h1>
-          <p className="mt-4 text-base leading-relaxed text-slate-600">
-            Guarda tendencias, construye tu biblioteca editorial y vuelve a ellas cuando quieras. Esta función está
-            incluida en el plan Premium.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/login?intent=premium&callbackUrl=%2Fmi-radar"
-              className="inline-flex rounded-2xl bg-brand-orange px-6 py-3 text-sm font-black text-white shadow-lg shadow-orange-500/30 hover:bg-orange-600"
-            >
-              Hazte Premium
-            </Link>
-            <Link
-              href="/#pricing"
-              className="inline-flex rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-brand-navy hover:border-brand-navy"
-            >
-              Ver planes
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const [profile] = await db
+    .select({ createdAt: users.createdAt })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .limit(1);
 
-  const rows = await db
-    .select({ trend: trends })
-    .from(userFavorites)
-    .innerJoin(trends, eq(userFavorites.trendId, trends.id))
-    .where(and(eq(userFavorites.userId, user.id), eq(trends.status, "published")))
-    .orderBy(desc(userFavorites.createdAt));
+  const memberSince = profile?.createdAt ?? new Date();
+  const premium = isPremiumPlan(user.plan);
+
+  const rows = premium
+    ? await db
+        .select({ trend: trends })
+        .from(userFavorites)
+        .innerJoin(trends, eq(userFavorites.trendId, trends.id))
+        .where(and(eq(userFavorites.userId, user.id), eq(trends.status, "published")))
+        .orderBy(desc(userFavorites.createdAt))
+    : [];
 
   const saved = rows.map((r) => r.trend);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50/90">
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-        <header className="max-w-2xl">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-brand-orange">Tu espacio</p>
+        <header className="border-b border-slate-100 pb-10">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-brand-orange">Tu panel</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-brand-navy md:text-4xl">Mi radar</h1>
-          <p className="mt-3 text-slate-600">
-            Tendencias que marcaste como favoritas. Un tablero editorial simple para volver al análisis cuando lo
-            necesites.
+          <p className="mt-2 max-w-2xl text-slate-600">
+            Resumen de tu cuenta, suscripción y tendencias que guardas para volver a ellas.
           </p>
+          {user.name ? (
+            <p className="mt-4 text-sm font-semibold text-brand-navy">
+              Hola, <span className="text-brand-orange">{user.name}</span>
+              <span className="font-normal text-slate-500"> · {user.email}</span>
+            </p>
+          ) : (
+            <p className="mt-4 text-sm text-slate-500">{user.email}</p>
+          )}
         </header>
 
-        {saved.length === 0 ? (
-          <div className="mt-14 rounded-[2rem] border border-dashed border-slate-200 bg-white/80 px-6 py-16 text-center shadow-inner md:px-10">
-            <p className="text-lg font-bold text-brand-navy md:text-xl">
-              Todavía no guardas tendencias. Explora IA y guarda las más útiles.
-            </p>
-            <Link
-              href="/ia"
-              className="mt-6 inline-flex rounded-2xl bg-brand-navy px-6 py-3 text-sm font-black text-white shadow-md hover:bg-slate-900"
-            >
-              Explorar tendencias
-            </Link>
-          </div>
-        ) : (
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {saved.map((t) => (
-              <TrendCard key={t.id} trend={t} />
-            ))}
-          </div>
-        )}
+        <div className="mt-10 grid gap-8 lg:grid-cols-12">
+          {/* Columna cuenta / suscripción */}
+          <aside className="space-y-6 lg:col-span-4">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-sm font-black uppercase tracking-wide text-brand-navy">Tu cuenta</h2>
+              <dl className="mt-5 space-y-4 text-sm">
+                <div className="flex justify-between gap-4 border-b border-slate-100 pb-3">
+                  <dt className="text-slate-500">Plan</dt>
+                  <dd>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
+                        premium
+                          ? "bg-brand-orange/15 text-brand-orange"
+                          : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      {planDisplay(user.plan)}
+                    </span>
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-slate-100 pb-3">
+                  <dt className="text-slate-500">Cuenta</dt>
+                  <dd className="font-semibold text-brand-navy">{statusDisplay(user.status)}</dd>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-slate-500">En Notitendencias desde</dt>
+                  <dd className="font-semibold text-brand-navy">{formatMemberSince(memberSince)}</dd>
+                </div>
+              </dl>
+
+              {!premium && (
+                <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-600">Suscripción</p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    Con <strong className="text-brand-navy">Premium</strong> desbloqueas favoritos ilimitados,
+                    biblioteca en Mi radar y lectura completa en tendencias.
+                  </p>
+                  <Link
+                    href="/login?intent=premium&callbackUrl=%2Fmi-radar"
+                    className="mt-4 inline-flex w-full justify-center rounded-2xl bg-brand-orange px-4 py-3 text-center text-sm font-black text-white shadow-md hover:bg-orange-600"
+                  >
+                    Pasar a Premium
+                  </Link>
+                  <Link
+                    href="/#pricing"
+                    className="mt-2 block text-center text-xs font-semibold text-brand-navy underline decoration-dotted hover:text-brand-orange"
+                  >
+                    Comparar planes
+                  </Link>
+                </div>
+              )}
+
+              {premium && (
+                <p className="mt-6 rounded-2xl border border-brand-orange/25 bg-brand-orange/5 px-4 py-3 text-xs leading-relaxed text-slate-700">
+                  Tu suscripción está activa. Las tendencias que guardes aparecen abajo; puedes volver cuando quieras.
+                </p>
+              )}
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-sm font-black uppercase tracking-wide text-brand-navy">Accesos rápidos</h2>
+              <ul className="mt-4 space-y-2 text-sm font-semibold">
+                <li>
+                  <Link href="/ia" className="text-brand-orange hover:underline">
+                    Explorar tendencias →
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/" className="text-slate-600 hover:text-brand-orange">
+                    Inicio
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#pricing" className="text-slate-600 hover:text-brand-orange">
+                    Precios
+                  </Link>
+                </li>
+              </ul>
+            </section>
+          </aside>
+
+          {/* Favoritos / upsell */}
+          <section className="lg:col-span-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-black text-brand-navy">Tus favoritos</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  {premium
+                    ? `${saved.length} tendencia${saved.length === 1 ? "" : "s"} guardada${saved.length === 1 ? "" : "s"}.`
+                    : "Disponible en plan Premium."}
+                </p>
+              </div>
+              {premium && (
+                <Link
+                  href="/ia"
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-brand-navy hover:border-brand-orange"
+                >
+                  + Explorar más
+                </Link>
+              )}
+            </div>
+
+            {!premium ? (
+              <div className="mt-8 rounded-[2rem] border border-dashed border-slate-200 bg-white/90 px-8 py-14 text-center shadow-inner">
+                <p className="text-lg font-bold text-brand-navy md:text-xl">Biblioteca personal bloqueada</p>
+                <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600">
+                  Aquí verás el historial de tendencias que marques como favoritas, listas para revisión editorial y
+                  equipos.
+                </p>
+                <ul className="mx-auto mt-6 max-w-sm space-y-2 text-left text-sm text-slate-600">
+                  <li className="flex gap-2">
+                    <span className="text-brand-orange">✓</span> Guardar tendencias desde cualquier categoría
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-brand-orange">✓</span> Volver al análisis completo cuando lo necesites
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-brand-orange">✓</span> Tablero editorial propio
+                  </li>
+                </ul>
+                <Link
+                  href="/login?intent=premium&callbackUrl=%2Fmi-radar"
+                  className="mt-8 inline-flex rounded-2xl bg-brand-navy px-8 py-3 text-sm font-black text-white hover:bg-slate-900"
+                >
+                  Desbloquear con Premium
+                </Link>
+              </div>
+            ) : saved.length === 0 ? (
+              <div className="mt-8 rounded-[2rem] border border-dashed border-slate-200 bg-white/80 px-6 py-16 text-center shadow-inner md:px-10">
+                <p className="text-lg font-bold text-brand-navy md:text-xl">
+                  Todavía no guardas tendencias. Explora y marca las que más te sirvan.
+                </p>
+                <Link
+                  href="/ia"
+                  className="mt-6 inline-flex rounded-2xl bg-brand-orange px-6 py-3 text-sm font-black text-white shadow-lg shadow-orange-500/25 hover:bg-orange-600"
+                >
+                  Explorar tendencias
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-8 grid gap-6 sm:grid-cols-2">
+                {saved.map((t) => (
+                  <TrendCard key={t.id} trend={t} />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ Los cambios pueden tardar **5–30 minutos** en propagarse.
 
 ## 2. Variables en Coolify
 
-**Sin `AUTH_SECRET` en runtime** verás `[auth][error] MissingSecret` en los logs y fallará el middleware (`/admin`, `/mi-radar`). Debe estar definida como variable de **Runtime** del servicio (no solo en la fase de build).
+**Sin `AUTH_SECRET` en runtime** verás `[auth][error] MissingSecret` en los logs y fallará el middleware de **`/admin`**. Debe estar definida como variable de **Runtime** del servicio (no solo en la fase de build).
 
 > **Auditoría Coolify:** si la variable existe en el panel pero sigue el error, suele ser porque el **middleware Edge** empaqueta `process.env.AUTH_SECRET` en la imagen durante `next build` como vacío (no estaba disponible en la etapa de build). El código usa lectura en runtime del secreto en `middleware.ts`. Aun así conviene tener `AUTH_SECRET` también disponible en **buildtime** en Coolify para otros pasos; tras cambios de código, haz **redeploy**.
 
