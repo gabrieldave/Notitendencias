@@ -28,6 +28,12 @@ Copia `.env.example` a `.env` (o usa el `.env` local si ya existe) y ajusta.
 | `N8N_API_KEY` | No | Solo para `npm run n8n:sync-x-radar` en tu máquina/CI (sincronizar workflow X). **No** en el contenedor Next. |
 | `N8N_BASE_URL` | No | Por defecto `https://n8n.vibesystems.tech`. |
 | `USAGE_API_KEY` | **Sí** para registrar consumo desde n8n | Bearer para `POST /api/admin/usage/runs`. Generar con `openssl rand -hex 32`. Misma clave en Coolify y en n8n (credencial **Notitendencias Usage**). **No** exponer en el frontend. |
+| `NEXT_PUBLIC_STRIPE_RADAR_PAYMENT_LINK` | No | Payment Link público (Stripe). Botón “Suscribirme” y pricing. |
+| `STRIPE_WEBHOOK_SECRET` | **Sí** para premium automático | Signing secret del webhook Stripe → `POST /api/webhooks/stripe`, evento `checkout.session.completed`. |
+| `STRIPE_SECRET_KEY` | Recomendada | `sk_live_…` / `sk_test_…` (misma cuenta que el Payment Link): validar `price_*` y adjuntar `priceIds` al aviso n8n. |
+| `STRIPE_PREMIUM_PRICE_IDS` | Recomendada | `price_xxx` del Payment Link (Dashboard Stripe). Lista separada por comas. |
+| `N8N_PAYMENT_WEBHOOK_URL` | No | URL del nodo **Webhook** en n8n; Next envía JSON tras cada pago (véase **Stripe (Payment Link), premium y n8n**). |
+| `N8N_PAYMENT_WEBHOOK_SECRET` | No | Opcional: Bearer compartido; Next envía `Authorization: Bearer …`. |
 
 **Build en Docker:** el `Dockerfile` pasa `DATABASE_URL` y `NEXT_PUBLIC_APP_URL` como build args; en Coolify define también esas variables en “Build arguments” si el build las necesita, además del runtime.
 
@@ -201,6 +207,35 @@ Panel admin en **`/admin/usage`** (enlace **Consumo** en la navegación admin). 
 | 6 | Verificar el **balance real** en el [portal de desarrollador de X](https://developer.x.com/) — la estimación interna puede desviarse. |
 
 El costo por corrida se calcula como `posts_received × post_read_cost_usd` (valor editable). La proyección mensual usa el promedio de los últimos 7 días × 30.
+
+## Stripe (Payment Link), premium y n8n
+
+1. **Payment Link** en Stripe: es una página de cobro que igual genera **Checkout Sessions**. Tu app **no** necesita crear la sesión por API para cobrar.
+2. **`price_…`**: el Payment Link está ligado a un precio en Stripe. Copia ese **Price ID** y ponlo en **`STRIPE_PREMIUM_PRICE_IDS`** (y **`STRIPE_SECRET_KEY`** de la misma cuenta). Así solo ese producto activa `premium` en BD.
+3. **Webhook Stripe → Next**: en Dashboard → Webhooks, endpoint **`POST /api/webhooks/stripe`** en tu URL pública de Notitendencias, evento **`checkout.session.completed`**, secreto → **`STRIPE_WEBHOOK_SECRET`**.
+4. **Después de procesar el pago**, Next puede **avisar a n8n** con un `POST` JSON al **`N8N_PAYMENT_WEBHOOK_URL`** (workflow con nodo **Webhook**). Cuerpo alineado con tu gateway:
+
+```json
+{
+  "appId": "notitendencias",
+  "event": "radar.payment_checkout",
+  "data": {
+    "premiumActivated": true,
+    "userId": "uuid-o-null",
+    "fulfillReason": "opcional, ej. user_not_found",
+    "fulfillMatch": "client_reference_id",
+    "stripeSessionId": "cs_…",
+    "stripeMode": "payment",
+    "customerEmail": "correo@…",
+    "clientReferenceId": "uuid-si-vino-del-pricing-logueado",
+    "amountTotal": 500,
+    "currency": "usd",
+    "priceIds": ["price_…"]
+  }
+}
+```
+
+En n8n: **IF** `premiumActivated` → correo al comprador y/o al admin; **IF** `fulfillReason == user_not_found` → alerta para revisión manual.
 
 ## n8n y Kimi
 

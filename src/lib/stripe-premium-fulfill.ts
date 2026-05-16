@@ -7,10 +7,7 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 async function sessionMatchesAllowedPrices(sessionId: string): Promise<boolean> {
-  const raw =
-    process.env.STRIPE_PREMIUM_PRICE_IDS?.split(",")
-      .map((s) => s.trim())
-      .filter(Boolean) ?? [];
+  const raw = process.env.STRIPE_PREMIUM_PRICE_IDS?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
   if (raw.length === 0) return true;
 
   const secret = process.env.STRIPE_SECRET_KEY?.trim();
@@ -43,9 +40,16 @@ async function upgradeUserPlan(userId: string, emailForSubscriber: string) {
   await db.update(subscribers).set({ plan: "premium" }).where(eq(subscribers.email, emailForSubscriber));
 }
 
+export type RadarFulfillResult = {
+  ok: boolean;
+  reason?: string;
+  userId?: string;
+  matchedVia?: "client_reference_id" | "email";
+};
+
 export async function fulfillRadarPremiumFromCheckoutSession(
   session: Stripe.Checkout.Session,
-): Promise<{ ok: boolean; reason?: string }> {
+): Promise<RadarFulfillResult> {
   if (session.payment_status !== "paid") {
     return { ok: false, reason: "payment_not_paid" };
   }
@@ -71,7 +75,7 @@ export async function fulfillRadarPremiumFromCheckoutSession(
       },
       status: "new",
     });
-    return { ok: true };
+    return { ok: true, userId: u.id, matchedVia: "client_reference_id" };
   }
 
   const rawEmail = session.customer_details?.email ?? session.customer_email;
@@ -94,5 +98,5 @@ export async function fulfillRadarPremiumFromCheckoutSession(
     },
     status: "new",
   });
-  return { ok: true };
+  return { ok: true, userId: u.id, matchedVia: "email" };
 }

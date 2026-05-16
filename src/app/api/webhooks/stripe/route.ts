@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import Stripe from "stripe";
 import { fulfillRadarPremiumFromCheckoutSession } from "@/lib/stripe-premium-fulfill";
+import { notifyN8nRadarPayment } from "@/lib/stripe-n8n-notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
         if (!result.ok) {
           console.info("[stripe] checkout.session.completed sin upgrade:", result.reason, session.id);
         }
+        await notifyN8nRadarPayment(session, result);
         break;
       }
       default:
