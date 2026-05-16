@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Calendar } from "lucide-react";
 import type { Trend } from "@/db/schema";
+import { categoryDisplayName } from "@/lib/category-display";
 import { TrendScoreBadge } from "./TrendScoreBadge";
 
 type Props = {
@@ -28,7 +29,9 @@ export function TrendCardCompact({ trend, rank, href }: Props) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-brand-orange">{trend.categorySlug}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide text-brand-orange">
+            {categoryDisplayName(trend.categorySlug)}
+          </span>
           <TrendScoreBadge score={trend.trendScore} size="sm" />
         </div>
         <h3 className="mt-0.5 line-clamp-2 text-sm font-bold leading-snug text-brand-navy group-hover:text-brand-orange">

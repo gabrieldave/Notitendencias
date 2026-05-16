@@ -35,14 +35,14 @@ function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         </Link>
 <div className="mt-10 rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-lift md:p-10">
           <h1 className="text-center text-2xl font-black tracking-tight text-brand-navy md:text-3xl">
-            {intent === "premium" ? "Accede a Premium" : "Iniciar sesión"}
+            {intent === "premium" ? "Unirte al radar" : "Iniciar sesión"}
           </h1>
           <p className="mt-3 text-center text-sm leading-relaxed text-slate-600">
             Usa tu cuenta de Google para entrar a Notitendencias.
           </p>
           {intent === "premium" && (
 <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-center text-xs font-semibold text-amber-950">
-              Pagos próximamente. Durante la beta el acceso Premium es por invitación o asignación manual.
+              Pagos próximamente. Durante la beta el acceso Notitendencias AI Radar es por invitación o asignación manual.
 </div>
           )}
 <div className="mt-8">

@@ -84,7 +84,7 @@ export function TrendSaveButton({ trendId, slug, initialSaved, isLoggedIn, userP
         className="inline-flex items-center gap-2 rounded-full border border-amber-200/80 bg-gradient-to-r from-amber-50 to-white px-4 py-2 text-sm font-bold text-amber-950 shadow-sm ring-1 ring-amber-100 transition hover:ring-amber-300"
       >
         <Sparkles className="h-4 w-4 text-brand-orange" aria-hidden />
-        Guardar (Premium)
+        Guardar · Mi radar
       </Link>
     );
   }

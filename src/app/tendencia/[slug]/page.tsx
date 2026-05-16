@@ -1,13 +1,20 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { trends, userFavorites, type Trend } from "@/db/schema";
-import { and, desc, eq, ne } from "drizzle-orm";
+import { trends, userFavorites } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
+import { RadarSidebar } from "@/components/RadarSidebar";
 import { TrendDetailArticle } from "@/components/TrendDetailArticle";
 import { TrendSaveButton } from "@/components/TrendSaveButton";
-import { MostViewedSidebar } from "@/components/MostViewedSidebar";
-import { QuickSignalCard } from "@/components/QuickSignalCard";
+import { categoryDisplayName } from "@/lib/category-display";
+import {
+  loadRecentPublishedForSidebar,
+  loadTopScoreTrends,
+  pickTopScoreExcluding,
+  pickTopTodayFromRecent,
+} from "@/lib/radar-feed-queries";
 import { isPremiumPlan } from "@/lib/membership";
 import { getOptionalSessionUser } from "@/lib/session-user";
+
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -36,22 +43,23 @@ export default async function TrendDetailPage({ params }: Props) {
     .limit(1);
   if (!t) notFound();
 
-  let sidebarTrends: Trend[] = [];
+  let topToday: Awaited<ReturnType<typeof pickTopTodayFromRecent>> = [];
+  let topScore: Awaited<ReturnType<typeof pickTopScoreExcluding>> = [];
+
   try {
-    sidebarTrends = await db
-      .select()
-      .from(trends)
-      .where(and(eq(trends.status, "published"), ne(trends.slug, slug)))
-      .orderBy(desc(trends.trendScore))
-      .limit(6);
+    const recent = await loadRecentPublishedForSidebar(40);
+    topToday = pickTopTodayFromRecent(recent, 5);
+    const scorePool = await loadTopScoreTrends(12);
+    topScore = pickTopScoreExcluding(scorePool, new Set(topToday.map((x) => x.id)), 5);
   } catch {
-    sidebarTrends = [];
+    topToday = [];
+    topScore = [];
   }
 
   const back =
     t.categorySlug === "ia"
-      ? { href: "/ia", label: "← Más tendencias de IA" }
-      : { href: `/categoria/${t.categorySlug}`, label: `← Más en ${t.categorySlug}` };
+      ? { href: "/ia", label: "← Radar IA" }
+      : { href: `/categoria/${t.categorySlug}`, label: `← ${categoryDisplayName(t.categorySlug)}` };
 
   const user = await getOptionalSessionUser();
   const access = user && isPremiumPlan(user.plan) ? "full" : "limited";
@@ -69,8 +77,8 @@ export default async function TrendDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-slate-50/80">
       <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-12">
-          <div className="min-w-0 rounded-[2rem] border border-slate-100/80 bg-white shadow-soft lg:rounded-3xl">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-center lg:gap-12">
+          <div className="mx-auto min-w-0 max-w-3xl flex-1 rounded-[2rem] border border-slate-100/80 bg-white shadow-soft lg:mx-0 lg:rounded-3xl">
             <TrendDetailArticle
               trend={t}
               access={access}
@@ -87,10 +95,7 @@ export default async function TrendDetailPage({ params }: Props) {
               }
             />
           </div>
-          <aside className="flex flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
-            <MostViewedSidebar trends={sidebarTrends} />
-            <QuickSignalCard />
-          </aside>
+          <RadarSidebar topToday={topToday} topScore={topScore} />
         </div>
       </div>
     </div>

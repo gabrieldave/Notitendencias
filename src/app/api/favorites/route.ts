@@ -15,7 +15,7 @@ async function requirePremiumUser() {
     return { error: NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 }) };
   }
   if (!isPremiumPlan(plan ?? "free")) {
-    return { error: NextResponse.json({ ok: false, error: "Solo plan Premium" }, { status: 403 }) };
+    return { error: NextResponse.json({ ok: false, error: "Activa Notitendencias AI Radar para usar Mi radar." }, { status: 403 }) };
   }
   return { user: { id, plan: plan ?? "free" } };
 }

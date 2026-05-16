@@ -10,7 +10,7 @@ export function HeroSection() {
         <div className="max-w-xl lg:max-w-none">
           <p className="inline-flex items-center gap-2 rounded-full border border-brand-orange/25 bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-brand-orange shadow-sm">
             <Radio className="h-3.5 w-3.5" aria-hidden />
-            México · señales digitales
+            México · Notitendencias AI Radar
           </p>
           <h1 className="mt-6 text-4xl font-black leading-[1.1] tracking-tight text-brand-navy md:text-5xl lg:text-[3.15rem] xl:text-[3.35rem]">
             Las tendencias digitales más importantes,{" "}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Trend } from "@/db/schema";
 import { NewsletterBox } from "@/components/NewsletterBox";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
+import { categoryDisplayName } from "@/lib/category-display";
 import { SOURCE_URL_COLLAPSE_LENGTH } from "@/lib/editorial";
 import { FREE_SECTION_PREVIEW_CHARS, FREE_SUMMARY_MAX_CHARS } from "@/lib/constants";
 import { truncateForFreeSummary, truncateSectionPreview } from "@/lib/membership";
@@ -17,21 +18,24 @@ type Props = {
   saveButton?: React.ReactNode;
 };
 
-function PremiumUnlockCard() {
+function RadarMembershipCard() {
   return (
     <div className="relative mt-10 overflow-hidden rounded-3xl border border-brand-navy/15 bg-gradient-to-br from-brand-navy via-slate-900 to-slate-950 p-8 text-center text-white shadow-lift md:p-10">
       <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand-orange/20 blur-3xl" aria-hidden />
       <p className="text-xs font-black uppercase tracking-[0.25em] text-amber-200/90">Análisis completo</p>
-      <h2 className="mt-3 text-2xl font-black tracking-tight md:text-3xl">Desbloquea el análisis completo</h2>
+      <h2 className="mt-3 text-2xl font-black tracking-tight md:text-3xl">Únete a Notitendencias AI Radar</h2>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/80 md:text-base">
-        Ideas de contenido, oportunidades y contexto editorial profundo. Guarda tendencias en Mi radar con Premium.
+        Recibe señales de IA curadas, explicadas y convertidas en oportunidades prácticas para crear contenido,
+        automatizar procesos o detectar ideas de negocio.
       </p>
+      <p className="mt-4 text-lg font-black text-brand-orange">$99 MXN / mes</p>
+      <p className="mt-1 text-xs font-semibold text-white/60">Precio beta. Pagos próximamente.</p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
-          href="/login?intent=premium"
+          href="/#pricing"
           className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-brand-orange px-6 py-3 text-sm font-black text-white shadow-lg shadow-orange-900/30 transition hover:bg-orange-500"
         >
-          Hazte Premium
+          Unirme al radar
         </Link>
         <Link
           href="/login"
@@ -89,7 +93,7 @@ export function TrendDetailArticle({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="rounded-full bg-brand-navy px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white">
-              {t.categorySlug}
+              {categoryDisplayName(t.categorySlug)}
             </span>
             <TrendScoreBadge score={t.trendScore} size="lg" />
             {t.publishedAt && (
@@ -169,7 +173,9 @@ export function TrendDetailArticle({
             ))}
           </ul>
           {contentIdeas.length > 1 && (
-            <p className="mt-2 text-sm font-semibold text-slate-500">+{contentIdeas.length - 1} ideas más en Premium</p>
+            <p className="mt-2 text-sm font-semibold text-slate-500">
+              +{contentIdeas.length - 1} ideas más con membresía AI Radar
+            </p>
           )}
         </section>
       )}
@@ -206,13 +212,15 @@ export function TrendDetailArticle({
             ))}
           </ul>
           {businessIdeas.length > 1 && (
-            <p className="mt-2 text-sm font-semibold text-slate-500">+{businessIdeas.length - 1} ideas más en Premium</p>
+            <p className="mt-2 text-sm font-semibold text-slate-500">
+              +{businessIdeas.length - 1} ideas más con membresía AI Radar
+            </p>
           )}
         </section>
       )}
 
       {!full && (t.whyItMatters || t.opportunity || contentIdeas.length > 0 || businessIdeas.length > 0) && (
-        <PremiumUnlockCard />
+        <RadarMembershipCard />
       )}
 
       {tags.length > 0 && (

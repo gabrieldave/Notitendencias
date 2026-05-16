@@ -10,7 +10,7 @@ const explore = [
 
 const product = [
   { href: "/#newsletter", label: "Newsletter" },
-  { href: "/#pricing", label: "Premium" },
+  { href: "/#pricing", label: "AI Radar" },
   { href: "/#categorias", label: "Categorías" },
 ] as const;
 

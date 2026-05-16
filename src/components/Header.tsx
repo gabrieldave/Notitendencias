@@ -147,7 +147,7 @@ export function Header({ user }: Props) {
             <>
               {premium && (
                 <span className="rounded-full bg-gradient-to-r from-amber-100 to-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-amber-950 ring-1 ring-amber-200/80">
-                  Premium
+                  Radar
                 </span>
               )}
               <Link
@@ -214,7 +214,7 @@ export function Header({ user }: Props) {
               <>
                 {premium && (
                   <span className="mx-3 mt-2 inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase text-amber-950">
-                    Premium
+                    Radar
                   </span>
                 )}
                 <Link

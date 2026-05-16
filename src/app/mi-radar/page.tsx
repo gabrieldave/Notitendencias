@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { trends, userFavorites, users } from "@/db/schema";
 import { TrendCard } from "@/components/TrendCard";
@@ -14,8 +14,8 @@ function formatMemberSince(d: Date): string {
 }
 
 function planDisplay(plan: string): string {
-  if (plan === "premium") return "Premium";
-  if (plan === "free") return "Gratis";
+  if (plan === "premium") return "AI Radar activo";
+  if (plan === "free") return "Beta / pendiente";
   return plan;
 }
 
@@ -46,7 +46,7 @@ export default async function MiRadarPage() {
         .from(userFavorites)
         .innerJoin(trends, eq(userFavorites.trendId, trends.id))
         .where(and(eq(userFavorites.userId, user.id), eq(trends.status, "published")))
-        .orderBy(desc(userFavorites.createdAt))
+        .orderBy(desc(sql`coalesce(${trends.publishedAt}, ${trends.createdAt})`))
     : [];
 
   const saved = rows.map((r) => r.trend);
@@ -77,7 +77,7 @@ export default async function MiRadarPage() {
               <h2 className="text-sm font-black uppercase tracking-wide text-brand-navy">Tu cuenta</h2>
               <dl className="mt-5 space-y-4 text-sm">
                 <div className="flex justify-between gap-4 border-b border-slate-100 pb-3">
-                  <dt className="text-slate-500">Plan</dt>
+                  <dt className="text-slate-500">Membresía</dt>
                   <dd>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
@@ -104,27 +104,27 @@ export default async function MiRadarPage() {
                 <div className="mt-6 rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-600">Suscripción</p>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Con <strong className="text-brand-navy">Premium</strong> desbloqueas favoritos ilimitados,
-                    biblioteca en Mi radar y lectura completa en tendencias.
+                    Con <strong className="text-brand-navy">Notitendencias AI Radar</strong> activo tendrás favoritos
+                    ilimitados, esta biblioteca y lectura completa en cada señal ($99 MXN/mes cuando activemos cobro).
                   </p>
                   <Link
-                    href="/login?intent=premium&callbackUrl=%2Fmi-radar"
+                    href="/#pricing"
                     className="mt-4 inline-flex w-full justify-center rounded-2xl bg-brand-orange px-4 py-3 text-center text-sm font-black text-white shadow-md hover:bg-orange-600"
                   >
-                    Pasar a Premium
+                    Unirme al radar
                   </Link>
                   <Link
                     href="/#pricing"
                     className="mt-2 block text-center text-xs font-semibold text-brand-navy underline decoration-dotted hover:text-brand-orange"
                   >
-                    Comparar planes
+                    Ver precio y beneficios
                   </Link>
                 </div>
               )}
 
               {premium && (
                 <p className="mt-6 rounded-2xl border border-brand-orange/25 bg-brand-orange/5 px-4 py-3 text-xs leading-relaxed text-slate-700">
-                  Tu suscripción está activa. Las tendencias que guardes aparecen abajo; puedes volver cuando quieras.
+                  Tu membresía AI Radar está activa. Las tendencias que guardes aparecen abajo; puedes volver cuando quieras.
                 </p>
               )}
             </section>
@@ -159,7 +159,7 @@ export default async function MiRadarPage() {
                 <p className="mt-1 text-sm text-slate-600">
                   {premium
                     ? `${saved.length} tendencia${saved.length === 1 ? "" : "s"} guardada${saved.length === 1 ? "" : "s"}.`
-                    : "Disponible en plan Premium."}
+                    : "Incluido con Notitendencias AI Radar cuando tu cuenta esté activa."}
                 </p>
               </div>
               {premium && (
@@ -191,10 +191,10 @@ export default async function MiRadarPage() {
                   </li>
                 </ul>
                 <Link
-                  href="/login?intent=premium&callbackUrl=%2Fmi-radar"
+                  href="/#pricing"
                   className="mt-8 inline-flex rounded-2xl bg-brand-navy px-8 py-3 text-sm font-black text-white hover:bg-slate-900"
                 >
-                  Desbloquear con Premium
+                  Unirme al radar
                 </Link>
               </div>
             ) : saved.length === 0 ? (
