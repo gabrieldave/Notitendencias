@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { trends } from "@/db/schema";
+import { radarContentUnlockedFromAuth, trendToPublicApiJson } from "@/lib/radar-access";
 import { and, eq } from "drizzle-orm";
 
 export async function GET(
@@ -8,6 +9,7 @@ export async function GET(
   ctx: { params: Promise<{ segment: string }> },
 ) {
   const { segment } = await ctx.params;
+  const unlocked = await radarContentUnlockedFromAuth();
 
   const [row] = await db
     .select()
@@ -19,5 +21,9 @@ export async function GET(
     return NextResponse.json({ ok: false, error: "No encontrado" }, { status: 404 });
   }
 
-  return NextResponse.json({ ok: true, trend: row });
+  return NextResponse.json({
+    ok: true,
+    radarUnlocked: unlocked,
+    trend: trendToPublicApiJson(row, unlocked),
+  });
 }

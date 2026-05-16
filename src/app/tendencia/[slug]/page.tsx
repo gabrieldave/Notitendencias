@@ -12,7 +12,7 @@ import {
   pickTopScoreExcluding,
   pickTopTodayFromRecent,
 } from "@/lib/radar-feed-queries";
-import { isPremiumPlan } from "@/lib/membership";
+import { isRadarContentUnlocked } from "@/lib/radar-access";
 import { getOptionalSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +28,11 @@ export async function generateMetadata({ params }: Props) {
       .where(and(eq(trends.slug, slug), eq(trends.status, "published")))
       .limit(1);
     if (!t) return { title: "Tendencia · Notitendencias" };
-    return { title: `${t.title} · Notitendencias`, description: t.summary.slice(0, 160) };
+    return {
+      title: `${t.title} · Notitendencias`,
+      description:
+        "Señal en Notitendencias AI Radar. Activa la membresía para ver análisis, oportunidades e ideas de negocio.",
+    };
   } catch {
     return { title: "Notitendencias" };
   }
@@ -62,10 +66,11 @@ export default async function TrendDetailPage({ params }: Props) {
       : { href: `/categoria/${t.categorySlug}`, label: `← ${categoryDisplayName(t.categorySlug)}` };
 
   const user = await getOptionalSessionUser();
-  const access = user && isPremiumPlan(user.plan) ? "full" : "limited";
+  const radarUnlocked = isRadarContentUnlocked(user);
+  const access = radarUnlocked ? "full" : "limited";
 
   let isFavorite = false;
-  if (user && isPremiumPlan(user.plan)) {
+  if (radarUnlocked && user) {
     const [fav] = await db
       .select({ id: userFavorites.id })
       .from(userFavorites)
@@ -83,19 +88,21 @@ export default async function TrendDetailPage({ params }: Props) {
               trend={t}
               access={access}
               backFooter={back}
-              showNewsletter
+              showNewsletter={radarUnlocked}
               saveButton={
-                <TrendSaveButton
-                  trendId={t.id}
-                  slug={t.slug}
-                  initialSaved={isFavorite}
-                  isLoggedIn={Boolean(user)}
-                  userPlan={user?.plan ?? null}
-                />
+                radarUnlocked && user ? (
+                  <TrendSaveButton
+                    trendId={t.id}
+                    slug={t.slug}
+                    initialSaved={isFavorite}
+                    isLoggedIn
+                    userPlan={user.plan}
+                  />
+                ) : null
               }
             />
           </div>
-          <RadarSidebar topToday={topToday} topScore={topScore} />
+          <RadarSidebar topToday={topToday} topScore={topScore} titlesOnly={!radarUnlocked} />
         </div>
       </div>
     </div>

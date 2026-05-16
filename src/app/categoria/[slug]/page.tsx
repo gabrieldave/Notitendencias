@@ -13,6 +13,8 @@ import {
   pickTopScoreExcluding,
   pickTopTodayFromRecent,
 } from "@/lib/radar-feed-queries";
+import { isRadarContentUnlocked } from "@/lib/radar-access";
+import { getOptionalSessionUser } from "@/lib/session-user";
 import { isPublicCategorySlug } from "@/lib/public-categories";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +52,9 @@ export default async function CategoriaPage({ params }: Props) {
   const { slug } = await params;
   if (!isPublicCategorySlug(slug)) notFound();
 
+  const user = await getOptionalSessionUser();
+  const radarUnlocked = isRadarContentUnlocked(user);
+
   let list: Awaited<ReturnType<typeof loadTrendFeed>> = [];
   let topToday: Awaited<ReturnType<typeof pickTopTodayFromRecent>> = [];
   let topScore: Awaited<ReturnType<typeof pickTopScoreExcluding>> = [];
@@ -85,17 +90,21 @@ export default async function CategoriaPage({ params }: Props) {
             <div className="mx-auto w-full min-w-0 max-w-3xl flex-1 lg:mx-0">
               <SectionHeader
                 title="Señales publicadas"
-                subtitle="Feed cronológico por fecha del post en la fuente (cuando existe) o por publicación en el radar."
+                subtitle={
+                  radarUnlocked
+                    ? "Feed cronológico por fecha del post en la fuente (cuando existe) o por publicación en el radar."
+                    : "Vista limitada a titulares. AI Radar desbloquea análisis, oportunidades e ideas."
+                }
               />
               <div className="mt-10 flex flex-col gap-8 md:gap-10">
                 {list.length === 0 ? (
                   <EditorialComingSoon />
                 ) : (
-                  list.map((t) => <TrendFeedCard key={t.id} trend={t} />)
+                  list.map((t) => <TrendFeedCard key={t.id} trend={t} titlesOnly={!radarUnlocked} />)
                 )}
               </div>
             </div>
-            <RadarSidebar topToday={topToday} topScore={topScore} />
+            <RadarSidebar topToday={topToday} topScore={topScore} titlesOnly={!radarUnlocked} />
           </div>
         </div>
       </div>

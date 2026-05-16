@@ -9,10 +9,30 @@ type Props = {
   trend: Trend;
   rank: number;
   href?: string;
+  titlesOnly?: boolean;
 };
 
-export function TrendCardCompact({ trend, rank, href }: Props) {
+export function TrendCardCompact({ trend, rank, href, titlesOnly = false }: Props) {
   const to = href ?? `/tendencia/${trend.slug}`;
+
+  if (titlesOnly) {
+    return (
+      <article className="group flex gap-3 rounded-2xl border border-transparent p-2 transition hover:border-slate-200 hover:bg-white hover:shadow-soft">
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-navy to-brand-navy/80 text-sm font-black text-white shadow-sm"
+          aria-hidden
+        >
+          {rank}
+        </div>
+        <div className="min-w-0 flex-1 py-1">
+          <h3 className="line-clamp-3 text-sm font-bold leading-snug text-brand-navy group-hover:text-brand-orange">
+            <Link href={to}>{trend.title}</Link>
+          </h3>
+        </div>
+      </article>
+    );
+  }
+
   const radarTs = trendRadarInstant(trend);
   const dateLabel = radarTs.toLocaleDateString("es-MX", {
     day: "numeric",

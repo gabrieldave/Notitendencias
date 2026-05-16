@@ -5,14 +5,17 @@ import { TrendCardCompact } from "@/components/TrendCardCompact";
 type Props = {
   topToday: Trend[];
   topScore: Trend[];
+  titlesOnly?: boolean;
 };
 
-export function RadarSidebar({ topToday, topScore }: Props) {
+export function RadarSidebar({ topToday, topScore, titlesOnly = false }: Props) {
   return (
     <aside className="mx-auto w-full max-w-sm shrink-0 space-y-6 lg:sticky lg:top-28 lg:max-w-[280px]">
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
         <h3 className="text-sm font-black uppercase tracking-wide text-brand-navy">Top hoy</h3>
-        <p className="mt-1 text-xs text-slate-500">Señales más recientes del día</p>
+        <p className="mt-1 text-xs text-slate-500">
+          {titlesOnly ? "Solo titulares visibles · desbloquea AI Radar para el análisis" : "Señales más recientes del día"}
+        </p>
         {topToday.length === 0 ? (
           <p className="mt-4 text-sm leading-relaxed text-slate-500">
             Aún no hay publicaciones hoy. Vuelve más tarde o mira el feed principal.
@@ -20,7 +23,7 @@ export function RadarSidebar({ topToday, topScore }: Props) {
         ) : (
           <div className="mt-4 flex flex-col divide-y divide-slate-100">
             {topToday.map((t, i) => (
-              <TrendCardCompact key={t.id} trend={t} rank={i + 1} />
+              <TrendCardCompact key={t.id} trend={t} rank={i + 1} titlesOnly={titlesOnly} />
             ))}
           </div>
         )}
@@ -28,13 +31,15 @@ export function RadarSidebar({ topToday, topScore }: Props) {
 
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
         <h3 className="text-sm font-black uppercase tracking-wide text-brand-navy">Mayor score</h3>
-        <p className="mt-1 text-xs text-slate-500">Prioridad editorial ahora</p>
+        <p className="mt-1 text-xs text-slate-500">
+          {titlesOnly ? "Titulares por score editorial · detalle con membresía" : "Prioridad editorial ahora"}
+        </p>
         {topScore.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">Sin datos.</p>
         ) : (
           <div className="mt-4 flex flex-col divide-y divide-slate-100">
             {topScore.map((t, i) => (
-              <TrendCardCompact key={t.id} trend={t} rank={i + 1} />
+              <TrendCardCompact key={t.id} trend={t} rank={i + 1} titlesOnly={titlesOnly} />
             ))}
           </div>
         )}

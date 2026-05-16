@@ -12,11 +12,15 @@ import {
   pickTopScoreExcluding,
   pickTopTodayFromRecent,
 } from "@/lib/radar-feed-queries";
+import { isRadarContentUnlocked } from "@/lib/radar-access";
+import { getOptionalSessionUser } from "@/lib/session-user";
 import { Brain, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function IaPage() {
+  const user = await getOptionalSessionUser();
+  const radarUnlocked = isRadarContentUnlocked(user);
   let list: Awaited<ReturnType<typeof loadTrendFeed>> = [];
   let topToday: Awaited<ReturnType<typeof pickTopTodayFromRecent>> = [];
   let topScore: Awaited<ReturnType<typeof pickTopScoreExcluding>> = [];
@@ -66,17 +70,21 @@ export default async function IaPage() {
           <div className="mx-auto w-full min-w-0 max-w-3xl flex-1 lg:mx-0">
             <SectionHeader
               title="Radar IA · en vivo"
-              subtitle="Orden: más reciente primero según la fecha del post en la fuente cuando existe; si no, por publicación en el radar."
+              subtitle={
+                radarUnlocked
+                  ? "Orden: más reciente primero según la fecha del post en la fuente cuando existe; si no, por publicación en el radar."
+                  : "Solo titulares sin cuenta o sin AI Radar. Desbloquea la membresía para ver resumen, oportunidad e ideas."
+              }
             />
             <div className="mt-10 flex flex-col gap-8 md:gap-10">
               {list.length === 0 ? (
                 <EditorialComingSoon />
               ) : (
-                list.map((t) => <TrendFeedCard key={t.id} trend={t} />)
+                list.map((t) => <TrendFeedCard key={t.id} trend={t} titlesOnly={!radarUnlocked} />)
               )}
             </div>
           </div>
-          <RadarSidebar topToday={topToday} topScore={topScore} />
+          <RadarSidebar topToday={topToday} topScore={topScore} titlesOnly={!radarUnlocked} />
         </div>
       </div>
 

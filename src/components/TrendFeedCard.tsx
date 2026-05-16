@@ -6,10 +6,26 @@ import { formatFeedTimestamp } from "@/lib/feed-date";
 import { trendRadarInstant } from "@/lib/trend-radar-instant";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 
-type Props = { trend: Trend };
+type Props = { trend: Trend; titlesOnly?: boolean };
 
-export function TrendFeedCard({ trend: t }: Props) {
+export function TrendFeedCard({ trend: t, titlesOnly = false }: Props) {
   const to = `/tendencia/${t.slug}`;
+
+  if (titlesOnly) {
+    return (
+      <article className="rounded-2xl border border-slate-200/90 bg-white px-5 py-5 shadow-sm md:px-7 md:py-6">
+        <h2 className="text-xl font-black leading-snug tracking-tight text-brand-navy md:text-2xl">
+          <Link
+            href={to}
+            className="transition hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+          >
+            {t.title}
+          </Link>
+        </h2>
+      </article>
+    );
+  }
+
   const ts = trendRadarInstant(t);
   const iso = ts instanceof Date ? ts.toISOString() : new Date(ts).toISOString();
   const tags = (t.tags as string[] | null)?.slice(0, 7) ?? [];

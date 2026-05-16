@@ -4,8 +4,6 @@ import { NewsletterBox } from "@/components/NewsletterBox";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 import { categoryDisplayName } from "@/lib/category-display";
 import { SOURCE_URL_COLLAPSE_LENGTH } from "@/lib/editorial";
-import { FREE_SECTION_PREVIEW_CHARS, FREE_SUMMARY_MAX_CHARS } from "@/lib/constants";
-import { truncateForFreeSummary, truncateSectionPreview } from "@/lib/membership";
 import { trendRadarInstant } from "@/lib/trend-radar-instant";
 import { Calendar } from "lucide-react";
 
@@ -49,28 +47,6 @@ function RadarMembershipCard() {
   );
 }
 
-function SectionPreview({ title, tone, children }: { title: string; tone: "slate" | "amber"; children: React.ReactNode }) {
-  const border = tone === "amber" ? "border-amber-100" : "border-slate-100";
-  return (
-    <section className={`mt-6 rounded-3xl border ${border} bg-white/90 p-6 shadow-soft md:p-8`}>
-      <h2
-        className={`text-xs font-black uppercase tracking-[0.2em] ${
-          tone === "amber" ? "text-amber-800" : "text-brand-orange"
-        }`}
-      >
-        {title}
-      </h2>
-      <div className="relative mt-3 text-base leading-relaxed text-slate-700 md:text-lg">
-        {children}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white to-transparent"
-          aria-hidden
-        />
-      </div>
-    </section>
-  );
-}
-
 export function TrendDetailArticle({
   trend: t,
   access,
@@ -79,15 +55,29 @@ export function TrendDetailArticle({
   saveButton,
 }: Props) {
   const full = access === "full";
+
+  if (!full) {
+    return (
+      <article className="mx-auto max-w-3xl px-4 py-10 md:py-14">
+        <h1 className="text-3xl font-black leading-[1.15] tracking-tight text-brand-navy md:text-4xl lg:text-5xl">
+          {t.title}
+        </h1>
+        <div className="mt-10">
+          <RadarMembershipCard />
+        </div>
+        <p className="mt-10 text-center">
+          <Link href={backFooter.href} className="text-sm font-bold text-brand-orange hover:underline">
+            {backFooter.label}
+          </Link>
+        </p>
+      </article>
+    );
+  }
+
   const contentIdeas = (t.contentIdeas as string[] | null) ?? [];
   const businessIdeas = (t.businessIdeas as string[] | null) ?? [];
   const tags = (t.tags as string[] | null) ?? [];
-
-  const summaryDisplay = full ? t.summary : truncateForFreeSummary(t.summary, FREE_SUMMARY_MAX_CHARS);
   const radarTs = trendRadarInstant(t);
-
-  const whyPreview = t.whyItMatters ? truncateSectionPreview(t.whyItMatters, FREE_SECTION_PREVIEW_CHARS) : "";
-  const oppPreview = t.opportunity ? truncateSectionPreview(t.opportunity, FREE_SECTION_PREVIEW_CHARS) : "";
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-10 md:py-14">
@@ -114,34 +104,23 @@ export function TrendDetailArticle({
         <h1 className="mt-6 text-3xl font-black leading-[1.15] tracking-tight text-brand-navy md:text-4xl lg:text-5xl">
           {t.title}
         </h1>
-        <p className="mt-6 text-lg leading-relaxed text-slate-700 md:text-xl">{summaryDisplay}</p>
+        <p className="mt-6 text-lg leading-relaxed text-slate-700 md:text-xl">{t.summary}</p>
       </header>
 
-      {full && t.whyItMatters && (
+      {t.whyItMatters && (
         <section className="mt-10 rounded-3xl border border-slate-100 bg-white p-6 shadow-soft md:p-8">
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-brand-orange">Por qué importa</h2>
           <p className="mt-3 text-base leading-relaxed text-slate-700 md:text-lg">{t.whyItMatters}</p>
         </section>
       )}
-      {full && t.opportunity && (
+      {t.opportunity && (
         <section className="mt-6 rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50/80 to-white p-6 shadow-soft md:p-8">
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-amber-800">Oportunidad</h2>
           <p className="mt-3 text-base leading-relaxed text-slate-700 md:text-lg">{t.opportunity}</p>
         </section>
       )}
 
-      {!full && t.whyItMatters && (
-        <SectionPreview title="Por qué importa" tone="slate">
-          <p>{whyPreview}</p>
-        </SectionPreview>
-      )}
-      {!full && t.opportunity && (
-        <SectionPreview title="Oportunidad" tone="amber">
-          <p>{oppPreview}</p>
-        </SectionPreview>
-      )}
-
-      {full && contentIdeas.length > 0 && (
+      {contentIdeas.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-black text-brand-navy md:text-2xl">Ideas de contenido</h2>
           <ul className="mt-4 space-y-3">
@@ -158,29 +137,7 @@ export function TrendDetailArticle({
         </section>
       )}
 
-      {!full && contentIdeas.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-xl font-black text-brand-navy md:text-2xl">Ideas de contenido</h2>
-          <ul className="mt-4 space-y-3">
-            {contentIdeas.slice(0, 1).map((idea) => (
-              <li
-                key={idea}
-                className="flex gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-slate-700 shadow-sm"
-              >
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-orange" aria-hidden />
-                <span className="leading-relaxed">{truncateSectionPreview(idea, FREE_SECTION_PREVIEW_CHARS)}</span>
-              </li>
-            ))}
-          </ul>
-          {contentIdeas.length > 1 && (
-            <p className="mt-2 text-sm font-semibold text-slate-500">
-              +{contentIdeas.length - 1} ideas más con membresía AI Radar
-            </p>
-          )}
-        </section>
-      )}
-
-      {full && businessIdeas.length > 0 && (
+      {businessIdeas.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-black text-brand-navy md:text-2xl">Ideas de negocio</h2>
           <ul className="mt-4 space-y-3">
@@ -195,32 +152,6 @@ export function TrendDetailArticle({
             ))}
           </ul>
         </section>
-      )}
-
-      {!full && businessIdeas.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-xl font-black text-brand-navy md:text-2xl">Ideas de negocio</h2>
-          <ul className="mt-4 space-y-3">
-            {businessIdeas.slice(0, 1).map((idea) => (
-              <li
-                key={idea}
-                className="flex gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-slate-700 shadow-sm"
-              >
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-navy" aria-hidden />
-                <span className="leading-relaxed">{truncateSectionPreview(idea, FREE_SECTION_PREVIEW_CHARS)}</span>
-              </li>
-            ))}
-          </ul>
-          {businessIdeas.length > 1 && (
-            <p className="mt-2 text-sm font-semibold text-slate-500">
-              +{businessIdeas.length - 1} ideas más con membresía AI Radar
-            </p>
-          )}
-        </section>
-      )}
-
-      {!full && (t.whyItMatters || t.opportunity || contentIdeas.length > 0 || businessIdeas.length > 0) && (
-        <RadarMembershipCard />
       )}
 
       {tags.length > 0 && (
@@ -251,18 +182,16 @@ export function TrendDetailArticle({
         )}
       </section>
 
-      {full && (
-        <div className="mt-10 rounded-3xl border border-brand-navy/10 bg-slate-50 p-6 text-center md:p-8">
-          <p className="text-sm font-bold text-brand-navy">¿Te sirvió esta señal?</p>
-          <p className="mt-1 text-sm text-slate-600">Explora más en Mi radar o comparte el hallazgo con tu equipo.</p>
-          <Link
-            href="/mi-radar"
-            className="mt-4 inline-flex rounded-full bg-white px-5 py-2 text-sm font-black text-brand-navy ring-1 ring-slate-200 transition hover:ring-brand-orange"
-          >
-            Ir a Mi radar
-          </Link>
-        </div>
-      )}
+      <div className="mt-10 rounded-3xl border border-brand-navy/10 bg-slate-50 p-6 text-center md:p-8">
+        <p className="text-sm font-bold text-brand-navy">¿Te sirvió esta señal?</p>
+        <p className="mt-1 text-sm text-slate-600">Explora más en Mi radar o comparte el hallazgo con tu equipo.</p>
+        <Link
+          href="/mi-radar"
+          className="mt-4 inline-flex rounded-full bg-white px-5 py-2 text-sm font-black text-brand-navy ring-1 ring-slate-200 transition hover:ring-brand-orange"
+        >
+          Ir a Mi radar
+        </Link>
+      </div>
 
       {showNewsletter && (
         <div className="mt-10">

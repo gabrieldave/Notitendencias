@@ -14,10 +14,14 @@ import {
   pickTopScoreExcluding,
   pickTopTodayFromRecent,
 } from "@/lib/radar-feed-queries";
+import { isRadarContentUnlocked } from "@/lib/radar-access";
+import { getOptionalSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  const user = await getOptionalSessionUser();
+  const radarUnlocked = isRadarContentUnlocked(user);
   let feed: Awaited<ReturnType<typeof loadTrendFeed>> = [];
   let topToday: Awaited<ReturnType<typeof pickTopTodayFromRecent>> = [];
   let topScore: Awaited<ReturnType<typeof pickTopScoreExcluding>> = [];
@@ -56,18 +60,18 @@ export default async function HomePage() {
                 <>
                   <SectionHeader
                     title="Radar en vivo"
-                    subtitle={`${publishedCount} señales recientes · todas las categorías · orden por fecha del post (si la fuente lo aporta)`}
+                    subtitle={`${publishedCount} señales · sin cuenta solo ves titulares · con AI Radar ves el análisis completo`}
                     action={{ href: "/ia", label: "Solo IA →" }}
                   />
                   <div className="mt-10 flex flex-col gap-8 md:gap-10">
                     {feed.map((t) => (
-                      <TrendFeedCard key={t.id} trend={t} />
+                      <TrendFeedCard key={t.id} trend={t} titlesOnly={!radarUnlocked} />
                     ))}
                   </div>
                 </>
               )}
             </div>
-            <RadarSidebar topToday={topToday} topScore={topScore} />
+            <RadarSidebar topToday={topToday} topScore={topScore} titlesOnly={!radarUnlocked} />
           </div>
         </div>
       </section>
