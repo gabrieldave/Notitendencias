@@ -14,7 +14,9 @@ const messages: Record<string, string> = {
   AccessDenied: "No tienes permiso para acceder con esa cuenta.",
   Verification: "La sesión de Google no se pudo completar. Inténtalo de nuevo.",
   OAuthSignin: "No se pudo conectar con Google. Revisa que la app OAuth tenga el redirect correcto.",
-  OAuthCallback: "Google respondió pero el servidor no pudo completar el acceso. Revisa logs y migraciones de BD.",
+  OAuthCallback:
+    "Google respondió pero la base de datos falló (suele faltar una columna nueva). En el servidor ejecuta npm run db:migrate con la misma DATABASE_URL de Coolify, o aplica drizzle/0006_stripe_customer.sql.",
+  OAuthAccountNotLinked: "Esa cuenta de Google ya está vinculada a otro usuario.",
   Default: "No pudimos completar el inicio de sesión. Inténtalo de nuevo.",
 };
 
