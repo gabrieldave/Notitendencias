@@ -26,6 +26,7 @@ FROM node:22.14-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3015
+ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public

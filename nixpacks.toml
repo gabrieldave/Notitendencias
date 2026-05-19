@@ -1,11 +1,16 @@
-# Coolify usa Nixpacks por defecto. En el panel, quita NIXPACKS_NODE_VERSION=22
-# si lo tienes fijado a 22.11, o pon 22.14. Preferible: Build Pack → Dockerfile.
+# Coolify: preferir Build Pack → Dockerfile. Si usas Nixpacks, puerto 3015 en el proxy.
 [variables]
+PORT = "3015"
+HOSTNAME = "0.0.0.0"
 NODE_OPTIONS = "--max-old-space-size=4096"
 NIXPACKS_NODE_VERSION = "22.14"
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = [
+  "npm run build",
+  "cp -r public .next/standalone/public",
+  "cp -r .next/static .next/standalone/.next/static",
+]
 
 [start]
-cmd = "node .next/standalone/server.js"
+cmd = "sh scripts/start-standalone.sh"

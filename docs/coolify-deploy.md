@@ -18,7 +18,18 @@ Suele ser **falta de RAM** en el contenedor de build o **Node 22.11** (algunas d
 3. RAM del servidor de build: **≥ 4 GB** libres para `next build`.
 4. `NODE_OPTIONS=--max-old-space-size=4096` ya está en `nixpacks.toml`.
 
-### Tras deploy
+### Error 502 (Cloudflare / Bad Gateway)
 
-- `https://notitendencias.iareal.net/api/me` → debe responder JSON (sesión).
-- Re-login tras cambios de auth (JWT).
+Significa que **no hay app escuchando** detrás del proxy (contenedor caído, build fallido o puerto mal mapeado).
+
+1. En Coolify → **Logs** del contenedor: busca `Error`, `Killed`, `EADDRINUSE`, `DATABASE_URL`.
+2. **Puerto interno** del servicio: **3015** (no 3000).
+3. Health check: `GET /api/health` → debe devolver `{"ok":true}`.
+4. Variables mínimas en runtime: `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`, `NEXT_PUBLIC_APP_URL`, `AUTH_TRUST_HOST=true`.
+5. Redeploy con **Dockerfile** tras el commit que incluye `HOSTNAME=0.0.0.0`.
+
+### Tras deploy OK
+
+- `https://notitendencias.iareal.net/api/health` → `ok: true`
+- `https://notitendencias.iareal.net/api/me` → JSON de sesión
+- Re-login tras cambios de auth (JWT)
