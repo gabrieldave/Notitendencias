@@ -57,6 +57,8 @@ Ya **no** hacen falta para login: `WEBHOOK_URL`, `APP_ID`, `AUTH_EMAIL_FROM` (ma
 
 **Redeploy** del contenedor después de guardar.
 
+> **Importante (Docker/Coolify):** `AUTH_GOOGLE_*` y `AUTH_SECRET` deben existir en **runtime** del contenedor. El código lee proveedores en cada petición (no solo en `next build`). Si el login fallaba con `Configuration` pero `/api/health` mostraba `hasGoogle: true`, era porque el build de la imagen no tenía Google y el array de proveedores quedaba vacío en el bundle — corregido en `src/auth.ts` con config dinámica.
+
 ---
 
 ## 3. Comprobar
