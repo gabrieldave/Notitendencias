@@ -10,19 +10,21 @@ type Props = { searchParams: Promise<{ error?: string }> };
 
 const messages: Record<string, string> = {
   Configuration:
-    "El servidor de auth respondió con un error genérico. Si /api/health muestra auth.ready: true, borra las cookies de notitendencias.iareal.net (o prueba en ventana privada) y vuelve a /login. Si sigue fallando tras elegir tu cuenta Google, revisa docs/google-oauth-coolify.md (redirect URI y usuarios de prueba).",
+    "Error genérico de Auth.js. Revisa /api/health: si db.ready es false, ejecuta npm run db:migrate en Coolify. Si db.ready es true, en Safari borra datos del sitio o usa ventana privada (cookies PKCE) y confirma que AUTH_URL sea https://notitendencias.iareal.net.",
   AccessDenied: "No tienes permiso para acceder con esa cuenta.",
   Verification: "La sesión de Google no se pudo completar. Inténtalo de nuevo.",
-  OAuthSignin: "No se pudo conectar con Google. Revisa que la app OAuth tenga el redirect correcto.",
+  OAuthSignin: "No se pudo conectar con Google. Revisa redirect URI en Google Cloud.",
   OAuthCallback:
-    "Google respondió pero la base de datos falló (suele faltar una columna nueva). En el servidor ejecuta npm run db:migrate con la misma DATABASE_URL de Coolify, o aplica drizzle/0006_stripe_customer.sql.",
+    "Google respondió pero falló el servidor (base de datos o sesión). Abre /api/health/db — si hasStripeCustomerColumn es false, aplica migraciones.",
   OAuthAccountNotLinked: "Esa cuenta de Google ya está vinculada a otro usuario.",
+  CallbackRouteError: "Falló la ruta de callback. Revisa logs del contenedor en Coolify.",
   Default: "No pudimos completar el inicio de sesión. Inténtalo de nuevo.",
 };
 
 export default async function AuthErrorPage({ searchParams }: Props) {
   const { error } = await searchParams;
-  const key = error && messages[error] ? error : "Default";
+  const code = error?.trim() || "Default";
+  const key = messages[code] ? code : "Default";
   const text = messages[key] ?? messages.Default;
 
   return (
@@ -39,7 +41,22 @@ export default async function AuthErrorPage({ searchParams }: Props) {
         </Link>
         <p className="mt-8 text-xs font-black uppercase tracking-[0.2em] text-red-600">Algo salió mal</p>
         <h1 className="mt-3 text-2xl font-black text-brand-navy md:text-3xl">Error de acceso</h1>
+        {code !== "Default" && (
+          <p className="mt-3 font-mono text-xs text-slate-500">
+            Código: <span className="font-bold text-slate-700">{code}</span>
+          </p>
+        )}
         <p className="mt-4 text-sm leading-relaxed text-slate-600">{text}</p>
+        <p className="mt-4 text-xs text-slate-500">
+          Diagnóstico:{" "}
+          <a href="/api/health" className="font-semibold text-brand-orange underline">
+            /api/health
+          </a>
+          {" · "}
+          <a href="/api/health/db" className="font-semibold text-brand-orange underline">
+            /api/health/db
+          </a>
+        </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link
             href="/login"
@@ -58,3 +75,5 @@ export default async function AuthErrorPage({ searchParams }: Props) {
     </div>
   );
 }
+
+

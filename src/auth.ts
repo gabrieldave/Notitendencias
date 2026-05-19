@@ -44,40 +44,63 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     trustHost,
     adapter,
     providers,
+    debug: process.env.AUTH_DEBUG === "true",
+    cookies: {
+      pkceCodeVerifier: {
+        options: {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          secure: true,
+          maxAge: 60 * 30,
+        },
+      },
+    },
     session: {
       strategy: "database",
       maxAge: 90 * 24 * 60 * 60,
     },
     events: {
       async signIn({ user }) {
-        if (!user.email) return;
-        const em = user.email.toLowerCase().trim();
-        if (!parseAdminEmails().includes(em)) return;
-        await db.update(users).set({ role: "admin", updatedAt: new Date() }).where(eq(users.email, em));
+        try {
+          if (!user.email) return;
+          const em = user.email.toLowerCase().trim();
+          if (!parseAdminEmails().includes(em)) return;
+          await db
+            .update(users)
+            .set({ role: "admin", updatedAt: new Date() })
+            .where(eq(users.email, em));
+        } catch (e) {
+          console.error("[auth] signIn event (admin role):", e);
+        }
       },
     },
     callbacks: {
       ...authConfig.callbacks,
       async session({ session, user }) {
-        const [row] = await db
-          .select({
-            id: users.id,
-            email: users.email,
-            name: users.name,
-            role: users.role,
-            plan: users.plan,
-            status: users.status,
-          })
-          .from(users)
-          .where(eq(users.id, user.id))
-          .limit(1);
-        if (!row || !session.user) return session;
-        session.user.id = row.id;
-        session.user.email = row.email ?? "";
-        session.user.name = row.name;
-        session.user.role = row.role === "admin" || isAdminEmail(row.email) ? "admin" : row.role;
-        session.user.plan = row.plan;
-        session.user.status = row.status;
+        try {
+          const [row] = await db
+            .select({
+              id: users.id,
+              email: users.email,
+              name: users.name,
+              role: users.role,
+              plan: users.plan,
+              status: users.status,
+            })
+            .from(users)
+            .where(eq(users.id, user.id))
+            .limit(1);
+          if (!row || !session.user) return session;
+          session.user.id = row.id;
+          session.user.email = row.email ?? "";
+          session.user.name = row.name;
+          session.user.role = row.role === "admin" || isAdminEmail(row.email) ? "admin" : row.role;
+          session.user.plan = row.plan;
+          session.user.status = row.status;
+        } catch (e) {
+          console.error("[auth] session callback:", e);
+        }
         return session;
       },
     },

@@ -1,3 +1,4 @@
+import { maskGoogleClientId, resolvePublicAppUrl } from "@/lib/app-url";
 import { googleProviderCount } from "@/lib/auth-providers";
 import { isGoogleAuthConfigured } from "@/lib/google-auth";
 import { resolveAuthSecret } from "@/lib/auth-env";
@@ -10,6 +11,9 @@ export type AuthSetupStatus = {
   hasGoogle: boolean;
   googleProviderCount: number;
   hasPublicUrl: boolean;
+  publicUrl: string | null;
+  googleCallbackUrl: string | null;
+  googleClientIdSuffix: string | null;
   trustHost: boolean;
   issues: AuthSetupIssue[];
 };
@@ -18,10 +22,10 @@ export type AuthSetupStatus = {
 export function getAuthSetupStatus(): AuthSetupStatus {
   const hasSecret = Boolean(resolveAuthSecret());
   const hasGoogle = isGoogleAuthConfigured();
-  const hasPublicUrl = Boolean(
-    process.env.AUTH_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim(),
-  );
+  const publicUrl = resolvePublicAppUrl() ?? null;
+  const hasPublicUrl = Boolean(publicUrl);
   const trustHost = process.env.AUTH_TRUST_HOST === "true";
+  const googleCallbackUrl = publicUrl ? `${publicUrl}/api/auth/callback/google` : null;
 
   const issues: AuthSetupIssue[] = [];
   if (!hasSecret) issues.push("missing_secret");
@@ -35,6 +39,9 @@ export function getAuthSetupStatus(): AuthSetupStatus {
     hasGoogle,
     googleProviderCount: providerCount,
     hasPublicUrl,
+    publicUrl,
+    googleCallbackUrl,
+    googleClientIdSuffix: maskGoogleClientId(),
     trustHost,
     issues,
   };
