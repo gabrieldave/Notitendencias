@@ -6,9 +6,13 @@ import { formatFeedTimestamp } from "@/lib/feed-date";
 import { trendRadarInstant } from "@/lib/trend-radar-instant";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 
-type Props = { trend: Trend; titlesOnly?: boolean };
+type Props = {
+  trend: Trend;
+  titlesOnly?: boolean;
+  saveButton?: React.ReactNode;
+};
 
-export function TrendFeedCard({ trend: t, titlesOnly = false }: Props) {
+export function TrendFeedCard({ trend: t, titlesOnly = false, saveButton }: Props) {
   const to = `/tendencia/${t.slug}`;
 
   if (titlesOnly) {
@@ -34,18 +38,21 @@ export function TrendFeedCard({ trend: t, titlesOnly = false }: Props) {
 
   return (
     <article className="group rounded-2xl border border-slate-200/90 bg-white px-5 py-6 shadow-sm transition hover:border-brand-orange/40 hover:shadow-md md:px-7 md:py-7">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 text-[13px] leading-tight text-slate-600">
-        <span className="font-bold text-brand-navy">{categoryDisplayName(t.categorySlug)}</span>
-        <span className="hidden text-slate-300 sm:inline" aria-hidden>
-          ·
-        </span>
-        <TrendScoreBadge score={t.trendScore} size="sm" />
-        <span className="hidden text-slate-300 sm:inline" aria-hidden>
-          ·
-        </span>
-        <time dateTime={iso} className="font-semibold tabular-nums text-slate-800">
-          {formatFeedTimestamp(ts)}
-        </time>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3 gap-y-1.5 text-[13px] leading-tight text-slate-600">
+          <span className="font-bold text-brand-navy">{categoryDisplayName(t.categorySlug)}</span>
+          <span className="hidden text-slate-300 sm:inline" aria-hidden>
+            ·
+          </span>
+          <TrendScoreBadge score={t.trendScore} size="sm" />
+          <span className="hidden text-slate-300 sm:inline" aria-hidden>
+            ·
+          </span>
+          <time dateTime={iso} className="font-semibold tabular-nums text-slate-800">
+            {formatFeedTimestamp(ts)}
+          </time>
+        </div>
+        {saveButton ? <div className="shrink-0">{saveButton}</div> : null}
       </div>
 
       <h2 className="mt-4 text-xl font-black leading-snug tracking-tight text-brand-navy md:text-2xl">
@@ -83,13 +90,15 @@ export function TrendFeedCard({ trend: t, titlesOnly = false }: Props) {
         )}
       </div>
 
-      <Link
-        href={to}
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-orange px-5 py-2.5 text-sm font-black text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2"
-      >
-        Leer análisis
-        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
-      </Link>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <Link
+          href={to}
+          className="inline-flex items-center gap-2 rounded-xl bg-brand-orange px-5 py-2.5 text-sm font-black text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2"
+        >
+          Leer análisis
+          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
+        </Link>
+      </div>
     </article>
   );
 }

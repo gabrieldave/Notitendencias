@@ -10,11 +10,8 @@ import { showHeaderAdminNav } from "@/lib/header-admin-nav";
 import type { PublicUser } from "@/lib/session-user";
 import { stripeRadarPaymentLink } from "@/lib/stripe-public";
 
-/** Feed editorial + anclas en la misma página (/ia#historias, /ia#pricing). */
-const mainNav = [
-  { href: "/ia", label: "Radar IA" },
-  { href: "/ia#historias", label: "Señales" },
-] as const;
+/** Una sola sección editorial: feed + pricing en /ia */
+const mainNav = [{ href: "/ia", label: "Radar IA" }] as const;
 
 function isActive(pathname: string, href: string): boolean {
   const base = href.split("#")[0] || href;

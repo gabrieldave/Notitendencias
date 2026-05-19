@@ -4,6 +4,8 @@ import { PricingSection } from "@/components/PricingSection";
 import { RadarSidebar } from "@/components/RadarSidebar";
 import { SectionHeader } from "@/components/SectionHeader";
 import { TrendFeedCard } from "@/components/TrendFeedCard";
+import { TrendSaveButton } from "@/components/TrendSaveButton";
+import { loadFavoriteTrendIds } from "@/lib/user-favorites";
 import {
   loadRecentPublishedForSidebar,
   loadTopScoreTrends,
@@ -20,6 +22,8 @@ export const dynamic = "force-dynamic";
 export default async function IaPage() {
   const user = await getOptionalSessionUser();
   const radarUnlocked = isRadarContentUnlocked(user);
+  const favoriteIds =
+    radarUnlocked && user ? await loadFavoriteTrendIds(user.id) : new Set<string>();
   let list: Awaited<ReturnType<typeof loadTrendFeed>> = [];
   let topToday: Awaited<ReturnType<typeof pickTopTodayFromRecent>> = [];
   let topScore: Awaited<ReturnType<typeof pickTopScoreExcluding>> = [];
@@ -91,7 +95,7 @@ export default async function IaPage() {
                 title="Señales IA · en vivo"
                 subtitle={
                   radarUnlocked
-                    ? `${list.length} publicaciones · análisis completo desbloqueado`
+                    ? `${list.length} publicaciones · guarda favoritos con el icono y revísalos en Mi radar`
                     : `${list.length} titulares visibles · activa AI Radar para ver oportunidades e ideas`
                 }
               />
@@ -99,7 +103,25 @@ export default async function IaPage() {
                 {list.length === 0 ? (
                   <EditorialComingSoon />
                 ) : (
-                  list.map((t) => <TrendFeedCard key={t.id} trend={t} titlesOnly={!radarUnlocked} />)
+                  list.map((t) => (
+                    <TrendFeedCard
+                      key={t.id}
+                      trend={t}
+                      titlesOnly={!radarUnlocked}
+                      saveButton={
+                        radarUnlocked && user ? (
+                          <TrendSaveButton
+                            trendId={t.id}
+                            slug={t.slug}
+                            initialSaved={favoriteIds.has(t.id)}
+                            isLoggedIn
+                            userPlan={user.plan}
+                            variant="compact"
+                          />
+                        ) : undefined
+                      }
+                    />
+                  ))
                 )}
               </div>
             </div>
