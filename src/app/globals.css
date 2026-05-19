@@ -8,8 +8,12 @@
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply text-slate-900 antialiased;
   font-family: var(--font-sans), system-ui, sans-serif;
+  background-color: #e2e8f0;
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% -10%, rgba(249, 115, 22, 0.07), transparent),
+    linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
 }
 
 @layer utilities {

@@ -4,24 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { ChevronDown, Loader2, Menu, X } from "lucide-react";
+import { Loader2, Menu, X } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { showHeaderAdminNav } from "@/lib/header-admin-nav";
 import type { PublicUser } from "@/lib/session-user";
 import { stripeRadarPaymentLink } from "@/lib/stripe-public";
 
-const mainNav = [
-  { href: "/", label: "Inicio" },
-  { href: "/#historias", label: "Tendencias" },
-  { href: "/ia", label: "IA" },
-  { href: "/categoria/negocios", label: "Negocios" },
-  { href: "/categoria/tecnologia", label: "Tecnología" },
-  { href: "/categoria/creadores", label: "Creadores" },
-] as const;
+const mainNav = [{ href: "/ia", label: "IA" }] as const;
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  if (href.startsWith("/#")) return false;
   if (href === "/ia") return pathname === "/ia" || pathname.startsWith("/ia/");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -42,7 +33,7 @@ function SubscribeButton({ className, onClick }: { className: string; onClick?: 
     );
   }
   return (
-    <Link href="/#pricing" className={className} onClick={onClick}>
+    <Link href="/ia#pricing" className={className} onClick={onClick}>
       Suscribirme
     </Link>
   );
@@ -57,7 +48,7 @@ function LogoutButton({ className }: { className?: string }) {
       disabled={pending}
       onClick={() => {
         start(async () => {
-          await signOut({ callbackUrl: "/" });
+          await signOut({ callbackUrl: "/ia" });
           router.refresh();
         });
       }}
@@ -73,15 +64,17 @@ type Props = { user: PublicUser | null };
 export function Header({ user }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const premium = user?.plan === "premium";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 shadow-[0_1px_0_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:py-5">
+    <header className="relative sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-brand-navy via-[#0f2848] to-slate-900 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.35)] backdrop-blur-md">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-orange/50 to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(249,115,22,0.12),transparent)]" />
+
+      <div className="relative mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 md:py-4">
         <Link
-          href="/"
-          className="flex shrink-0 items-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+          href="/ia"
+          className="flex shrink-0 items-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
           onClick={() => setOpen(false)}
         >
           <Image
@@ -89,7 +82,7 @@ export function Header({ user }: Props) {
             alt=""
             width={48}
             height={48}
-            className="h-11 w-11 rounded-2xl shadow-md ring-1 ring-slate-200/80 md:h-12 md:w-12"
+            className="h-11 w-11 rounded-2xl shadow-lg ring-1 ring-white/15 md:h-12 md:w-12"
             priority
           />
           <Image
@@ -97,10 +90,10 @@ export function Header({ user }: Props) {
             alt="Notitendencias"
             width={220}
             height={52}
-            className="hidden h-10 w-auto sm:block md:h-11"
+            className="hidden h-10 w-auto brightness-0 invert sm:block md:h-11"
             priority
           />
-          <span className="sr-only">Notitendencias — inicio</span>
+          <span className="sr-only">Notitendencias — radar IA</span>
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
@@ -110,60 +103,22 @@ export function Header({ user }: Props) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`border-b-2 border-transparent px-3 py-2 text-sm font-semibold transition ${
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   active
-                    ? "border-brand-orange text-brand-orange"
-                    : "text-slate-600 hover:border-slate-200 hover:text-brand-navy"
+                    ? "bg-brand-orange/20 text-brand-orange ring-1 ring-brand-orange/40"
+                    : "text-slate-300 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 {item.label}
               </Link>
             );
           })}
-          <div className="relative">
-            <button
-              type="button"
-              className="flex items-center gap-0.5 rounded-full px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
-              aria-expanded={moreOpen}
-              onClick={() => setMoreOpen(!moreOpen)}
-            >
-              Más
-              <ChevronDown className={`h-4 w-4 transition ${moreOpen ? "rotate-180" : ""}`} aria-hidden />
-            </button>
-            {moreOpen && (
-              <>
-                <button
-                  type="button"
-                  className="fixed inset-0 z-40 cursor-default bg-transparent"
-                  aria-label="Cerrar menú"
-                  onClick={() => setMoreOpen(false)}
-                />
-                <div className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-2xl border border-slate-200 bg-white py-2 shadow-lift">
-                  <Link
-                    href="/#categorias"
-                    className="block px-4 py-2 text-sm font-medium text-brand-navy hover:bg-amber-50"
-                    onClick={() => setMoreOpen(false)}
-                  >
-                    Todas las categorías
-                  </Link>
-                  <Link
-                    href="/categoria/dinero"
-                    className="block px-4 py-2 text-sm font-medium text-brand-navy hover:bg-amber-50"
-                    onClick={() => setMoreOpen(false)}
-                  >
-                    Dinero
-                  </Link>
-                  <Link
-                    href="/categoria/entretenimiento"
-                    className="block px-4 py-2 text-sm font-medium text-brand-navy hover:bg-amber-50"
-                    onClick={() => setMoreOpen(false)}
-                  >
-                    Entretenimiento
-                  </Link>
-                </div>
-              </>
-            )}
-          </div>
+          <Link
+            href="/ia#historias"
+            className="rounded-full px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+          >
+            Radar en vivo
+          </Link>
         </nav>
 
         <div className="hidden flex-wrap items-center justify-end gap-2 sm:flex sm:gap-3">
@@ -172,43 +127,43 @@ export function Header({ user }: Props) {
               {premium && (
                 <Link
                   href="/ia"
-                  className="rounded-full bg-gradient-to-r from-amber-100 to-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-amber-950 ring-1 ring-amber-200/80 transition hover:ring-brand-orange/60"
+                  className="rounded-full bg-gradient-to-r from-amber-400/90 to-brand-orange px-3 py-1 text-[11px] font-black uppercase tracking-wide text-brand-navy shadow-sm"
                 >
-                  Radar
+                  Premium
                 </Link>
               )}
               <Link
                 href="/mi-radar"
-                className="rounded-full px-4 py-2.5 text-sm font-bold text-brand-navy ring-1 ring-slate-200 transition hover:bg-slate-50"
+                className="rounded-full px-4 py-2.5 text-sm font-bold text-white ring-1 ring-white/25 transition hover:bg-white/10"
               >
                 Mi radar
               </Link>
               {showHeaderAdminNav(user.email) && (
                 <Link
                   href="/admin"
-                  className="rounded-full px-4 py-2.5 text-sm font-bold text-brand-navy ring-1 ring-slate-200 transition hover:bg-slate-50"
+                  className="rounded-full px-4 py-2.5 text-sm font-bold text-white/90 ring-1 ring-white/20 transition hover:bg-white/10"
                 >
                   Admin
                 </Link>
               )}
-              <LogoutButton className="rounded-full px-4 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-brand-navy disabled:opacity-60" />
+              <LogoutButton className="rounded-full px-4 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-60" />
             </>
           ) : (
             <>
               <Link
                 href="/login"
-                className="rounded-full px-4 py-2.5 text-sm font-bold text-brand-navy ring-1 ring-slate-200 transition hover:bg-slate-50"
+                className="rounded-full px-4 py-2.5 text-sm font-bold text-white ring-1 ring-white/25 transition hover:bg-white/10"
               >
                 Iniciar sesión
               </Link>
-              <SubscribeButton className="rounded-full bg-brand-orange px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-orange-500/35 ring-2 ring-brand-orange/40 transition hover:bg-orange-600 hover:shadow-orange-500/45" />
+              <SubscribeButton className="rounded-full bg-brand-orange px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-orange-900/40 ring-2 ring-orange-400/30 transition hover:bg-orange-500" />
             </>
           )}
         </div>
 
         <button
           type="button"
-          className="inline-flex rounded-full p-2 text-brand-navy ring-1 ring-slate-200 hover:bg-slate-50 lg:hidden"
+          className="inline-flex rounded-full p-2 text-white ring-1 ring-white/25 hover:bg-white/10 lg:hidden"
           aria-expanded={open}
           aria-controls="mobile-nav"
           onClick={() => setOpen(!open)}
@@ -219,14 +174,17 @@ export function Header({ user }: Props) {
       </div>
 
       {open && (
-        <div id="mobile-nav" className="border-t border-slate-100 bg-white px-4 py-4 lg:hidden">
+        <div
+          id="mobile-nav"
+          className="relative border-t border-white/10 bg-brand-navy/98 px-4 py-4 backdrop-blur-lg lg:hidden"
+        >
           <nav className="flex flex-col gap-1" aria-label="Móvil">
             {mainNav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`rounded-xl px-3 py-3 text-base font-semibold ${
-                  isActive(pathname, item.href) ? "bg-brand-orange/10 text-brand-orange" : "text-brand-navy"
+                  isActive(pathname, item.href) ? "bg-brand-orange/20 text-brand-orange" : "text-white"
                 }`}
                 onClick={() => setOpen(false)}
               >
@@ -234,26 +192,22 @@ export function Header({ user }: Props) {
               </Link>
             ))}
             <Link
-              href="/#categorias"
-              className="rounded-xl px-3 py-3 text-base font-semibold text-brand-navy"
+              href="/ia#historias"
+              className="rounded-xl px-3 py-3 text-base font-semibold text-slate-200"
               onClick={() => setOpen(false)}
             >
-              Categorías
+              Radar en vivo
             </Link>
             {user ? (
               <>
                 {premium && (
-                  <Link
-                    href="/ia"
-                    className="mx-3 mt-2 inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase text-amber-950 ring-1 ring-amber-200/80 transition hover:ring-brand-orange/60"
-                    onClick={() => setOpen(false)}
-                  >
-                    Radar
-                  </Link>
+                  <span className="mx-3 mt-2 inline-flex w-fit rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase text-brand-navy">
+                    Premium
+                  </span>
                 )}
                 <Link
                   href="/mi-radar"
-                  className="mt-2 rounded-xl px-3 py-3 text-base font-semibold text-brand-navy"
+                  className="mt-2 rounded-xl px-3 py-3 text-base font-semibold text-white"
                   onClick={() => setOpen(false)}
                 >
                   Mi radar
@@ -261,25 +215,25 @@ export function Header({ user }: Props) {
                 {showHeaderAdminNav(user.email) && (
                   <Link
                     href="/admin"
-                    className="rounded-xl px-3 py-3 text-base font-semibold text-brand-navy"
+                    className="rounded-xl px-3 py-3 text-base font-semibold text-white"
                     onClick={() => setOpen(false)}
                   >
                     Admin
                   </Link>
                 )}
-                <LogoutButton className="w-full rounded-xl py-3 text-center text-base font-semibold text-slate-600" />
+                <LogoutButton className="w-full rounded-xl py-3 text-center text-base font-semibold text-slate-300" />
               </>
             ) : (
               <>
                 <Link
                   href="/login"
-                  className="mt-2 rounded-xl px-3 py-3 text-base font-semibold text-brand-navy"
+                  className="mt-2 rounded-xl px-3 py-3 text-base font-semibold text-white"
                   onClick={() => setOpen(false)}
                 >
                   Iniciar sesión
                 </Link>
                 <SubscribeButton
-                  className="mt-2 rounded-xl bg-brand-orange py-3.5 text-center text-base font-black text-white shadow-lg shadow-orange-500/30"
+                  className="mt-2 rounded-xl bg-brand-orange py-3.5 text-center text-base font-black text-white"
                   onClick={() => setOpen(false)}
                 />
               </>

@@ -1,4 +1,3 @@
-import { CategoryNav } from "@/components/CategoryNav";
 import { EditorialComingSoon } from "@/components/EditorialComingSoon";
 import { NewsletterBox } from "@/components/NewsletterBox";
 import { PricingSection } from "@/components/PricingSection";
@@ -14,7 +13,7 @@ import {
 } from "@/lib/radar-feed-queries";
 import { isRadarContentUnlocked } from "@/lib/radar-access";
 import { getOptionalSessionUser } from "@/lib/session-user";
-import { Brain, Sparkles } from "lucide-react";
+import { Brain, Radio, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -38,55 +37,76 @@ export default async function IaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/80">
-      <div className="border-b border-slate-100 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 md:py-10">
-          <CategoryNav active="ia" />
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-100 to-slate-50">
+      <section className="relative overflow-hidden border-b border-brand-navy/30 bg-gradient-to-br from-brand-navy via-[#0d2647] to-slate-950 text-white">
+        <div className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-brand-orange/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 bottom-0 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-[url('/branding/logo-icon.png')] bg-[length:420px] bg-right-top bg-no-repeat opacity-[0.04]" />
 
-      <div className="mx-auto max-w-7xl px-4 py-10 md:py-14">
-        <header className="relative overflow-hidden rounded-[2rem] border border-slate-200/90 bg-gradient-to-br from-brand-navy via-brand-navy to-slate-950 px-6 py-10 text-white shadow-lift md:px-10 md:py-12">
-          <div className="pointer-events-none absolute -right-16 top-0 h-48 w-48 rounded-full bg-brand-orange/25 blur-3xl" />
-          <div className="relative flex flex-wrap items-start gap-4">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
-              <Brain className="h-8 w-8 text-brand-orange" aria-hidden />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 md:py-16 lg:py-20">
+          <div className="flex flex-wrap items-start gap-5">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 shadow-lift">
+              <Brain className="h-9 w-9 text-brand-orange" aria-hidden />
             </span>
-            <div>
-              <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-amber-200/90">
-                <Sparkles className="h-4 w-4" aria-hidden />
-                Radar · IA
+            <div className="min-w-0 flex-1">
+              <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-amber-200/95">
+                <Sparkles className="h-3.5 w-3.5 text-brand-orange" aria-hidden />
+                Notitendencias · México
               </p>
-              <h1 className="mt-2 text-4xl font-black tracking-tight md:text-5xl">Inteligencia artificial</h1>
-              <p className="mt-4 max-w-2xl text-lg text-white/85">
-                Feed cronológico de señales publicadas: lanzamientos, modelos y oportunidades accionables para creadores y
-                equipos en México.
+              <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl lg:text-[3.25rem]">
+                Radar de{" "}
+                <span className="bg-gradient-to-r from-brand-orange to-amber-300 bg-clip-text text-transparent">
+                  inteligencia artificial
+                </span>
+              </h1>
+              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-300 md:text-xl">
+                Lanzamientos, modelos, agentes y señales accionables — filtradas para creadores y equipos que no quieren
+                perderse el cambio.
               </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a
+                  href="#historias"
+                  className="inline-flex items-center gap-2 rounded-full bg-brand-orange px-7 py-3.5 text-sm font-black text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-500"
+                >
+                  <Radio className="h-4 w-4" aria-hidden />
+                  Ver señales
+                </a>
+                <a
+                  href="#pricing"
+                  className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
+                >
+                  AI Radar Premium
+                </a>
+              </div>
             </div>
           </div>
-        </header>
-
-        <div className="mt-12 flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-center lg:gap-14">
-          <div className="mx-auto w-full min-w-0 max-w-3xl flex-1 lg:mx-0">
-            <SectionHeader
-              title="Radar IA · en vivo"
-              subtitle={
-                radarUnlocked
-                  ? "Orden: más reciente primero según la fecha del post en la fuente cuando existe; si no, por publicación en el radar."
-                  : "Solo titulares sin cuenta o sin AI Radar. Desbloquea la membresía para ver resumen, oportunidad e ideas."
-              }
-            />
-            <div className="mt-10 flex flex-col gap-8 md:gap-10">
-              {list.length === 0 ? (
-                <EditorialComingSoon />
-              ) : (
-                list.map((t) => <TrendFeedCard key={t.id} trend={t} titlesOnly={!radarUnlocked} />)
-              )}
-            </div>
-          </div>
-          <RadarSidebar topToday={topToday} topScore={topScore} titlesOnly={!radarUnlocked} />
         </div>
-      </div>
+      </section>
+
+      <section id="historias" className="scroll-mt-24">
+        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
+          <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-center lg:gap-14">
+            <div className="mx-auto w-full min-w-0 max-w-3xl flex-1 lg:mx-0">
+              <SectionHeader
+                title="Señales IA · en vivo"
+                subtitle={
+                  radarUnlocked
+                    ? `${list.length} publicaciones · análisis completo desbloqueado`
+                    : `${list.length} titulares visibles · activa AI Radar para ver oportunidades e ideas`
+                }
+              />
+              <div className="mt-10 flex flex-col gap-8 md:gap-10">
+                {list.length === 0 ? (
+                  <EditorialComingSoon />
+                ) : (
+                  list.map((t) => <TrendFeedCard key={t.id} trend={t} titlesOnly={!radarUnlocked} />)
+                )}
+              </div>
+            </div>
+            <RadarSidebar topToday={topToday} topScore={topScore} titlesOnly={!radarUnlocked} />
+          </div>
+        </div>
+      </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-16 md:pb-20">
         <div className="mx-auto max-w-4xl">

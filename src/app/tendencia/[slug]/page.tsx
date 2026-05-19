@@ -5,7 +5,6 @@ import { and, eq } from "drizzle-orm";
 import { RadarSidebar } from "@/components/RadarSidebar";
 import { TrendDetailArticle } from "@/components/TrendDetailArticle";
 import { TrendSaveButton } from "@/components/TrendSaveButton";
-import { categoryDisplayName } from "@/lib/category-display";
 import {
   loadRecentPublishedForSidebar,
   loadTopScoreTrends,
@@ -60,10 +59,7 @@ export default async function TrendDetailPage({ params }: Props) {
     topScore = [];
   }
 
-  const back =
-    t.categorySlug === "ia"
-      ? { href: "/ia", label: "← Radar IA" }
-      : { href: `/categoria/${t.categorySlug}`, label: `← ${categoryDisplayName(t.categorySlug)}` };
+  const back = { href: "/ia", label: "← Radar IA" };
 
   const user = await getOptionalSessionUser();
   const radarUnlocked = isRadarContentUnlocked(user);

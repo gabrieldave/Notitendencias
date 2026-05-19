@@ -1,17 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const explore = [
-  { href: "/ia", label: "IA" },
-  { href: "/categoria/tecnologia", label: "Tecnología" },
-  { href: "/categoria/dinero", label: "Dinero" },
-  { href: "/categoria/negocios", label: "Negocios" },
-] as const;
+const explore = [{ href: "/ia", label: "Radar IA" }] as const;
 
 const product = [
-  { href: "/#newsletter", label: "Newsletter" },
-  { href: "/#pricing", label: "AI Radar" },
-  { href: "/#categorias", label: "Categorías" },
+  { href: "/ia#newsletter", label: "Newsletter" },
+  { href: "/ia#pricing", label: "AI Radar" },
+  { href: "/mi-radar", label: "Mi radar" },
 ] as const;
 
 const company = [
@@ -22,17 +17,17 @@ const company = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-slate-50">
+    <footer className="border-t border-slate-300/80 bg-gradient-to-b from-slate-100 to-slate-200/90">
       <div className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-16">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-5">
-            <Link href="/" className="inline-flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link href="/ia" className="inline-flex flex-col gap-3 sm:flex-row sm:items-center">
               <Image
                 src="/branding/logo-icon.png"
                 alt=""
                 width={56}
                 height={56}
-                className="h-14 w-14 rounded-2xl shadow-md ring-1 ring-slate-200/80"
+                className="h-14 w-14 rounded-2xl shadow-md ring-1 ring-slate-300/80"
               />
               <Image
                 src="/branding/logo-wordmark.png"
@@ -43,8 +38,7 @@ export function SiteFooter() {
               />
             </Link>
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-slate-600 md:text-base">
-              Señales útiles. Tendencias claras. Plataforma mexicana para entender el cambio digital sin perderse en el
-              ruido.
+              Señales de IA para México: tendencias claras, análisis accionable y radar premium sin ruido innecesario.
             </p>
           </div>
 
@@ -92,7 +86,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <p className="mt-12 border-t border-slate-200 pt-8 text-center text-xs text-slate-500 md:text-left">
+        <p className="mt-12 border-t border-slate-300/80 pt-8 text-center text-xs text-slate-500 md:text-left">
           © 2026 Notitendencias · iareal.net
         </p>
       </div>

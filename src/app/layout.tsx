@@ -11,6 +11,9 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+/** Cabecera con sesión: no cachear HTML estático sin cookie de sesión. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Notitendencias",
   description:
@@ -28,7 +31,7 @@ export default async function RootLayout({
   const user = await getOptionalSessionUser();
   return (
     <html lang="es" className={dmSans.variable}>
-      <body className="min-h-screen">
+      <body className="min-h-screen bg-slate-100 text-slate-900 antialiased">
         <Header user={user} />
         <main className="min-h-[50vh]">{children}</main>
         <SiteFooter />
