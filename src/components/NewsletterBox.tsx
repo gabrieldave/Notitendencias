@@ -7,10 +7,19 @@ type Props = {
   className?: string;
   /** complement = bloque más discreto debajo del contenido premium */
   variant?: "default" | "complement";
+  defaultEmail?: string;
+  title?: string;
+  description?: string;
 };
 
-export function NewsletterBox({ className = "", variant = "default" }: Props) {
-  const [email, setEmail] = useState("");
+export function NewsletterBox({
+  className = "",
+  variant = "default",
+  defaultEmail = "",
+  title,
+  description,
+}: Props) {
+  const [email, setEmail] = useState(defaultEmail);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -45,9 +54,11 @@ export function NewsletterBox({ className = "", variant = "default" }: Props) {
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-brand-navy ring-1 ring-slate-200/80">
             <Mail className="h-5 w-5 text-brand-orange" aria-hidden />
           </span>
-          <h3 className="mt-4 text-lg font-black tracking-tight text-brand-navy md:text-xl">Newsletter</h3>
+          <h3 className="mt-4 text-lg font-black tracking-tight text-brand-navy md:text-xl">
+            {title ?? "Newsletter"}
+          </h3>
           <p className="mt-2 text-sm leading-relaxed text-slate-600 md:text-base">
-            Recibe las señales más importantes de IA sin ruido.
+            {description ?? "Recibe las señales más importantes de IA sin ruido."}
           </p>
           <form onSubmit={onSubmit} className="mt-6 flex max-w-lg flex-col gap-2 sm:mx-auto sm:flex-row sm:items-stretch">
             <input

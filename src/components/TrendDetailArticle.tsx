@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Trend } from "@/db/schema";
 import type { PublicUser } from "@/lib/session-user";
-import { NewsletterBox } from "@/components/NewsletterBox";
+import { NewsletterSection } from "@/components/NewsletterSection";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 import { categoryDisplayName } from "@/lib/category-display";
 import { trendRadarInstant } from "@/lib/trend-radar-instant";
@@ -301,7 +301,7 @@ export function TrendDetailArticle({
 
       {showNewsletter ? (
         <div className="mt-12">
-          <NewsletterBox variant="complement" />
+          <NewsletterSection variant="complement" />
         </div>
       ) : null}
 
