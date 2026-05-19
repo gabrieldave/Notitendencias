@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appEvents, subscribers, users } from "@/db/schema";
+import { persistStripeCustomerId, stripeCustomerIdFromSession } from "@/lib/stripe-billing";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -34,10 +35,15 @@ async function sessionMatchesAllowedPrices(sessionId: string): Promise<boolean> 
   return priceIds.some((id) => raw.includes(id!));
 }
 
-async function upgradeUserPlan(userId: string, emailForSubscriber: string) {
+async function upgradeUserPlan(
+  userId: string,
+  emailForSubscriber: string,
+  stripeCustomerId?: string | null,
+) {
   const now = new Date();
   await db.update(users).set({ plan: "premium", updatedAt: now }).where(eq(users.id, userId));
   await db.update(subscribers).set({ plan: "premium" }).where(eq(subscribers.email, emailForSubscriber));
+  if (stripeCustomerId) await persistStripeCustomerId(userId, stripeCustomerId);
 }
 
 export type RadarFulfillResult = {
@@ -59,12 +65,14 @@ export async function fulfillRadarPremiumFromCheckoutSession(
     return { ok: false, reason: "price_not_allowed" };
   }
 
+  const stripeCustomerId = stripeCustomerIdFromSession(session);
+
   const clientRef = session.client_reference_id?.trim();
   if (clientRef && UUID_RE.test(clientRef)) {
     const [u] = await db.select().from(users).where(eq(users.id, clientRef)).limit(1);
     if (!u) return { ok: false, reason: "client_ref_user_not_found" };
     if (u.status !== "active") return { ok: false, reason: "client_ref_user_inactive" };
-    await upgradeUserPlan(u.id, u.email);
+    await upgradeUserPlan(u.id, u.email, stripeCustomerId);
     await db.insert(appEvents).values({
       type: "stripe.checkout.completed",
       payloadJson: {
@@ -72,6 +80,7 @@ export async function fulfillRadarPremiumFromCheckoutSession(
         via: "client_reference_id",
         userId: u.id,
         mode: session.mode,
+        stripeCustomerId,
       },
       status: "new",
     });
@@ -86,7 +95,7 @@ export async function fulfillRadarPremiumFromCheckoutSession(
   if (!u) return { ok: false, reason: "user_not_found" };
   if (u.status !== "active") return { ok: false, reason: "user_inactive" };
 
-  await upgradeUserPlan(u.id, u.email);
+  await upgradeUserPlan(u.id, u.email, stripeCustomerId);
   await db.insert(appEvents).values({
     type: "stripe.checkout.completed",
     payloadJson: {
@@ -95,6 +104,7 @@ export async function fulfillRadarPremiumFromCheckoutSession(
       email: em,
       userId: u.id,
       mode: session.mode,
+      stripeCustomerId,
     },
     status: "new",
   });

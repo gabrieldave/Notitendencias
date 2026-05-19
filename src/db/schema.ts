@@ -122,6 +122,8 @@ export const users = pgTable("users", {
   role: text("role").default("user").notNull(),
   plan: text("plan").default("free").notNull(),
   status: text("status").default("active").notNull(),
+  /** Cliente Stripe (`cus_…`) para Billing Portal y webhooks de suscripción. */
+  stripeCustomerId: text("stripe_customer_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

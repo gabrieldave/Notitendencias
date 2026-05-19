@@ -1,5 +1,9 @@
 import { headers } from "next/headers";
 import Stripe from "stripe";
+import {
+  downgradeUserByStripeCustomerId,
+  subscriptionShouldDowngrade,
+} from "@/lib/stripe-billing";
 import { fulfillRadarPremiumFromCheckoutSession } from "@/lib/stripe-premium-fulfill";
 import { notifyN8nRadarPayment } from "@/lib/stripe-n8n-notify";
 
@@ -37,6 +41,29 @@ export async function POST(req: Request) {
           console.info("[stripe] checkout.session.completed sin upgrade:", result.reason, session.id);
         }
         await notifyN8nRadarPayment(session, result);
+        break;
+      }
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+        if (customerId) {
+          const downgraded = await downgradeUserByStripeCustomerId(customerId);
+          if (downgraded) {
+            console.info("[stripe] premium downgrade por subscription.deleted", customerId);
+          }
+        }
+        break;
+      }
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        if (!subscriptionShouldDowngrade(sub)) break;
+        const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+        if (customerId) {
+          const downgraded = await downgradeUserByStripeCustomerId(customerId);
+          if (downgraded) {
+            console.info("[stripe] premium downgrade por subscription.updated", sub.status, customerId);
+          }
+        }
         break;
       }
       default:

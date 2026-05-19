@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { trends, userFavorites, users } from "@/db/schema";
+import { CancelMembershipPanel } from "@/components/CancelMembershipPanel";
 import { TrendCard } from "@/components/TrendCard";
 import { isPremiumPlan } from "@/lib/membership";
 import { radarPriceMxnHintLabel, radarPriceUsdLabel } from "@/lib/radar-pricing-display";
@@ -65,7 +66,7 @@ export default async function MiRadarPage({
   const user = await requireSessionUser("/mi-radar");
 
   const [profile] = await db
-    .select({ createdAt: users.createdAt })
+    .select({ createdAt: users.createdAt, stripeCustomerId: users.stripeCustomerId })
     .from(users)
     .where(eq(users.id, user.id))
     .limit(1);
@@ -176,9 +177,15 @@ export default async function MiRadarPage({
               )}
 
               {premium && (
-                <p className="mt-6 rounded-2xl border border-brand-orange/25 bg-brand-orange/5 px-4 py-3 text-xs leading-relaxed text-slate-700">
-                  Tu membresía AI Radar está activa. Las tendencias que guardes aparecen abajo; puedes volver cuando quieras.
-                </p>
+                <>
+                  <p className="mt-6 rounded-2xl border border-brand-orange/25 bg-brand-orange/5 px-4 py-3 text-xs leading-relaxed text-slate-700">
+                    Tu membresía AI Radar está activa. Las tendencias que guardes aparecen abajo; puedes volver cuando
+                    quieras.
+                  </p>
+                  <CancelMembershipPanel
+                    hasStripeCustomer={Boolean(profile?.stripeCustomerId?.trim())}
+                  />
+                </>
               )}
             </section>
 

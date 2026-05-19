@@ -16,7 +16,8 @@ La app no tiene un “modo test” propio: todo depende de que **las claves, el 
 | 2 | **Developers → API keys**: usa `sk_test_…` en Coolify/local como `STRIPE_SECRET_KEY`. |
 | 3 | Crea un **Payment Link de test** (Productos → Payment Links) con el precio de AI Radar. Copia la URL `https://buy.stripe.com/test_…` → `NEXT_PUBLIC_STRIPE_RADAR_PAYMENT_LINK`. |
 | 4 | Copia el **Price ID** (`price_…`) del enlace → `STRIPE_PREMIUM_PRICE_IDS` (coma si hay varios). |
-| 5 | **Developers → Webhooks** → endpoint: `https://TU_DOMINIO/api/webhooks/stripe` (local: ver CLI abajo). Evento: **`checkout.session.completed`**. Copia el **Signing secret** → `STRIPE_WEBHOOK_SECRET` (en test será `whsec_…` de test). |
+| 5 | **Developers → Webhooks** → endpoint: `https://TU_DOMINIO/api/webhooks/stripe` (local: ver CLI abajo). Eventos: **`checkout.session.completed`**, **`customer.subscription.updated`**, **`customer.subscription.deleted`**. Copia el **Signing secret** → `STRIPE_WEBHOOK_SECRET` (en test será `whsec_…` de test). |
+| 5b | **Settings → Billing → Customer portal**: actívalo y permite **cancelar suscripciones**. Los usuarios premium abren el portal desde **Mi radar → Gestionar o cancelar en Stripe** (`POST /api/billing/portal`). Opcional: `STRIPE_CUSTOMER_PORTAL_RETURN_URL` (por defecto `NEXT_PUBLIC_APP_URL/mi-radar`). |
 | 6 | En el Payment Link, URL de éxito sugerida: `https://TU_DOMINIO/mi-radar?bienvenida=1`. |
 | 7 | Flujo de prueba: inicia sesión en la web → ve a **pricing en `/ia#pricing`** o **Mi radar** → paga con tarjeta de prueba. |
 
@@ -111,7 +112,9 @@ Si falla, en logs verás razones como: `user_not_found`, `no_email`, `price_not_
 
 - [ ] `NEXT_PUBLIC_STRIPE_RADAR_PAYMENT_LINK` = URL del Payment Link (test **o** live, coherente con el resto)
 - [ ] `STRIPE_WEBHOOK_SECRET` del endpoint en esa misma cuenta/modo
-- [ ] Webhook en Stripe: `https://notitendencias.iareal.net/api/webhooks/stripe`, evento **`checkout.session.completed`**
+- [ ] Webhook en Stripe: `https://notitendencias.iareal.net/api/webhooks/stripe`, eventos **`checkout.session.completed`**, **`customer.subscription.updated`**, **`customer.subscription.deleted`**
+- [ ] Customer Billing Portal activado en Stripe (cancelación de suscripción)
+- [ ] `STRIPE_SECRET_KEY` (necesaria para portal y baja automática tras cancelar)
 - [ ] `STRIPE_SECRET_KEY` (`sk_test_` o `sk_live_` acorde al link)
 - [ ] `STRIPE_PREMIUM_PRICE_IDS` = `price_…` del Payment Link
 - [ ] Success URL del link → `/mi-radar?bienvenida=1` (recomendado)
@@ -141,5 +144,6 @@ Si falla, en logs verás razones como: `user_not_found`, `no_email`, `price_not_
 | Probar cobro real (sin dinero) | Stripe **test** + variables test + webhook a `/api/webhooks/stripe` |
 | Simular premium en prod sin cobrar | **`/admin/users` → Premium** |
 | Activación automática fiable | Mismo email al pagar **o** checkout logueado desde `/ia#pricing` / Mi radar (`client_reference_id`) |
+| Cancelar membresía | Usuario premium en **`/mi-radar`** → **Gestionar o cancelar en Stripe** (portal). Premium manual sin Stripe → mensaje de contacto a soporte |
 
 Ver también: [README § Stripe](../README.md#stripe-payment-link-premium-y-n8n), [coolify-deploy.md](./coolify-deploy.md).
