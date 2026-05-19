@@ -1,4 +1,5 @@
 import { EditorialComingSoon } from "@/components/EditorialComingSoon";
+import { PremiumBanner } from "@/components/PremiumBanner";
 import { NewsletterSection } from "@/components/NewsletterSection";
 import { PricingSection } from "@/components/PricingSection";
 import { RadarSidebar } from "@/components/RadarSidebar";
@@ -97,6 +98,12 @@ export default async function IaPage() {
           </div>
         </div>
       </section>
+
+      {!radarUnlocked && (
+        <section className="mx-auto max-w-7xl px-4 pb-2 pt-8 md:pt-10">
+          <PremiumBanner />
+        </section>
+      )}
 
       <section id="historias" className="scroll-mt-24">
         <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">

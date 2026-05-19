@@ -87,14 +87,15 @@ export function Header({ user }: Props) {
             className="h-11 w-11 rounded-2xl shadow-lg ring-1 ring-white/15 md:h-12 md:w-12"
             priority
           />
-          <Image
-            src="/branding/logo-wordmark.png"
-            alt="Notitendencias"
-            width={220}
-            height={52}
-            className="hidden h-10 w-auto brightness-0 invert sm:block md:h-11"
-            priority
-          />
+          <span className="hidden flex-col sm:flex">
+            <span className="text-lg font-black leading-none tracking-tight md:text-xl">
+              <span className="text-white">Noti</span>
+              <span className="text-brand-orange">tendencias</span>
+            </span>
+            <span className="mt-1 text-[10px] font-semibold leading-tight text-slate-400 md:text-[11px]">
+              Señales útiles · Tendencias claras
+            </span>
+          </span>
           <span className="sr-only">Notitendencias — radar IA</span>
         </Link>
 
