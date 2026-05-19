@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { trends } from "@/db/schema";
-import { radarContentUnlockedFromAuth, trendToPublicApiJson } from "@/lib/radar-access";
+import { trendToPublicApiJson } from "@/lib/radar-access";
+import { radarContentUnlockedFromAuth } from "@/lib/session-user";
 import { trendPublicationSort } from "@/lib/radar-feed-queries";
 import { and, eq, SQL } from "drizzle-orm";
 

@@ -1,24 +1,35 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { resolveLoggedInRedirect } from "@/lib/login-redirect";
 
-/** Si la sesión existe en cliente pero el HTML de login se mostró, redirige sin pedir Google otra vez. */
+/** Redirige si /api/me confirma sesión (más fiable que useSession solo). */
 export function LoginAlreadyAuthed() {
-  const { status, data } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (status !== "authenticated" || !data?.user?.id) return;
-    const sp: Record<string, string | string[] | undefined> = {};
-    searchParams.forEach((value, key) => {
-      sp[key] = value;
-    });
-    router.replace(resolveLoggedInRedirect(sp));
-  }, [status, data?.user?.id, router, searchParams]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "same-origin", cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { user?: { id: string } | null };
+        if (!data.user?.id) return;
+        const sp: Record<string, string | string[] | undefined> = {};
+        searchParams.forEach((value, key) => {
+          sp[key] = value;
+        });
+        router.replace(resolveLoggedInRedirect(sp));
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router, searchParams]);
 
   return null;
 }

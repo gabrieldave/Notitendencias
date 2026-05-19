@@ -1,27 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { and, desc, eq } from "drizzle-orm";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { trends, userFavorites } from "@/db/schema";
+import { requireApiPremiumUser } from "@/lib/api-auth";
 import { favoriteBodySchema } from "@/lib/schemas";
-import { isPremiumPlan } from "@/lib/membership";
-
-async function requirePremiumUser() {
-  const session = await auth();
-  const id = session?.user?.id;
-  const plan = session?.user?.plan;
-  const status = session?.user?.status;
-  if (!id || status !== "active") {
-    return { error: NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 }) };
-  }
-  if (!isPremiumPlan(plan ?? "free")) {
-    return { error: NextResponse.json({ ok: false, error: "Activa Notitendencias AI Radar para usar Mi radar." }, { status: 403 }) };
-  }
-  return { user: { id, plan: plan ?? "free" } };
-}
 
 export async function GET() {
-  const gate = await requirePremiumUser();
+  const gate = await requireApiPremiumUser();
   if ("error" in gate) return gate.error;
 
   const rows = await db
@@ -32,9 +17,7 @@ export async function GET() {
     })
     .from(userFavorites)
     .innerJoin(trends, eq(userFavorites.trendId, trends.id))
-    .where(
-      and(eq(userFavorites.userId, gate.user.id), eq(trends.status, "published")),
-    )
+    .where(and(eq(userFavorites.userId, gate.user.id), eq(trends.status, "published")))
     .orderBy(desc(userFavorites.createdAt));
 
   return NextResponse.json({
@@ -47,7 +30,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const gate = await requirePremiumUser();
+  const gate = await requireApiPremiumUser();
   if ("error" in gate) return gate.error;
 
   let body: unknown;

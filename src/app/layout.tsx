@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Providers } from "@/components/Providers";
+import { SessionRefresh } from "@/components/SessionRefresh";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getOptionalSessionUser } from "@/lib/session-user";
 
@@ -34,6 +35,7 @@ export default async function RootLayout({
     <html lang="es" className={dmSans.variable}>
       <body className="min-h-screen bg-slate-100 text-slate-900 antialiased">
         <Providers>
+          <SessionRefresh />
           <Header user={user} />
           <main className="min-h-[50vh]">{children}</main>
           <SiteFooter />

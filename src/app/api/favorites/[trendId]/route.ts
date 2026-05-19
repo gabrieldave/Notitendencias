@@ -1,32 +1,23 @@
 import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { userFavorites } from "@/db/schema";
-import { isPremiumPlan } from "@/lib/membership";
+import { requireApiPremiumUser } from "@/lib/api-auth";
 
-type Params = Promise<{ trendId: string }>;
+type Props = { params: Promise<{ trendId: string }> };
 
-export async function DELETE(_request: Request, ctx: { params: Params }) {
-  const session = await auth();
-  const id = session?.user?.id;
-  const plan = session?.user?.plan;
-  const status = session?.user?.status;
-  if (!id || status !== "active") {
-    return NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 });
-  }
-  if (!isPremiumPlan(plan ?? "free")) {
-    return NextResponse.json({ ok: false, error: "Activa Notitendencias AI Radar para usar Mi radar." }, { status: 403 });
-  }
+export async function DELETE(_request: Request, { params }: Props) {
+  const gate = await requireApiPremiumUser();
+  if ("error" in gate) return gate.error;
 
-  const { trendId } = await ctx.params;
+  const { trendId } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(trendId)) {
     return NextResponse.json({ ok: false, error: "ID inválido" }, { status: 400 });
   }
 
   await db
     .delete(userFavorites)
-    .where(and(eq(userFavorites.userId, id), eq(userFavorites.trendId, trendId)));
+    .where(and(eq(userFavorites.userId, gate.user.id), eq(userFavorites.trendId, trendId)));
 
   return NextResponse.json({ ok: true });
 }

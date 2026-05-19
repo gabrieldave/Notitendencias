@@ -12,7 +12,6 @@ type Props = {
   initialSaved: boolean;
   isLoggedIn: boolean;
   userPlan: string | null;
-  /** En el feed: solo icono en la esquina de la tarjeta */
   variant?: "default" | "compact";
 };
 
@@ -35,8 +34,7 @@ export function TrendSaveButton({
   const premium = isPremiumPlan(userPlan);
   const compact = variant === "compact";
 
-  const next = `/tendencia/${encodeURIComponent(slug)}`;
-  const loginHref = `/login?callbackUrl=${encodeURIComponent(next)}`;
+  const loginHref = `/login?callbackUrl=${encodeURIComponent(`/tendencia/${slug}`)}`;
   const upgradeHref = "/ia#pricing";
 
   async function save() {
@@ -53,18 +51,11 @@ export function TrendSaveButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ trendId }),
+        credentials: "same-origin",
       });
       if (res.ok) {
         setSaved(true);
         router.refresh();
-        return;
-      }
-      if (res.status === 401) {
-        router.push(loginHref);
-        return;
-      }
-      if (res.status === 403) {
-        router.push(upgradeHref);
       }
     });
   }
@@ -74,6 +65,7 @@ export function TrendSaveButton({
     startTransition(async () => {
       const res = await fetch(`/api/favorites/${encodeURIComponent(trendId)}`, {
         method: "DELETE",
+        credentials: "same-origin",
       });
       if (res.ok) {
         setSaved(false);
@@ -84,17 +76,8 @@ export function TrendSaveButton({
 
   if (!isLoggedIn) {
     return (
-      <Link
-        href={loginHref}
-        className={
-          compact
-            ? `${compactBtn} border-slate-200 bg-white text-brand-navy ring-1 ring-slate-100 hover:border-brand-orange/40 hover:text-brand-orange`
-            : `${defaultBtn} border-slate-200 bg-white text-brand-navy ring-1 ring-slate-100 hover:border-brand-orange/40 hover:text-brand-orange`
-        }
-        aria-label="Iniciar sesión para guardar"
-        title="Guardar en Mi radar"
-      >
-        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className="h-4 w-4" aria-hidden />}
+      <Link href={loginHref} className={compact ? `${compactBtn} border-slate-200 bg-white text-brand-navy` : `${defaultBtn} border-slate-200 bg-white text-brand-navy`} aria-label="Iniciar sesión para guardar" title="Guardar en Mi radar">
+        <Bookmark className="h-4 w-4" aria-hidden />
         {!compact && "Guardar en Mi radar"}
       </Link>
     );
@@ -102,16 +85,7 @@ export function TrendSaveButton({
 
   if (!premium) {
     return (
-      <Link
-        href={upgradeHref}
-        className={
-          compact
-            ? `${compactBtn} border-amber-200/80 bg-amber-50 text-amber-950 ring-1 ring-amber-100 hover:ring-amber-300`
-            : `${defaultBtn} border-amber-200/80 bg-gradient-to-r from-amber-50 to-white text-amber-950 ring-1 ring-amber-100 hover:ring-amber-300`
-        }
-        aria-label="Activar AI Radar para guardar"
-        title="Activar AI Radar"
-      >
+      <Link href={upgradeHref} className={compact ? `${compactBtn} border-amber-200/80 bg-amber-50 text-amber-950` : `${defaultBtn} border-amber-200/80 bg-amber-50 text-amber-950`} aria-label="Activar AI Radar" title="Activar AI Radar">
         <Sparkles className="h-4 w-4 text-brand-orange" aria-hidden />
         {!compact && "Activar AI Radar para guardar"}
       </Link>
@@ -120,18 +94,7 @@ export function TrendSaveButton({
 
   if (saved) {
     return (
-      <button
-        type="button"
-        onClick={() => void unsave()}
-        disabled={pending}
-        className={
-          compact
-            ? `${compactBtn} border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100`
-            : `${defaultBtn} border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100`
-        }
-        aria-label="Quitar de Mi radar"
-        title="Guardado en Mi radar"
-      >
+      <button type="button" onClick={() => void unsave()} disabled={pending} className={compact ? `${compactBtn} border-emerald-200 bg-emerald-50 text-emerald-900` : `${defaultBtn} border-emerald-200 bg-emerald-50 text-emerald-900`} aria-label="Quitar de Mi radar">
         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkCheck className="h-4 w-4" aria-hidden />}
         {!compact && "Guardado en Mi radar"}
       </button>
@@ -139,18 +102,7 @@ export function TrendSaveButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => void save()}
-      disabled={pending}
-      className={
-        compact
-          ? `${compactBtn} border-brand-navy/20 bg-brand-navy text-white hover:bg-slate-900`
-          : `${defaultBtn} border-transparent bg-brand-navy text-white shadow-md shadow-slate-900/15 ring-2 ring-brand-navy/20 hover:bg-slate-900`
-      }
-      aria-label="Guardar en Mi radar"
-      title="Guardar en Mi radar"
-    >
+    <button type="button" onClick={() => void save()} disabled={pending} className={compact ? `${compactBtn} bg-brand-navy text-white` : `${defaultBtn} bg-brand-navy text-white`} aria-label="Guardar en Mi radar">
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className="h-4 w-4" aria-hidden />}
       {!compact && "Guardar en Mi radar"}
     </button>

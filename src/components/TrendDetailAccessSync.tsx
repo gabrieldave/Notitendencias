@@ -1,19 +1,31 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
-/** Si hay sesión en el navegador pero el HTML vino sin usuario, revalida el RSC. */
-export function TrendDetailAccessSync({ serverHasUser }: { serverHasUser: boolean }) {
-  const { status, data } = useSession();
+/**
+ * Si el HTML del detalle vino sin acceso pero /api/me confirma sesión premium, revalida una vez.
+ */
+export function TrendDetailAccessSync({ serverUnlocked }: { serverUnlocked: boolean }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (serverHasUser) return;
-    if (status !== "authenticated" || !data?.user?.id) return;
-    router.refresh();
-  }, [serverHasUser, status, data?.user?.id, router]);
+    if (serverUnlocked) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "same-origin", cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { radarUnlocked?: boolean };
+        if (data.radarUnlocked) router.refresh();
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [serverUnlocked, router]);
 
   return null;
 }

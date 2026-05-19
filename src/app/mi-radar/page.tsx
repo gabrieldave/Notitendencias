@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { trends, userFavorites, users } from "@/db/schema";
 import { TrendCard } from "@/components/TrendCard";
 import { isPremiumPlan } from "@/lib/membership";
-import { getOptionalSessionUser } from "@/lib/session-user";
+import { requireSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
 
@@ -59,12 +59,9 @@ export default async function MiRadarPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await getOptionalSessionUser();
   const sp = await normalizeSearchParams(searchParams);
   const bienvenidaStripe = bienvenidaFlag(sp);
-  if (!user) {
-    redirect(`/login?callbackUrl=${encodeURIComponent("/mi-radar")}`);
-  }
+  const user = await requireSessionUser("/mi-radar");
 
   const [profile] = await db
     .select({ createdAt: users.createdAt })
