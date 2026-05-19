@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { PublicUser } from "@/lib/session-user";
 import { isRadarContentUnlocked } from "@/lib/radar-access";
+import { radarPriceUsdLabel } from "@/lib/radar-pricing-display";
 import { stripeRadarCheckoutUrl, stripeRadarPaymentLink } from "@/lib/stripe-public";
 
 type Props = {
@@ -59,7 +60,7 @@ export function RadarMembershipCard({ serverUser, callbackPath = "/ia" }: Props)
           ? "Ya iniciaste sesión. El análisis completo requiere plan premium activo; si ya pagaste y no se desbloquea, entra a Mi radar."
           : "Mantente al día con las señales más importantes de IA, sin ruido y con ideas claras para actuar."}
       </p>
-      <p className="mt-4 text-2xl font-black tabular-nums text-brand-orange md:text-3xl">$5 USD / mes</p>
+      <p className="mt-4 text-2xl font-black tabular-nums text-brand-orange md:text-3xl">{radarPriceUsdLabel()}</p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         {checkoutUrl ? (
           <a

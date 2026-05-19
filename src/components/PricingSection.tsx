@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { PremiumMemberStrip } from "@/components/PremiumMemberStrip";
 import { isRadarContentUnlocked } from "@/lib/radar-access";
 import { getOptionalSessionUser } from "@/lib/session-user";
+import { radarPriceMxnHintLabel, radarPriceUsdBigLabel } from "@/lib/radar-pricing-display";
 import { stripeRadarCheckoutUrl } from "@/lib/stripe-public";
 
 const benefits = [
@@ -62,7 +63,7 @@ export async function PricingSection() {
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-200/95">Mensual</p>
               <p className="mt-2 flex flex-wrap items-baseline gap-2 font-black tabular-nums tracking-tight">
-                <span className="text-5xl md:text-6xl">$5</span>
+                <span className="text-5xl md:text-6xl">{radarPriceUsdBigLabel()}</span>
                 <span className="text-xl font-bold text-white/90 md:text-2xl">USD / mes</span>
               </p>
               <p className="mt-2 text-xs font-medium leading-snug text-white/65">
@@ -70,7 +71,7 @@ export async function PricingSection() {
               </p>
             </div>
             <p className="shrink-0 rounded-xl bg-white/10 px-3 py-2 text-center text-xs font-semibold leading-tight text-white/90 ring-1 ring-white/15">
-              ~ $99 MXN / mes
+              {radarPriceMxnHintLabel()}
             </p>
           </div>
 

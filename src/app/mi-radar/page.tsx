@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { trends, userFavorites, users } from "@/db/schema";
 import { TrendCard } from "@/components/TrendCard";
 import { isPremiumPlan } from "@/lib/membership";
+import { radarPriceMxnHintLabel, radarPriceUsdLabel } from "@/lib/radar-pricing-display";
 import { requireSessionUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
@@ -156,7 +157,8 @@ export default async function MiRadarPage({
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-600">Suscripción</p>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
                     Con <strong className="text-brand-navy">Notitendencias AI Radar</strong> activo tendrás favoritos
-                    ilimitados, esta biblioteca y lectura completa en cada señal ($5 USD/mes — orientativo ~ $99 MXN según tu banco).
+                    ilimitados, esta biblioteca y lectura completa en cada señal ({radarPriceUsdLabel()} — orientativo{" "}
+                    {radarPriceMxnHintLabel()} según tu banco).
                   </p>
                   <Link
                     href="/#pricing"
