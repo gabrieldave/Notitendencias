@@ -12,6 +12,7 @@ export async function GET() {
       ready: auth.ok,
       hasSecret: auth.hasSecret,
       hasGoogle: auth.hasGoogle,
+      googleProviderCount: auth.googleProviderCount,
       hasPublicUrl: auth.hasPublicUrl,
       trustHost: auth.trustHost,
     },

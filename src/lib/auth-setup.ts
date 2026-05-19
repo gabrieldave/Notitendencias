@@ -1,3 +1,4 @@
+import { googleProviderCount } from "@/lib/auth-providers";
 import { isGoogleAuthConfigured } from "@/lib/google-auth";
 import { resolveAuthSecret } from "@/lib/auth-env";
 
@@ -7,6 +8,7 @@ export type AuthSetupStatus = {
   ok: boolean;
   hasSecret: boolean;
   hasGoogle: boolean;
+  googleProviderCount: number;
   hasPublicUrl: boolean;
   trustHost: boolean;
   issues: AuthSetupIssue[];
@@ -25,10 +27,13 @@ export function getAuthSetupStatus(): AuthSetupStatus {
   if (!hasSecret) issues.push("missing_secret");
   if (!hasGoogle) issues.push("missing_google");
 
+  const providerCount = googleProviderCount();
+
   return {
-    ok: hasSecret && hasGoogle,
+    ok: hasSecret && hasGoogle && providerCount > 0,
     hasSecret,
     hasGoogle,
+    googleProviderCount: providerCount,
     hasPublicUrl,
     trustHost,
     issues,
@@ -44,6 +49,9 @@ export function authSetupUserMessage(status: AuthSetupStatus): string {
   }
   if (!status.hasPublicUrl) {
     return "Define AUTH_URL y NEXT_PUBLIC_APP_URL con la URL pública (https://notitendencias.iareal.net).";
+  }
+  if (status.hasGoogle && status.googleProviderCount === 0) {
+    return "Las variables Google existen pero Auth no cargó el proveedor (redeploy con el último código; en Coolify activa variables también en BUILD).";
   }
   if (!status.trustHost) {
     return "En producción detrás de proxy, define AUTH_TRUST_HOST=true en Coolify y redeploy.";

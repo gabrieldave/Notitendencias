@@ -9,6 +9,7 @@ import { resolveAuthSecretEdge } from "./lib/auth-env-edge";
 const { auth } = NextAuth(async () => ({
   ...authConfig,
   secret: resolveAuthSecretEdge(),
+  trustHost: process.env.AUTH_TRUST_HOST === "true",
 }));
 
 export default auth;

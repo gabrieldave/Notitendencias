@@ -41,7 +41,8 @@ function hasElevatedSession(auth: { user?: { email?: string | null; role?: strin
  */
 export default {
   providers: [],
-  trustHost: process.env.AUTH_TRUST_HOST === "true",
+  /** Sobrescrito en runtime en `auth.ts` y `middleware.ts` (no leer env aquí: se congela en build). */
+  trustHost: false,
   pages: {
     signIn: "/login",
     error: "/auth/error",

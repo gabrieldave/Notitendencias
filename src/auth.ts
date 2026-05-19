@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import authConfig from "@/auth.config";
@@ -7,7 +6,7 @@ import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
 import { isAdminEmail, parseAdminEmails } from "@/lib/admin-emails";
 import { resolveAuthSecret } from "@/lib/auth-env";
-import { isGoogleAuthConfigured } from "@/lib/google-auth";
+import { createGoogleProviders, googleProviderCount } from "@/lib/auth-providers";
 
 const adapter = DrizzleAdapter(db, {
   usersTable: users,
@@ -16,35 +15,33 @@ const adapter = DrizzleAdapter(db, {
   verificationTokensTable: verificationTokens,
 });
 
-/** Proveedores en cada request: en `next build` no hay AUTH_GOOGLE_* → si se fijan al import, quedan []. */
-function createGoogleProviders() {
-  if (!isGoogleAuthConfigured()) return [];
-  return [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID!.trim(),
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!.trim(),
-    }),
-  ];
+function runtimeTrustHost(): boolean {
+  return process.env.AUTH_TRUST_HOST === "true";
 }
 
 /**
- * Config como función (igual que middleware): secret y providers se leen en runtime
- * en Coolify, no durante `npm run build` del Dockerfile.
+ * Config en cada petición: secret, trustHost y providers no deben fijarse en `next build`
+ * (Dockerfile/Nixpacks sin AUTH_* en la fase de build → error Configuration en OAuth).
  */
 export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
   const secret = resolveAuthSecret();
   const providers = createGoogleProviders();
+  const trustHost = runtimeTrustHost();
 
   if (!secret) {
-    console.error("[auth] AUTH_SECRET ausente en runtime — error Configuration.");
+    console.error("[auth] AUTH_SECRET ausente en runtime.");
   }
   if (providers.length === 0) {
-    console.error("[auth] Sin proveedor Google en runtime — revisa AUTH_GOOGLE_* en Coolify.");
+    console.error("[auth] 0 proveedores Google en runtime — revisa AUTH_GOOGLE_* en Coolify.");
+  }
+  if (!trustHost && process.env.NODE_ENV === "production") {
+    console.warn("[auth] AUTH_TRUST_HOST no es true — OAuth puede fallar detrás del proxy.");
   }
 
   return {
     ...authConfig,
     secret,
+    trustHost,
     adapter,
     providers,
     session: {
@@ -86,3 +83,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     },
   };
 });
+
+export { googleProviderCount };

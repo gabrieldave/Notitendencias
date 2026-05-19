@@ -1,8 +1,13 @@
-# Coolify: preferir Build Pack → Dockerfile. Si usas Nixpacks, puerto 3015 en el proxy.
+# Coolify → Build Pack: Nixpacks (recomendado si Dockerfile te da problemas de OAuth en build).
+# Puerto en el proxy de Coolify: 3015
+#
+# En Coolify → Environment: marca variables disponibles en BUILD y RUNTIME
+# (AUTH_SECRET, AUTH_GOOGLE_*, AUTH_URL, DATABASE_URL, NEXT_PUBLIC_APP_URL, AUTH_TRUST_HOST=true).
+
 [variables]
 PORT = "3015"
 HOSTNAME = "0.0.0.0"
-NODE_OPTIONS = "--max-old-space-size=4096"
+NODE_OPTIONS = "--max-old-space-size=6144"
 NIXPACKS_NODE_VERSION = "22.14"
 
 [phases.build]
