@@ -9,9 +9,12 @@ export const metadata: Metadata = {
 type Props = { searchParams: Promise<{ error?: string }> };
 
 const messages: Record<string, string> = {
-  Configuration: "Hay un problema de configuración del servicio de acceso. Contacta al equipo.",
+  Configuration:
+    "Falta configuración en el servidor (suele ser AUTH_SECRET o credenciales Google en Coolify). Revisa docs/google-oauth-coolify.md y vuelve a desplegar.",
   AccessDenied: "No tienes permiso para acceder con esa cuenta.",
   Verification: "La sesión de Google no se pudo completar. Inténtalo de nuevo.",
+  OAuthSignin: "No se pudo conectar con Google. Revisa que la app OAuth tenga el redirect correcto.",
+  OAuthCallback: "Google respondió pero el servidor no pudo completar el acceso. Revisa logs y migraciones de BD.",
   Default: "No pudimos completar el inicio de sesión. Inténtalo de nuevo.",
 };
 

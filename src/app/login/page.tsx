@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { isGoogleAuthConfigured } from "@/lib/google-auth";
-import { resolveLoggedInRedirect } from "@/lib/login-redirect";
-import { getOptionalSessionUser } from "@/lib/session-user";
+import { auth } from "@/auth";
+import { getAuthSetupStatus } from "@/lib/auth-setup";
 import { LoginClient } from "./LoginClient";
 
 export const dynamic = "force-dynamic";
@@ -15,21 +14,29 @@ function LoginFallback() {
   );
 }
 
+function safeInternalPath(raw: string | string[] | undefined): string {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof v !== "string") return "/";
+  const t = v.trim();
+  if (!t.startsWith("/") || t.startsWith("//")) return "/";
+  return t;
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await getOptionalSessionUser();
+  const session = await auth();
   const sp = await searchParams;
-  if (user) {
-    redirect(resolveLoggedInRedirect(sp));
+  if (session?.user?.id) {
+    redirect(safeInternalPath(sp.callbackUrl ?? sp.next));
   }
 
-  const googleEnabled = isGoogleAuthConfigured();
+  const authSetup = getAuthSetupStatus();
   return (
     <Suspense fallback={<LoginFallback />}>
-      <LoginClient googleEnabled={googleEnabled} />
+      <LoginClient authSetup={authSetup} />
     </Suspense>
   );
 }
