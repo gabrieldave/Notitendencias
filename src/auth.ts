@@ -4,7 +4,8 @@ import { eq } from "drizzle-orm";
 import authConfig from "@/auth.config";
 import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
-import { isAdminEmail, parseAdminEmails } from "@/lib/admin-emails";
+import { parseAdminEmails } from "@/lib/admin-emails";
+import { applySessionClaims, jwtCallback } from "@/lib/auth-callbacks";
 import { resolveAuthSecret } from "@/lib/auth-env";
 import { createGoogleProviders, googleProviderCount } from "@/lib/auth-providers";
 
@@ -15,13 +16,15 @@ const adapter = DrizzleAdapter(db, {
   verificationTokensTable: verificationTokens,
 });
 
+const SESSION_MAX_AGE = 90 * 24 * 60 * 60;
+
 function runtimeTrustHost(): boolean {
   return process.env.AUTH_TRUST_HOST === "true";
 }
 
 /**
- * Config en cada petición: secret, trustHost y providers no deben fijarse en `next build`
- * (Dockerfile/Nixpacks sin AUTH_* en la fase de build → error Configuration en OAuth).
+ * Config en cada petición: secret, trustHost y providers no deben fijarse en `next build`.
+ * Sesión JWT: estable en App Router/RSC (las sesiones solo en BD se perdían al navegar).
  */
 export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
   const secret = resolveAuthSecret();
@@ -46,6 +49,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     providers,
     debug: process.env.AUTH_DEBUG === "true",
     cookies: {
+      sessionToken: {
+        options: {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          secure: true,
+          maxAge: SESSION_MAX_AGE,
+        },
+      },
       pkceCodeVerifier: {
         options: {
           httpOnly: true,
@@ -57,8 +69,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
       },
     },
     session: {
-      strategy: "database",
-      maxAge: 90 * 24 * 60 * 60,
+      strategy: "jwt",
+      maxAge: SESSION_MAX_AGE,
+      updateAge: 24 * 60 * 60,
     },
     events: {
       async signIn({ user }) {
@@ -77,31 +90,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     },
     callbacks: {
       ...authConfig.callbacks,
-      async session({ session, user }) {
-        try {
-          const [row] = await db
-            .select({
-              id: users.id,
-              email: users.email,
-              name: users.name,
-              role: users.role,
-              plan: users.plan,
-              status: users.status,
-            })
-            .from(users)
-            .where(eq(users.id, user.id))
-            .limit(1);
-          if (!row || !session.user) return session;
-          session.user.id = row.id;
-          session.user.email = row.email ?? "";
-          session.user.name = row.name;
-          session.user.role = row.role === "admin" || isAdminEmail(row.email) ? "admin" : row.role;
-          session.user.plan = row.plan;
-          session.user.status = row.status;
-        } catch (e) {
-          console.error("[auth] session callback:", e);
-        }
-        return session;
+      jwt: jwtCallback,
+      async session({ session, token, user }) {
+        return applySessionClaims(session, token, user);
       },
     },
   };

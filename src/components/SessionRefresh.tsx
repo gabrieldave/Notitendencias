@@ -4,17 +4,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 /**
- * Tras login OAuth o navegación, alinea RSC con la cookie real llamando /api/me.
+ * Tras login OAuth, un solo refresh para alinear RSC con la cookie JWT.
+ * No refrescar en cada cambio de ruta (provocaba parpadeos y sensación de logout).
  */
 export function SessionRefresh() {
   const router = useRouter();
   const pathname = usePathname();
-  const last = useRef<string | null>(null);
+  const didRun = useRef(false);
 
   useEffect(() => {
-    if (last.current === pathname) return;
-    last.current = pathname;
+    if (didRun.current) return;
+    if (pathname.startsWith("/login") || pathname.startsWith("/auth/")) return;
 
+    didRun.current = true;
     let cancelled = false;
     (async () => {
       try {

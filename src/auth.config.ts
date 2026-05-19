@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import { NextResponse } from "next/server";
+import { applySessionClaims } from "@/lib/auth-callbacks";
 import { isAdminEmail } from "@/lib/admin-emails";
 import { ADMIN_COOKIE_NAME } from "@/lib/constants";
 
@@ -37,7 +38,7 @@ function hasElevatedSession(auth: { user?: { email?: string | null; role?: strin
 
 /**
  * Fragmento sin adapter ni providers para usar en middleware (Edge).
- * La sesión se resuelve vía la ruta interna de Auth.js.
+ * La sesión JWT se lee en cada request sin adapter Drizzle.
  */
 export default {
   providers: [],
@@ -48,11 +49,8 @@ export default {
     error: "/auth/error",
   },
   callbacks: {
-    async session({ session }) {
-      if (session.user?.email && isAdminEmail(session.user.email)) {
-        session.user.role = "admin";
-      }
-      return session;
+    async session({ session, token, user }) {
+      return applySessionClaims(session, token, user);
     },
     async authorized({ request, auth }) {
       const pathname = request.nextUrl.pathname;

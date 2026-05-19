@@ -10,15 +10,9 @@ import { isAdminEmail } from "@/lib/admin-emails";
 import { isRadarContentUnlocked } from "@/lib/radar-access";
 import { syncPremiumPlanFromSubscriber } from "@/lib/premium-sync";
 import { isPremiumPlan } from "@/lib/membership";
+import { readSessionCookieValue } from "@/lib/session-cookie";
 
 export type PublicUser = Pick<User, "id" | "email" | "name" | "plan" | "status" | "role">;
-
-const SESSION_COOKIE_NAMES = [
-  "__Secure-authjs.session-token",
-  "authjs.session-token",
-  "__Secure-next-auth.session-token",
-  "next-auth.session-token",
-] as const;
 
 async function rowToPublicUser(row: {
   id: string;
@@ -58,17 +52,10 @@ async function loadUserById(userId: string): Promise<PublicUser | null> {
   return rowToPublicUser(row);
 }
 
-/** Sesiones legacy (strategy database) guardadas en tabla `sessions`. */
+/** Sesiones antiguas (strategy database) en tabla `sessions`. */
 async function loadUserFromDatabaseSessionCookie(): Promise<PublicUser | null> {
   const cookieStore = await cookies();
-  let token: string | undefined;
-  for (const name of SESSION_COOKIE_NAMES) {
-    const v = cookieStore.get(name)?.value;
-    if (v) {
-      token = v;
-      break;
-    }
-  }
+  const token = readSessionCookieValue(cookieStore);
   if (!token) return null;
 
   const now = new Date();
@@ -82,8 +69,7 @@ async function loadUserFromDatabaseSessionCookie(): Promise<PublicUser | null> {
 }
 
 /**
- * Única fuente de verdad de sesión en el servidor.
- * 1) JWT Auth.js  2) cookie de sesión en BD (legacy)
+ * Sesión en servidor: JWT Auth.js (principal) + fallback BD para cookies legacy.
  */
 export const getOptionalSessionUser = cache(async (): Promise<PublicUser | null> => {
   cookies();
