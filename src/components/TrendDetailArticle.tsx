@@ -39,6 +39,8 @@ type Props = {
   backFooter?: { href: string; label: string };
   showNewsletter?: boolean;
   saveButton?: React.ReactNode;
+  /** Botón principal «Guardar en Mi radar» al final del artículo */
+  footerSave?: React.ReactNode;
 };
 
 
@@ -73,6 +75,7 @@ export function TrendDetailArticle({
   backFooter = { href: "/ia", label: "← Volver a IA" },
   showNewsletter = true,
   saveButton,
+  footerSave,
 }: Props) {
   const full = access === "full";
 
@@ -285,12 +288,15 @@ export function TrendDetailArticle({
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600 md:text-base">
           Vuelve a consultarla cuando quieras o úsala para crear contenido, automatizaciones o ideas de negocio.
         </p>
-        <Link
-          href="/mi-radar"
-          className="mt-6 inline-flex items-center justify-center rounded-full bg-brand-orange px-8 py-3 text-sm font-black text-white shadow-lg shadow-orange-500/25 transition hover:bg-orange-600"
-        >
-          Ir a Mi radar
-        </Link>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3">
+          {footerSave ?? saveButton}
+          <Link
+            href="/mi-radar"
+            className="text-sm font-bold text-brand-navy underline decoration-dotted underline-offset-4 hover:text-brand-orange"
+          >
+            Ver todas mis señales guardadas →
+          </Link>
+        </div>
       </section>
 
       {showNewsletter ? (

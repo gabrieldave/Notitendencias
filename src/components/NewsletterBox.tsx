@@ -24,9 +24,9 @@ export function NewsletterBox({ className = "", variant = "default" }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string; message?: string };
       if (!res.ok) throw new Error(data.error ?? "Error");
-      setMsg("¡Listo! Revisa tu correo pronto.");
+      setMsg(data.message ?? "¡Listo! Te avisaremos por correo en el próximo resumen.");
       setEmail("");
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "No se pudo registrar");

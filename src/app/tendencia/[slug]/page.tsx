@@ -100,6 +100,16 @@ export default async function TrendDetailPage({ params }: Props) {
                   />
                 ) : null
               }
+              footerSave={
+                <TrendSaveButton
+                  trendId={t.id}
+                  slug={t.slug}
+                  initialSaved={isFavorite}
+                  isLoggedIn={Boolean(user)}
+                  userPlan={user?.plan ?? null}
+                  variant="cta"
+                />
+              }
             />
           </div>
           <RadarSidebar

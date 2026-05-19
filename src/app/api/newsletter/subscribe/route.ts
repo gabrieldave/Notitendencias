@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { subscribers } from "@/db/schema";
 import { newsletterSubscribeSchema } from "@/lib/schemas";
+import { getWebhookUrl, postWebhook } from "@/lib/webhook";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
@@ -47,5 +48,20 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, subscriber: { id: sub.id, email: sub.email } });
+  const webhook = getWebhookUrl("N8N_WEBHOOK_NEWSLETTER");
+  if (webhook) {
+    void postWebhook(webhook, {
+      event: "newsletter_subscribe",
+      email: sub.email,
+      subscriberId: sub.id,
+      source: "notitendencias_web",
+      at: new Date().toISOString(),
+    });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    message: "Te registramos en la lista. Recibirás el resumen por correo cuando enviemos la siguiente edición.",
+    subscriber: { id: sub.id, email: sub.email },
+  });
 }
