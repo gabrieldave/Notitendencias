@@ -47,6 +47,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     ...authConfig.callbacks,
     async session({ session, user }) {
+      const userId = user?.id;
+      if (!userId || !session.user) return session;
+
       const [row] = await db
         .select({
           id: users.id,
@@ -57,7 +60,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           status: users.status,
         })
         .from(users)
-        .where(eq(users.id, user.id))
+        .where(eq(users.id, userId))
         .limit(1);
       if (!row || !session.user) return session;
       session.user.id = row.id;

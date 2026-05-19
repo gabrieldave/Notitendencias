@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { trends, userFavorites } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { RadarSidebar } from "@/components/RadarSidebar";
+import { TrendDetailAccessSync } from "@/components/TrendDetailAccessSync";
 import { TrendDetailArticle } from "@/components/TrendDetailArticle";
 import { TrendSaveButton } from "@/components/TrendSaveButton";
 import {
@@ -77,6 +78,7 @@ export default async function TrendDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-50/80">
+      <TrendDetailAccessSync serverHasUser={Boolean(user)} />
       <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-center lg:gap-12">
           <div className="mx-auto min-w-0 max-w-3xl flex-1 rounded-[2rem] border border-slate-100/80 bg-white shadow-soft lg:mx-0 lg:rounded-3xl">
