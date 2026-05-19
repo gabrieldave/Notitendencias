@@ -18,6 +18,8 @@ const messages: Record<string, string> = {
     "Google respondió pero falló el servidor (base de datos o sesión). Abre /api/health/db — si hasStripeCustomerColumn es false, aplica migraciones.",
   OAuthAccountNotLinked: "Esa cuenta de Google ya está vinculada a otro usuario.",
   CallbackRouteError: "Falló la ruta de callback. Revisa logs del contenedor en Coolify.",
+  UnknownAction:
+    "El login usó un método no válido (GET en lugar de POST). Actualiza el deploy con el último código del botón de Google.",
   Default: "No pudimos completar el inicio de sesión. Inténtalo de nuevo.",
 };
 
