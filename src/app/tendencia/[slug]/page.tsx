@@ -83,6 +83,7 @@ export default async function TrendDetailPage({ params }: Props) {
             <TrendDetailArticle
               trend={t}
               access={access}
+              user={user}
               backFooter={back}
               showNewsletter={radarUnlocked}
               saveButton={
