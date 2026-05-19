@@ -1,5 +1,32 @@
 # Deploy en Coolify (Notitendencias)
 
+## Fallo en `nix-env` / `unpacking nixpkgs` (Nixpacks)
+
+Si el log se corta así (sin llegar a `npm run build`):
+
+```
+#8 RUN nix-env -if .nixpacks/nixpkgs-....nix
+unpacking 'https://github.com/NixOS/nixpkgs/archive/...'
+Deployment failed.
+```
+
+**Causa habitual:** el servidor de build se queda sin RAM/disco o hace timeout descargando Nix (Nixpacks es pesado). No es un error de tu app.
+
+**Solución (recomendada):**
+
+1. Coolify → tu servicio → **Configuration** → **Build Pack** → **Dockerfile** (no Nixpacks).
+2. **Dockerfile location:** `/Dockerfile` (raíz del repo).
+3. **Puerto:** `3015`.
+4. En **Environment**, **quita** `NIXPACKS_NODE_VERSION=22` si la tienes (Coolify fuerza Node 22.11 y choca con el proyecto; el Dockerfile usa **22.14**).
+5. **Redeploy**.
+
+Tras el deploy, ejecuta migraciones si hay nuevas (`drizzle/0006_stripe_customer.sql`, etc.):
+
+```bash
+# en el contenedor o con DATABASE_URL apuntando a prod
+npm run db:migrate
+```
+
 ## Fallo en `next build` (sin mensaje claro)
 
 Suele ser **falta de RAM** en el contenedor de build o **Node 22.11** (algunas deps piden ≥ 22.13).
