@@ -2,16 +2,14 @@
   "name": "notitendencias",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": ">=22.13.0"
-  },
   "scripts": {
     "dev": "next dev -p 3015",
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 next build",
+    "build": "NODE_OPTIONS=--max-old-space-size=6144 next build",
     "start": "next start -p ${PORT:-3015}",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:audit": "node scripts/audit-schema.mjs",
     "db:seed": "npx tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "setup": "npx tsx scripts/setup.ts",
