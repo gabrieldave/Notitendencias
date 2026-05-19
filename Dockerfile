@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 
 # --- deps ---
-FROM node:22-alpine AS deps
+FROM node:22.14-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
 # --- build ---
-FROM node:22-alpine AS builder
+FROM node:22.14-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
@@ -18,11 +18,11 @@ ENV DATABASE_URL=$DATABASE_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 # standalone + file tracing pica mucha RAM en el build; evita OOM en VPS pequeños
-ENV NODE_OPTIONS=--max-old-space-size=6144
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
 # --- run ---
-FROM node:22-alpine AS runner
+FROM node:22.14-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3015

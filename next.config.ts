@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  /** Menos RAM en `next build` (Coolify / VPS pequeños). */
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
   async headers() {
     return [
       {

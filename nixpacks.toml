@@ -1,4 +1,11 @@
-# Coolify usa Nixpacks: refuerza heap en `next build` (fase "Collecting build traces").
-# Si sigue fallando, sube a 8192 o aumenta RAM del servidor / límite del contenedor de build.
+# Coolify usa Nixpacks por defecto. En el panel, quita NIXPACKS_NODE_VERSION=22
+# si lo tienes fijado a 22.11, o pon 22.14. Preferible: Build Pack → Dockerfile.
 [variables]
-NODE_OPTIONS = "--max-old-space-size=6144"
+NODE_OPTIONS = "--max-old-space-size=4096"
+NIXPACKS_NODE_VERSION = "22.14"
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "node .next/standalone/server.js"
