@@ -10,7 +10,6 @@ const benefits = [
   "Análisis accionables y contexto editorial",
   "Ideas de contenido y de negocio",
   "Radar diario de tendencias curadas",
-  "Newsletter y resumen por correo",
   "Favoritos en Mi radar cuando tu cuenta esté activa",
   "Funciones completas de Mi radar al activar cobro",
 ] as const;
@@ -132,12 +131,6 @@ export async function PricingSection() {
                 Unirme al radar
               </Link>
             )}
-            <Link
-              href="/ia#newsletter"
-              className="text-center text-sm font-bold text-amber-100/95 underline decoration-dotted underline-offset-4 hover:text-white"
-            >
-              Recibir resumen por correo
-            </Link>
           </div>
         </div>
       </div>

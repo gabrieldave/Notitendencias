@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Trend } from "@/db/schema";
 import type { PublicUser } from "@/lib/session-user";
-import { NewsletterSection } from "@/components/NewsletterSection";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 import { categoryDisplayName } from "@/lib/category-display";
 import { trendRadarInstant } from "@/lib/trend-radar-instant";
@@ -37,7 +36,6 @@ type Props = {
   user?: PublicUser | null;
   serverUnlocked?: boolean;
   backFooter?: { href: string; label: string };
-  showNewsletter?: boolean;
   saveButton?: React.ReactNode;
   /** Botón principal «Guardar en Mi radar» al final del artículo */
   footerSave?: React.ReactNode;
@@ -73,7 +71,6 @@ export function TrendDetailArticle({
   user = null,
   serverUnlocked = false,
   backFooter = { href: "/ia", label: "← Volver a IA" },
-  showNewsletter = true,
   saveButton,
   footerSave,
 }: Props) {
@@ -298,12 +295,6 @@ export function TrendDetailArticle({
           </Link>
         </div>
       </section>
-
-      {showNewsletter ? (
-        <div className="mt-12">
-          <NewsletterSection variant="complement" />
-        </div>
-      ) : null}
 
       <p className="mt-10 text-center">
         <Link href={backFooter.href} className="text-sm font-bold text-brand-orange hover:underline">

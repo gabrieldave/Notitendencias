@@ -4,7 +4,7 @@ import { Radar, Sparkles, Newspaper } from "lucide-react";
 const bullets = [
   { icon: Radar, label: "Feed cronológico de señales curadas" },
   { icon: Sparkles, label: "Análisis listos para crear y ejecutar" },
-  { icon: Newspaper, label: "Newsletter y Mi radar con membresía" },
+  { icon: Newspaper, label: "Mi radar con membresía" },
 ] as const;
 
 export function PremiumBanner() {
@@ -44,7 +44,7 @@ export function PremiumBanner() {
             Unirme al radar
           </Link>
           <p className="text-center text-xs leading-snug text-white/55 sm:text-left lg:text-right">
-            Cobro en línea próximo · lista de espera vía newsletter
+            Cobro en línea próximo · acceso completo al activar pagos
           </p>
         </div>
       </div>

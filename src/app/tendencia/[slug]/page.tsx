@@ -88,7 +88,6 @@ export default async function TrendDetailPage({ params }: Props) {
               user={user}
               serverUnlocked={radarUnlocked}
               backFooter={back}
-              showNewsletter={radarUnlocked}
               saveButton={
                 radarUnlocked && user ? (
                   <TrendSaveButton

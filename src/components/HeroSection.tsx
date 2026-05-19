@@ -28,10 +28,10 @@ export function HeroSection() {
               Explorar tendencias
             </Link>
             <Link
-              href="/#newsletter"
+              href="/ia#pricing"
               className="inline-flex items-center justify-center rounded-full border-2 border-slate-200 bg-white px-8 py-3.5 text-sm font-bold text-brand-navy transition hover:border-brand-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
             >
-              Unirme al newsletter
+              Unirme al radar
             </Link>
           </div>
           <p className="mt-6 max-w-lg text-sm font-medium leading-relaxed text-slate-500 md:text-base">

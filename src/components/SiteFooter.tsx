@@ -4,7 +4,6 @@ import Link from "next/link";
 const explore = [{ href: "/ia", label: "Radar IA" }] as const;
 
 const product = [
-  { href: "/ia#newsletter", label: "Newsletter" },
   { href: "/ia#pricing", label: "AI Radar" },
   { href: "/mi-radar", label: "Mi radar" },
 ] as const;

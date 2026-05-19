@@ -1,6 +1,5 @@
 import { EditorialComingSoon } from "@/components/EditorialComingSoon";
 import { PremiumBanner } from "@/components/PremiumBanner";
-import { NewsletterSection } from "@/components/NewsletterSection";
 import { PricingSection } from "@/components/PricingSection";
 import { RadarSidebar } from "@/components/RadarSidebar";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -150,12 +149,6 @@ export default async function IaPage() {
               hideUpsell={radarUnlocked}
             />
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:pb-20">
-        <div className="mx-auto max-w-4xl">
-          <NewsletterSection />
         </div>
       </section>
 

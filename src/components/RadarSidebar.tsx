@@ -59,12 +59,6 @@ export function RadarSidebar({ topToday, topScore, titlesOnly = false, hideUpsel
         >
           Unirme al radar
         </Link>
-        <Link
-          href="/ia#newsletter"
-          className="mt-3 block text-center text-xs font-bold text-brand-navy underline decoration-dotted hover:text-brand-orange"
-        >
-          Recibir resumen por correo
-        </Link>
       </div>
       )}
     </aside>
