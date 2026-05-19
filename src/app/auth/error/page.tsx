@@ -10,7 +10,7 @@ type Props = { searchParams: Promise<{ error?: string }> };
 
 const messages: Record<string, string> = {
   Configuration:
-    "Falta configuración en el servidor (suele ser AUTH_SECRET o credenciales Google en Coolify). Revisa docs/google-oauth-coolify.md y vuelve a desplegar.",
+    "El servidor de auth respondió con un error genérico. Si /api/health muestra auth.ready: true, borra las cookies de notitendencias.iareal.net (o prueba en ventana privada) y vuelve a /login. Si sigue fallando tras elegir tu cuenta Google, revisa docs/google-oauth-coolify.md (redirect URI y usuarios de prueba).",
   AccessDenied: "No tienes permiso para acceder con esa cuenta.",
   Verification: "La sesión de Google no se pudo completar. Inténtalo de nuevo.",
   OAuthSignin: "No se pudo conectar con Google. Revisa que la app OAuth tenga el redirect correcto.",

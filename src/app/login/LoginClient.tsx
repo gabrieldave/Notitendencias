@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { signIn, SessionProvider } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import type { AuthSetupStatus } from "@/lib/auth-setup";
 import { authSetupUserMessage } from "@/lib/auth-setup";
@@ -18,33 +17,16 @@ function LoginForm({ authSetup }: { authSetup: AuthSetupStatus }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const safeCallback =
     callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : "/";
-  async function onGoogle() {
+  function onGoogle() {
     if (!authSetup.ok) {
       setError(authSetupUserMessage(authSetup));
       return;
     }
     setError(null);
     setGoogleLoading(true);
-    try {
-      const result = await signIn("google", { callbackUrl: safeCallback, redirect: false });
-      if (result?.error) {
-        setError(
-          result.error === "Configuration"
-            ? authSetupUserMessage(authSetup)
-            : "No se pudo iniciar con Google. Inténtalo de nuevo.",
-        );
-        setGoogleLoading(false);
-        return;
-      }
-      if (result?.url) {
-        window.location.href = result.url;
-        return;
-      }
-      setGoogleLoading(false);
-    } catch {
-      setError("No se pudo iniciar con Google.");
-      setGoogleLoading(false);
-    }
+    // Redirección directa al handler de Auth.js (evita fallos de signIn client + cookies CSRF viejas).
+    const params = new URLSearchParams({ callbackUrl: safeCallback });
+    window.location.assign(`/api/auth/signin/google?${params.toString()}`);
   }
   return (
 <div className="min-h-[calc(100vh-12rem)] bg-gradient-to-b from-slate-50 via-white to-amber-50/30">
@@ -93,9 +75,5 @@ function LoginForm({ authSetup }: { authSetup: AuthSetupStatus }) {
 }
 
 export function LoginClient({ authSetup }: { authSetup: AuthSetupStatus }) {
-  return (
-    <SessionProvider>
-      <LoginForm authSetup={authSetup} />
-    </SessionProvider>
-  );
+  return <LoginForm authSetup={authSetup} />;
 }
