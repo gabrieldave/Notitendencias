@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { PublicUser } from "@/lib/session-user";
+import { isRadarContentUnlocked } from "@/lib/radar-access";
 import { stripeRadarCheckoutUrl, stripeRadarPaymentLink } from "@/lib/stripe-public";
 
 type Props = {
@@ -34,8 +35,12 @@ export function RadarMembershipCard({ serverUser, callbackPath = "/ia" }: Props)
     };
   }, []);
 
+  const unlocked =
+    isRadarContentUnlocked(serverUser) || Boolean(me?.radarUnlocked);
   const loggedIn = Boolean(serverUser) || Boolean(me?.user?.id);
   const userId = serverUser?.id ?? me?.user?.id ?? null;
+
+  if (unlocked) return null;
   const checkoutUrl = userId ? stripeRadarCheckoutUrl(userId) : stripeRadarPaymentLink();
   const loginHref = `/login?callbackUrl=${encodeURIComponent(callbackPath)}`;
 

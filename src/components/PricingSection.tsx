@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { PremiumMemberStrip } from "@/components/PremiumMemberStrip";
+import { isRadarContentUnlocked } from "@/lib/radar-access";
 import { getOptionalSessionUser } from "@/lib/session-user";
 import { stripeRadarCheckoutUrl } from "@/lib/stripe-public";
 
@@ -31,6 +33,9 @@ const REGION_ACCEPTED = [
 
 export async function PricingSection() {
   const user = await getOptionalSessionUser();
+  if (isRadarContentUnlocked(user)) {
+    return <PremiumMemberStrip />;
+  }
   const checkout = stripeRadarCheckoutUrl(user?.id ?? null);
   return (
     <section

@@ -15,6 +15,7 @@ import {
 } from "@/lib/radar-feed-queries";
 import { isRadarContentUnlocked } from "@/lib/radar-access";
 import { getOptionalSessionUser } from "@/lib/session-user";
+import Link from "next/link";
 import { Brain, Radio, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -75,12 +76,22 @@ export default async function IaPage() {
                   <Radio className="h-4 w-4" aria-hidden />
                   Ver señales
                 </a>
-                <a
-                  href="#pricing"
-                  className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
-                >
-                  AI Radar Premium
-                </a>
+                {!radarUnlocked && (
+                  <a
+                    href="#pricing"
+                    className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
+                  >
+                    AI Radar Premium
+                  </a>
+                )}
+                {radarUnlocked && user && (
+                  <Link
+                    href="/mi-radar"
+                    className="inline-flex items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/15 px-7 py-3.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-500/25"
+                  >
+                    Mi radar · Premium activo
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -125,7 +136,12 @@ export default async function IaPage() {
                 )}
               </div>
             </div>
-            <RadarSidebar topToday={topToday} topScore={topScore} titlesOnly={!radarUnlocked} />
+            <RadarSidebar
+              topToday={topToday}
+              topScore={topScore}
+              titlesOnly={!radarUnlocked}
+              hideUpsell={radarUnlocked}
+            />
           </div>
         </div>
       </section>

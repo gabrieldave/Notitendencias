@@ -6,9 +6,11 @@ type Props = {
   topToday: Trend[];
   topScore: Trend[];
   titlesOnly?: boolean;
+  /** Sin CTA «Unirme al radar» para miembros premium */
+  hideUpsell?: boolean;
 };
 
-export function RadarSidebar({ topToday, topScore, titlesOnly = false }: Props) {
+export function RadarSidebar({ topToday, topScore, titlesOnly = false, hideUpsell = false }: Props) {
   return (
     <aside className="mx-auto w-full max-w-sm shrink-0 space-y-6 lg:sticky lg:top-28 lg:max-w-[280px]">
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
@@ -45,6 +47,7 @@ export function RadarSidebar({ topToday, topScore, titlesOnly = false }: Props) 
         )}
       </div>
 
+      {!hideUpsell && (
       <div className="rounded-2xl border border-brand-orange/25 bg-gradient-to-br from-white to-amber-50/40 p-5 shadow-sm">
         <p className="text-sm font-bold text-brand-navy">Notitendencias AI Radar</p>
         <p className="mt-2 text-xs leading-relaxed text-slate-600">
@@ -63,6 +66,7 @@ export function RadarSidebar({ topToday, topScore, titlesOnly = false }: Props) 
           Recibir resumen por correo
         </Link>
       </div>
+      )}
     </aside>
   );
 }

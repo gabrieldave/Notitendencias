@@ -16,7 +16,7 @@ import {
   parseRadarPayload,
   urgencyLabel,
 } from "@/lib/trend-radar-display";
-import { RadarMembershipCard } from "@/components/RadarMembershipCard";
+import { TrendDetailLimitedGate } from "@/components/TrendDetailLimitedGate";
 import {
   ArrowUpRight,
   Bookmark,
@@ -35,6 +35,7 @@ type Props = {
   trend: Trend;
   access: TrendDetailAccess;
   user?: PublicUser | null;
+  serverUnlocked?: boolean;
   backFooter?: { href: string; label: string };
   showNewsletter?: boolean;
   saveButton?: React.ReactNode;
@@ -68,6 +69,7 @@ export function TrendDetailArticle({
   trend: t,
   access,
   user = null,
+  serverUnlocked = false,
   backFooter = { href: "/ia", label: "← Volver a IA" },
   showNewsletter = true,
   saveButton,
@@ -76,19 +78,13 @@ export function TrendDetailArticle({
 
   if (!full) {
     return (
-      <article className="mx-auto max-w-3xl px-4 py-10 md:py-14">
-        <h1 className="text-3xl font-black leading-[1.15] tracking-tight text-brand-navy md:text-4xl lg:text-5xl">
-          {t.title}
-        </h1>
-        <div className="mt-10">
-          <RadarMembershipCard serverUser={user ?? null} callbackPath={`/tendencia/${t.slug}`} />
-        </div>
-        <p className="mt-10 text-center">
-          <Link href={backFooter.href} className="text-sm font-bold text-brand-orange hover:underline">
-            {backFooter.label}
-          </Link>
-        </p>
-      </article>
+      <TrendDetailLimitedGate
+        title={t.title}
+        slug={t.slug}
+        serverUser={user ?? null}
+        serverUnlocked={serverUnlocked}
+        backFooter={backFooter}
+      />
     );
   }
 

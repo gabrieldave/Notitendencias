@@ -86,6 +86,7 @@ export default async function TrendDetailPage({ params }: Props) {
               trend={t}
               access={access}
               user={user}
+              serverUnlocked={radarUnlocked}
               backFooter={back}
               showNewsletter={radarUnlocked}
               saveButton={
@@ -101,7 +102,12 @@ export default async function TrendDetailPage({ params }: Props) {
               }
             />
           </div>
-          <RadarSidebar topToday={topToday} topScore={topScore} titlesOnly={!radarUnlocked} />
+          <RadarSidebar
+            topToday={topToday}
+            topScore={topScore}
+            titlesOnly={!radarUnlocked}
+            hideUpsell={radarUnlocked}
+          />
         </div>
       </div>
     </div>
