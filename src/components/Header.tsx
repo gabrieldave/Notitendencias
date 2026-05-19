@@ -10,11 +10,16 @@ import { showHeaderAdminNav } from "@/lib/header-admin-nav";
 import type { PublicUser } from "@/lib/session-user";
 import { stripeRadarPaymentLink } from "@/lib/stripe-public";
 
-const mainNav = [{ href: "/ia", label: "IA" }] as const;
+/** Feed editorial + anclas en la misma página (/ia#historias, /ia#pricing). */
+const mainNav = [
+  { href: "/ia", label: "Radar IA" },
+  { href: "/ia#historias", label: "Señales" },
+] as const;
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/ia") return pathname === "/ia" || pathname.startsWith("/ia/");
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const base = href.split("#")[0] || href;
+  if (base === "/ia") return pathname === "/ia" || pathname.startsWith("/ia/");
+  return pathname === base || pathname.startsWith(`${base}/`);
 }
 
 function SubscribeButton({ className, onClick }: { className: string; onClick?: () => void }) {
@@ -113,12 +118,6 @@ export function Header({ user }: Props) {
               </Link>
             );
           })}
-          <Link
-            href="/ia#historias"
-            className="rounded-full px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
-          >
-            Radar en vivo
-          </Link>
         </nav>
 
         <div className="hidden flex-wrap items-center justify-end gap-2 sm:flex sm:gap-3">
@@ -191,13 +190,6 @@ export function Header({ user }: Props) {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="/ia#historias"
-              className="rounded-xl px-3 py-3 text-base font-semibold text-slate-200"
-              onClick={() => setOpen(false)}
-            >
-              Radar en vivo
-            </Link>
             {user ? (
               <>
                 {premium && (

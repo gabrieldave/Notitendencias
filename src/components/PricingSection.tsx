@@ -112,6 +112,13 @@ export async function PricingSection() {
               >
                 Pagar con Stripe
               </a>
+            ) : user ? (
+              <Link
+                href="/mi-radar"
+                className="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-brand-orange px-6 py-3.5 text-base font-black text-white shadow-lg shadow-orange-900/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
+              >
+                Ir a Mi radar
+              </Link>
             ) : (
               <Link
                 href="/login?intent=premium"
@@ -121,7 +128,7 @@ export async function PricingSection() {
               </Link>
             )}
             <Link
-              href="/#newsletter"
+              href="/ia#newsletter"
               className="text-center text-sm font-bold text-amber-100/95 underline decoration-dotted underline-offset-4 hover:text-white"
             >
               Recibir resumen por correo

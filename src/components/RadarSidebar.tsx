@@ -51,13 +51,13 @@ export function RadarSidebar({ topToday, topScore, titlesOnly = false }: Props) 
           Una sola membresía con todo desbloqueado cuando activemos pagos.
         </p>
         <Link
-          href="/#pricing"
+          href="/ia#pricing"
           className="mt-4 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-brand-orange px-4 py-2.5 text-center text-sm font-black text-white shadow-md transition hover:bg-orange-600"
         >
           Unirme al radar
         </Link>
         <Link
-          href="/#newsletter"
+          href="/ia#newsletter"
           className="mt-3 block text-center text-xs font-bold text-brand-navy underline decoration-dotted hover:text-brand-orange"
         >
           Recibir resumen por correo

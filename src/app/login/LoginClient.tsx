@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { signIn, SessionProvider } from "next-auth/react";
 import { Loader2 } from "lucide-react";
+import { LoginAlreadyAuthed } from "./LoginAlreadyAuthed";
 
 function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   const searchParams = useSearchParams();
@@ -29,7 +30,7 @@ function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   return (
 <div className="min-h-[calc(100vh-12rem)] bg-gradient-to-b from-slate-50 via-white to-amber-50/30">
 <div className="mx-auto flex max-w-lg flex-col px-4 py-14 md:py-20">
-        <Link href="/" className="mx-auto flex flex-col items-center gap-3 text-center">
+        <Link href="/ia" className="mx-auto flex flex-col items-center gap-3 text-center">
           <Image src="/branding/logo-icon.png" alt="" width={64} height={64} className="h-16 w-16 rounded-2xl shadow-lg ring-1 ring-slate-200/80" />
           <span className="text-sm font-bold text-brand-orange hover:underline">Volver al inicio</span>
         </Link>
@@ -75,6 +76,7 @@ function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
 export function LoginClient({ googleEnabled }: { googleEnabled: boolean }) {
   return (
     <SessionProvider>
+      <LoginAlreadyAuthed />
       <LoginForm googleEnabled={googleEnabled} />
     </SessionProvider>
   );

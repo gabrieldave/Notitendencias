@@ -38,7 +38,7 @@ export function PremiumBanner() {
         </div>
         <div className="flex shrink-0 flex-col items-stretch gap-2 sm:max-w-xs lg:items-end">
           <Link
-            href="/#pricing"
+            href="/ia#pricing"
             className="inline-flex min-h-[56px] items-center justify-center rounded-2xl bg-brand-orange px-10 py-4 text-center text-base font-black text-white shadow-xl shadow-orange-900/35 ring-2 ring-white/20 transition hover:bg-orange-500 hover:shadow-orange-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
           >
             Unirme al radar
