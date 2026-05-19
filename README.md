@@ -85,6 +85,15 @@ La web usa **Auth.js (NextAuth v5)** con sesión en **PostgreSQL** (tablas `sess
 
    Abre `http://localhost:3015`.
 
+## App instalable (PWA)
+
+En **HTTPS** (producción), el sitio se puede añadir al inicio del celular como app:
+
+- **Android / Chrome:** menú del navegador → «Instalar app», o el banner «Instalar Notitendencias» si aparece.
+- **iPhone (Safari):** Compartir → «Añadir a pantalla de inicio».
+
+La app abre en `/ia` a pantalla completa. Archivos: `src/app/manifest.ts`, `public/sw.js`, iconos `public/pwa/`. El `Dockerfile` y Nixpacks copian `public/` al contenedor standalone (incluye `sw.js`).
+
 ## Scripts npm
 
 | Script | Descripción |
