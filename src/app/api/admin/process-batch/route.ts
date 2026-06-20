@@ -2,13 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { desc, eq, or } from "drizzle-orm";
 import { db } from "@/db";
 import { rawTrendItems } from "@/db/schema";
-import { isAdminFromRequest } from "@/lib/admin-auth";
+import { isElevatedAdmin } from "@/lib/admin-auth";
 import { processRawItemById } from "@/lib/admin-trend-actions";
 
 const BATCH_LIMIT = 100;
 
 export async function POST(request: NextRequest) {
-  if (!isAdminFromRequest(request)) {
+  if (!(await isElevatedAdmin())) {
     return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
   }
 
