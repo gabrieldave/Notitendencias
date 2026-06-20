@@ -56,15 +56,18 @@ export function isAdminFromRequest(request: NextRequest): boolean {
   return verifyAdminCookieValue(request.cookies.get(ADMIN_COOKIE_NAME)?.value);
 }
 
-/** Cookie admin o sesión Auth.js con rol/email de admin. */
+/** Cookie admin o sesión Auth.js con rol/email de admin (misma lógica que isElevatedAdmin). */
 export async function isElevatedAdminFromRequest(
   _request: NextRequest,
 ): Promise<boolean> {
   if (isAdminFromRequest(_request)) return true;
   const session = await auth();
-  if (!session?.user) return false;
+  const id = session?.user?.id;
+  if (!id) return false;
   if (session.user.role === "admin") return true;
-  return isAdminEmail(session.user.email);
+  if (isAdminEmail(session.user.email)) return true;
+  const [row] = await db.select({ role: users.role }).from(users).where(eq(users.id, id)).limit(1);
+  return row?.role === "admin";
 }
 
 /** Hash no reversible para mostrar en settings (estado de contraseña) */

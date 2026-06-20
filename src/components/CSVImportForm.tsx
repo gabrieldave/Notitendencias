@@ -1,5 +1,6 @@
 "use client";
 
+import { adminApiFetch } from "@/lib/admin-api-fetch";
 import { useState } from "react";
 
 export function CSVImportForm() {
@@ -12,13 +13,10 @@ export function CSVImportForm() {
     setLoading(true);
     setMsg(null);
     try {
-      const res = await fetch("/api/admin/import", {
+      const data = await adminApiFetch<{ inserted: number; errors?: string[] }>("/api/admin/import", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csv }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
       setMsg(
         `Insertados: ${data.inserted}. Errores: ${data.errors?.length ? data.errors.join("; ") : "ninguno"}`,
       );

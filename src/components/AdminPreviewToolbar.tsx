@@ -1,5 +1,6 @@
 "use client";
 
+import { adminApiFetch } from "@/lib/admin-api-fetch";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -30,13 +31,10 @@ export function AdminPreviewToolbar({ trendId, slug, status, mentionsArxiv = fal
           return;
         }
       }
-      const res = await fetch(`/api/trends/${trendId}/publish`, {
+      await adminApiFetch(`/api/trends/${trendId}/publish`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(mentionsArxiv ? { confirmEditorialArxiv: true } : {}),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? data.error ?? "Error");
       router.push(`/tendencia/${slug}`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Error");
@@ -49,9 +47,7 @@ export function AdminPreviewToolbar({ trendId, slug, status, mentionsArxiv = fal
     if (!confirm("¿Rechazar esta tendencia?")) return;
     setBusy("rej");
     try {
-      const res = await fetch(`/api/trends/${trendId}/reject`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
+      await adminApiFetch(`/api/trends/${trendId}/reject`, { method: "POST" });
       router.push("/admin");
     } catch (e) {
       alert(e instanceof Error ? e.message : "Error");

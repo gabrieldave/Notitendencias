@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/db";
 import { rawTrendItems } from "@/db/schema";
-import { isAdminFromRequest } from "@/lib/admin-auth";
+import { isElevatedAdmin } from "@/lib/admin-auth";
 import { desc, eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
-  if (!isAdminFromRequest(request)) {
+  if (!(await isElevatedAdmin())) {
     return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
   }
 

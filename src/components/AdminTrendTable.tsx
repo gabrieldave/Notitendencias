@@ -1,5 +1,6 @@
 "use client";
 
+import { adminApiFetch } from "@/lib/admin-api-fetch";
 import type { Trend } from "@/db/schema";
 import { EDITORIAL_ARXIV_ALERT_ES, trendMentionsArxiv } from "@/lib/editorial";
 import Link from "next/link";
@@ -24,13 +25,10 @@ export function AdminTrendTable({ trends }: { trends: Trend[] }) {
           return;
         }
       }
-      const res = await fetch(`/api/trends/${t.id}/publish`, {
+      await adminApiFetch(`/api/trends/${t.id}/publish`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(needsConfirm ? { confirmEditorialArxiv: true } : {}),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? data.error ?? "Error");
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Error");
@@ -52,19 +50,17 @@ export function AdminTrendTable({ trends }: { trends: Trend[] }) {
 
     setBatchBusy(true);
     try {
-      const res = await fetch("/api/admin/publish-batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ids: trends.map((t) => t.id),
-          ...(needsConfirm ? { confirmEditorialArxiv: true } : {}),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message ?? data.error ?? "Error");
-      }
-      const summary = data.summary as { succeeded: number; failed: number; total: number };
+      const data = await adminApiFetch<{ summary: { succeeded: number; failed: number; total: number } }>(
+        "/api/admin/publish-batch",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            ids: trends.map((t) => t.id),
+            ...(needsConfirm ? { confirmEditorialArxiv: true } : {}),
+          }),
+        },
+      );
+      const summary = data.summary;
       router.refresh();
       alert(
         `Publicación masiva terminada: ${summary.succeeded}/${summary.total} correctas${
@@ -82,9 +78,7 @@ export function AdminTrendTable({ trends }: { trends: Trend[] }) {
     if (!confirm("¿Rechazar esta tendencia?")) return;
     setBusy(`rej-${id}`);
     try {
-      const res = await fetch(`/api/trends/${id}/reject`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
+      await adminApiFetch(`/api/trends/${id}/reject`, { method: "POST" });
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Error");

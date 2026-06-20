@@ -2,20 +2,29 @@
 
 import type { RawTrendItem } from "@/db/schema";
 import { EDITORIAL_ARXIV_ALERT_ES, rawItemMentionsArxiv } from "@/lib/editorial";
+import { adminApiFetch } from "@/lib/admin-api-fetch";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function AdminRawItemTable({ items }: { items: RawTrendItem[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [batchBusy, setBatchBusy] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(
+    null,
+  );
+  const [authOk, setAuthOk] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    adminApiFetch("/api/admin/session")
+      .then(() => setAuthOk(true))
+      .catch(() => setAuthOk(false));
+  }, []);
 
   async function processOne(id: string) {
     setBusy(id);
     try {
-      const res = await fetch(`/api/process/${id}`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
+      await adminApiFetch(`/api/process/${id}`, { method: "POST" });
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Error");
@@ -27,32 +36,51 @@ export function AdminRawItemTable({ items }: { items: RawTrendItem[] }) {
   async function processAll() {
     if (
       !confirm(
-        `¿Procesar ${items.length} hallazgos de esta lista? Puede tardar varios minutos y consume la API de DeepSeek.`,
+        `¿Procesar ${items.length} hallazgos uno por uno? Puede tardar varios minutos y consume la API de DeepSeek.`,
       )
     ) {
       return;
     }
+
     setBatchBusy(true);
-    try {
-      const res = await fetch("/api/admin/process-batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: items.map((it) => it.id) }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
-      const summary = data.summary as { succeeded: number; failed: number; total: number };
-      router.refresh();
-      alert(
-        `Procesamiento masivo terminado: ${summary.succeeded}/${summary.total} correctos${
-          summary.failed ? `, ${summary.failed} fallidos` : ""
-        }.`,
-      );
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Error");
-    } finally {
-      setBatchBusy(false);
+    let succeeded = 0;
+    let failed = 0;
+    const failures: string[] = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      setBatchProgress({ current: i + 1, total: items.length });
+      setBusy(it.id);
+      try {
+        await adminApiFetch(`/api/process/${it.id}`, { method: "POST" });
+        succeeded++;
+      } catch (e) {
+        failed++;
+        const msg = e instanceof Error ? e.message : "Error";
+        failures.push(`${it.title.slice(0, 40)}…: ${msg}`);
+        if (msg.includes("No autorizado")) {
+          alert(msg);
+          break;
+        }
+      }
     }
+
+    setBusy(null);
+    setBatchProgress(null);
+    setBatchBusy(false);
+    router.refresh();
+
+    if (succeeded + failed === 0) return;
+
+    const detail =
+      failures.length > 0
+        ? `\n\nFallos:\n${failures.slice(0, 3).join("\n")}${failures.length > 3 ? `\n… y ${failures.length - 3} más` : ""}`
+        : "";
+    alert(
+      `Procesamiento terminado: ${succeeded}/${items.length} correctos${
+        failed ? `, ${failed} fallidos` : ""
+      }.${detail}`,
+    );
   }
 
   if (items.length === 0) {
@@ -61,7 +89,21 @@ export function AdminRawItemTable({ items }: { items: RawTrendItem[] }) {
 
   return (
     <>
-      <div className="mt-4 flex flex-wrap justify-end gap-2">
+      {authOk === false && (
+        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          Sesión admin incompleta.{" "}
+          <a href="/admin/login" className="font-semibold underline">
+            Entra con la contraseña del panel
+          </a>{" "}
+          o inicia sesión con Google (email en ADMIN_EMAILS).
+        </p>
+      )}
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+        {batchProgress && (
+          <span className="text-xs font-semibold text-slate-600">
+            Procesando {batchProgress.current}/{batchProgress.total}…
+          </span>
+        )}
         <button
           type="button"
           onClick={() => void processAll()}

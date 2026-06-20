@@ -2,14 +2,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/db";
 import { rawTrendItems, categories } from "@/db/schema";
 import { adminImportSchema } from "@/lib/schemas";
-import { isAdminFromRequest } from "@/lib/admin-auth";
+import { isElevatedAdmin } from "@/lib/admin-auth";
 import { parseAdminImportCsv } from "@/lib/csv";
 import { RAW_TEXT_MAX_LENGTH } from "@/lib/constants";
 import { mergeEditorialArxivMetadata, rawItemMentionsArxiv } from "@/lib/editorial";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
-  if (!isAdminFromRequest(request)) {
+  if (!(await isElevatedAdmin())) {
     return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
   }
 

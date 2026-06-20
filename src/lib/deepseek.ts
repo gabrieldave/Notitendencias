@@ -88,6 +88,7 @@ export async function processRawWithDeepSeek(input: {
 
   const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
+    signal: AbortSignal.timeout(120_000),
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",

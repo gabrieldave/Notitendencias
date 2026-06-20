@@ -1,5 +1,6 @@
 "use client";
 
+import { adminApiFetch } from "@/lib/admin-api-fetch";
 import type { Trend } from "@/db/schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,9 +20,7 @@ export function AdminPublishedTrendTable({ trends }: { trends: Trend[] }) {
     }
     setBusy(id);
     try {
-      const res = await fetch(`/api/trends/${id}/reject`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
+      await adminApiFetch(`/api/trends/${id}/reject`, { method: "POST" });
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Error");
