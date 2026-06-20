@@ -1,14 +1,20 @@
-# Coolify → Build Pack: Nixpacks (recomendado si Dockerfile te da problemas de OAuth en build).
-# Puerto en el proxy de Coolify: 3015
+# Coolify → Build Pack: Nixpacks. Puerto proxy: 3015.
+# En Coolify → Environment: variables críticas en BUILD + RUNTIME (ver docs/coolify-deploy.md).
 #
-# En Coolify → Environment: marca variables disponibles en BUILD y RUNTIME
-# (AUTH_SECRET, AUTH_GOOGLE_*, AUTH_URL, DATABASE_URL, NEXT_PUBLIC_APP_URL, AUTH_TRUST_HOST=true).
+# NODE_OPTIONS: 3072 evita OOM en VPS pequeños (6144 pide ~6 GB de heap y el build muere con exit 255).
 
 [variables]
 PORT = "3015"
 HOSTNAME = "0.0.0.0"
-NODE_OPTIONS = "--max-old-space-size=6144"
+NODE_OPTIONS = "--max-old-space-size=3072"
 NIXPACKS_NODE_VERSION = "22.14"
+NEXT_TELEMETRY_DISABLED = "1"
+# Fallback de build si DATABASE_URL no está marcada «Available at Buildtime» en Coolify
+DATABASE_URL = "postgresql://build:build@127.0.0.1:5432/notitendencias"
+NEXT_PUBLIC_APP_URL = "https://notitendencias.iareal.net"
+
+[phases.install]
+cmds = ["npm ci"]
 
 [phases.build]
 cmds = [

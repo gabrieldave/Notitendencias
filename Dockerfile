@@ -24,8 +24,8 @@ ENV AUTH_SECRET=$AUTH_SECRET
 ENV AUTH_GOOGLE_ID=$AUTH_GOOGLE_ID
 ENV AUTH_GOOGLE_SECRET=$AUTH_GOOGLE_SECRET
 ENV NEXT_TELEMETRY_DISABLED=1
-# standalone + file tracing pica mucha RAM en el build; evita OOM en VPS pequeños
-ENV NODE_OPTIONS=--max-old-space-size=6144
+# Heap moderado: 6 GB en VPS pequeños provoca OOM kill (exit 255) durante next build
+ENV NODE_OPTIONS=--max-old-space-size=3072
 RUN npm run build
 
 # --- run ---

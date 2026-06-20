@@ -41,6 +41,22 @@ Deployment failed.
 - Cambiar temporalmente a **Dockerfile** (ver abajo).
 - Reintentar deploy en horario de menor carga.
 
+### Fallo en `next build` (exit 255, sin mensaje claro)
+
+```
+Creating an optimized production build ...
+Deployment failed: exit code 255
+```
+
+**Causa habitual:** el contenedor de build se queda sin RAM. El repo ya usa `NODE_OPTIONS=--max-old-space-size=3072` en `nixpacks.toml` (no 6144).
+
+**Opciones:**
+
+- Redeploy tras el último `main` (no reinicio solo).
+- En Coolify, quita `NODE_OPTIONS=6144` si lo definiste manualmente en Environment.
+- Si el VPS tiene ≥ 8 GB libres en build, puedes subir a `4096` en `nixpacks.toml`.
+- Cambiar a **Dockerfile** (imagen Alpine, suele consumir menos RAM que Nixpacks).
+
 ## Build Pack: Dockerfile (alternativa)
 
 Si Nixpacks falla en el servidor:
